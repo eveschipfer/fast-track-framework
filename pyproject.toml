@@ -27,6 +27,9 @@ aiofiles = "^24.1.0"  # Async file I/O (Sprint 1.1)
 # alembic = "^1.13.0"
 # pydantic = "^2.9.0"
 # python-dotenv = "^1.0.0"
+fastapi = "^0.128.0"
+uvicorn = "^0.40.0"
+httpx = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
 # Testing
@@ -217,10 +220,17 @@ ignore = [
     "S101",   # assert allowed in tests
     "PLR2004", # magic values allowed in tests
     "S105",   # hardcoded password string (test data)
+    "B008",   # function call in defaults (FastAPI Depends pattern)
 ]
 "src/ftf/exercises/**/*.py" = [
     "T201",   # print allowed in exercises/demos
     "S311",   # random for non-cryptographic use is ok in demos
+]
+"src/ftf/http/controllers/**/*.py" = [
+    "B008",   # function call in defaults (FastAPI Depends pattern)
+]
+"src/ftf/main.py" = [
+    "ERA001", # commented code allowed for examples
 ]
 
 [tool.ruff.lint.mccabe]

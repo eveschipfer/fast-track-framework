@@ -121,7 +121,7 @@ class Container:
         >>> repo = container.resolve(UserRepository)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Registry: Type → Registration metadata
         self._registry: dict[type, Registration] = {}
 
@@ -265,7 +265,8 @@ class Container:
             Instance with all dependencies injected
         """
         # Get constructor
-        init_method = implementation.__init__
+        # Type ignore: accessing __init__ on type is safe here
+        init_method = implementation.__init__  # type: ignore[misc]
 
         # Edge case: Classes without custom __init__
         if init_method is object.__init__:
