@@ -11,6 +11,7 @@ Public API:
     get_scoped_cache: Get current request's scoped cache
     set_scoped_cache: Set scoped cache for current request
     clear_scoped_cache: Clear scoped cache (end of request)
+    clear_scoped_cache_async: Clear scoped cache with async cleanup
 
 Exceptions:
     DependencyResolutionError: Base exception for DI errors
@@ -23,6 +24,7 @@ from .container import (
     Registration,
     Scope,
     clear_scoped_cache,
+    clear_scoped_cache_async,
     get_scoped_cache,
     set_scoped_cache,
 )
@@ -41,6 +43,7 @@ __all__ = [
     "get_scoped_cache",
     "set_scoped_cache",
     "clear_scoped_cache",
+    "clear_scoped_cache_async",
     # Exceptions
     "DependencyResolutionError",
     "CircularDependencyError",
