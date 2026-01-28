@@ -12,7 +12,8 @@ Features:
 
 Main Components:
     core: IoC container and dependency injection
-    orm: SQLModel wrapper with fluent query builder (coming soon)
+    database: SQLAlchemy async integration with Repository Pattern
+    models: Database models (User, etc.)
     http: FastAPI extensions (coming soon)
     cli: Artisan-like CLI tools (coming soon)
 
@@ -31,6 +32,7 @@ from .core import (
     Scope,
     UnregisteredDependencyError,
     clear_scoped_cache,
+    clear_scoped_cache_async,
     get_scoped_cache,
     set_scoped_cache,
 )
@@ -48,8 +50,12 @@ __all__ = [
     "get_scoped_cache",
     "set_scoped_cache",
     "clear_scoped_cache",
+    "clear_scoped_cache_async",
     # Core - Exceptions
     "DependencyResolutionError",
     "CircularDependencyError",
     "UnregisteredDependencyError",
+    # Note: database and models modules are available but not exported here
+    # Import directly: from ftf.database import Base, BaseRepository
+    # Import directly: from ftf.models import User
 ]

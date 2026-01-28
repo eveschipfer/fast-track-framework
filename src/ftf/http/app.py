@@ -29,7 +29,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from ftf.core import Container, clear_scoped_cache, set_scoped_cache
+from ftf.core import Container, clear_scoped_cache_async, set_scoped_cache
 
 
 class FastTrackFramework(FastAPI):
@@ -191,9 +191,10 @@ def scoped_middleware(app: FastTrackFramework, call_next: Any) -> Any:  # noqa: 
             response: Response = await call_next(request)
             return response
         finally:
-            # Step 3: Cleanup scoped dependencies (prevent memory leaks)
-            # This runs even if the request handler raises an exception
-            clear_scoped_cache()
+            # Step 3: Cleanup scoped dependencies with async disposal
+            # This calls close() on database sessions and other resources
+            # Runs even if the request handler raises an exception
+            await clear_scoped_cache_async()
 
     return middleware
 

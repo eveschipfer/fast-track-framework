@@ -1,13 +1,17 @@
 # 🚀 Fast Track Framework
 
 > A Laravel-inspired micro-framework built on top of FastAPI, designed as an educational deep-dive into modern Python architecture patterns.
+> This project is an educational deep dive into building production-grade frameworks.
+It is safe to experiment with, but not intended as a drop-in replacement for mature frameworks.
 
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Test Coverage](https://img.shields.io/badge/coverage-88.98%25-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Tests](https://img.shields.io/badge/tests-73%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Test Coverage](https://img.shields.io/badge/coverage-58.97%25-yellow.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-100%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-2.2%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
 
@@ -18,7 +22,8 @@ Fast Track Framework bridges the gap between FastAPI's async performance and Lar
 - 🏗️ **Modern Python architecture** with strict type safety (MyPy strict mode)
 - ⚡ **Async-first design** leveraging Python 3.13+ features
 - 🎨 **Laravel-inspired DX** with production-ready IoC Container
-- 🧪 **Test-driven development** with 88.98% coverage (73 tests)
+- 🗄️ **Repository Pattern** for database access (NOT Active Record)
+- 🧪 **Test-driven development** with 58.97% coverage (100 tests passing)
 - 📚 **Educational documentation** explaining every design decision
 - 🚀 **Production-ready tooling** (Poetry, Black, Ruff, pre-commit hooks)
 - ✅ **Quality hardened** - All critical technical debt resolved
@@ -27,31 +32,45 @@ Fast Track Framework bridges the gap between FastAPI's async performance and Lar
 
 ## ✨ **Features**
 
-### 🔥 Current (Sprint 2.1 - Production Ready)
+### 🔥 Current (Sprint 2.2 - Production-quality architecture)
 
+**Core Container:**
 - [x] **IoC Container** - Production-grade dependency injection with automatic resolution
 - [x] **FastAPI Integration** - Seamless DI with `Inject()` parameter
 - [x] **Request Scoping** - Per-request dependency lifecycle with automatic cleanup
 - [x] **Lifecycle Management** - Resource cleanup with async context managers
 - [x] **Dependency Override** - Full mocking support for testing (15 patterns)
 - [x] **Async Concurrency** - Validated isolation under high parallelism
-- [x] **Type-safe** - Strict MyPy compliance, 88.98% test coverage
+
+**Database Layer (NEW ✨):**
+- [x] **SQLAlchemy AsyncEngine** - Connection pooling with automatic driver detection
+- [x] **Repository Pattern** - Generic CRUD without Active Record anti-pattern
+- [x] **AsyncSession** - Scoped per-request with automatic cleanup
+- [x] **Alembic Migrations** - Async migration support with auto-discovery
+- [x] **Type-safe Models** - SQLAlchemy 2.0 with Mapped[] types
+- [x] **Complete CRUD** - BaseRepository[T] with pagination, filtering, custom queries
+
+**Quality:**
+- [x] **Type-safe** - Strict MyPy compliance
+- [x] **100 tests passing** - 26 database tests + 74 container tests
+- [x] **58.97% coverage** - ~70% on database module
 - [x] **Production tooling** - Poetry, pre-commit hooks, Black, Ruff, MyPy
 
-### 🆕 Recent Improvements (Quality Hardening Sprint)
+### 🆕 Sprint 2.2 Highlights (Database Foundation)
 
-- [x] **Async Concurrency Validation** - 12 tests validating ContextVar isolation
-- [x] **Resource Lifecycle Management** - Automatic cleanup of scoped/singleton resources
-- [x] **Dependency Override System** - Complete mocking support for tests
-- [x] **+37 New Tests** - 73 total tests (100% pass rate)
-- [x] **Coverage: 84.21%** (container), 88.98% (overall)
+- [x] **Repository Pattern Implementation** - Explicit dependencies, no magic
+- [x] **26 Database Tests** - 17 unit + 9 integration (all passing)
+- [x] **SQLite Support** - StaticPool for in-memory, optimized for testing
+- [x] **Complete Example** - Working CRUD API in `examples/database_example.py`
+- [x] **4 Bugs Fixed** - Pool config, connection loss, API consistency, middleware
+- [x] **Comprehensive Docs** - 65KB of implementation guides and reports
 
-### 🚧 In Progress (Sprint 2.x - Database & ORM)
+### 🚧 In Progress (Sprint 2.3 - Query Builder)
 
-- [ ] **Eloquent-inspired ORM** - SQLModel wrapper with fluent query builder
-- [ ] **Database migrations** - Alembic with simplified API
-- [ ] **Service Providers** - Laravel-style application bootstrapping
-- [ ] **Artisan-like CLI** - Code generation and migration tools
+- [ ] **Eloquent-inspired Query Builder** - Fluent interface for complex queries
+- [ ] **Relationships** - One-to-many, many-to-many, eager loading
+- [ ] **Advanced Filtering** - WHERE, OR, IN, LIKE, etc.
+- [ ] **Soft Deletes** - Transparent deleted_at handling
 
 ### 🗺️ Roadmap (Sprint 2.x+)
 
@@ -181,6 +200,85 @@ curl http://localhost:8000/
 
 # API docs
 open http://localhost:8000/docs
+```
+
+### Database CRUD Example (NEW ✨)
+
+```python
+from ftf.http import FastTrackFramework, Inject
+from ftf.database import create_engine, AsyncSessionFactory, BaseRepository, Base
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
+
+# Create app
+app = FastTrackFramework(title="My CRUD API")
+
+# 1. Setup database
+engine = create_engine("sqlite+aiosqlite:///./app.db")
+app.container.register(AsyncEngine, scope="singleton")
+app.container._singletons[AsyncEngine] = engine
+
+# 2. Register session (scoped per request)
+def session_factory() -> AsyncSession:
+    factory = AsyncSessionFactory()
+    return factory()
+
+app.register(AsyncSession, implementation=session_factory, scope="scoped")
+
+# 3. Define model (SQLAlchemy 2.0 style)
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    email: Mapped[str] = mapped_column(String(100), unique=True)
+
+# 4. Create repository
+class UserRepository(BaseRepository[User]):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session, User)
+
+app.register(UserRepository, scope="transient")
+
+# 5. Define routes with automatic injection
+@app.post("/users")
+async def create_user(
+    name: str,
+    email: str,
+    repo: UserRepository = Inject(UserRepository)  # Auto-injected!
+):
+    user = User(name=name, email=email)
+    return await repo.create(user)
+
+@app.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    repo: UserRepository = Inject(UserRepository)
+):
+    return await repo.find_or_fail(user_id)  # Auto 404 if not found
+
+@app.get("/users")
+async def list_users(
+    limit: int = 10,
+    repo: UserRepository = Inject(UserRepository)
+):
+    return await repo.all(limit=limit)
+
+# Run with: poetry run python examples/database_example.py
+```
+
+**Test the CRUD API:**
+```bash
+# Create user
+curl -X POST http://localhost:8000/users -d "name=Alice&email=alice@example.com"
+
+# Get user
+curl http://localhost:8000/users/1
+
+# List users
+curl http://localhost:8000/users
+
+# Complete example: poetry run python examples/database_example.py
 ```
 
 ---
@@ -382,6 +480,114 @@ def list_users(session: DatabaseSession = Inject(DatabaseSession)):
 - ✅ No memory leaks
 - ✅ Validated under high concurrency
 
+### 6. Repository Pattern (Database Access) - NEW ✨
+
+**WHY NOT ACTIVE RECORD?** Active Record (`user.save()`) requires ContextVar global state and breaks testability in async Python. We use **explicit Repository Pattern** instead.
+
+```python
+from ftf.database import create_engine, AsyncSessionFactory, BaseRepository, Base
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String
+
+# 1. Define model (SQLAlchemy 2.0 style - type-safe!)
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    email: Mapped[str] = mapped_column(String(100), unique=True)
+
+# 2. Create repository (Generic CRUD)
+class UserRepository(BaseRepository[User]):
+    def __init__(self, session: AsyncSession):  # Explicit dependency!
+        super().__init__(session, User)
+
+    # Add custom queries
+    async def find_by_email(self, email: str) -> User | None:
+        from sqlalchemy import select
+        stmt = select(User).where(User.email == email)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+# 3. Setup in app
+app = FastTrackFramework()
+
+# Register engine (singleton - connection pool)
+engine = create_engine("postgresql+asyncpg://user:pass@localhost/db")
+app.container.register(AsyncEngine, scope="singleton")
+app.container._singletons[AsyncEngine] = engine
+
+# Register session (scoped - one per request)
+def session_factory() -> AsyncSession:
+    factory = AsyncSessionFactory()
+    return factory()
+
+app.register(AsyncSession, implementation=session_factory, scope="scoped")
+app.register(UserRepository, scope="transient")
+
+# 4. Use in routes (automatic injection + cleanup)
+@app.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    repo: UserRepository = Inject(UserRepository)  # Session auto-injected!
+):
+    return await repo.find_or_fail(user_id)  # Auto 404 if not found
+
+@app.post("/users")
+async def create_user(
+    name: str,
+    email: str,
+    repo: UserRepository = Inject(UserRepository)
+):
+    user = User(name=name, email=email)
+    return await repo.create(user)  # Auto-commit + refresh
+```
+
+**BaseRepository provides:**
+- ✅ `create(instance)` - Insert with auto-commit
+- ✅ `find(id)` - Get by primary key
+- ✅ `find_or_fail(id)` - Get or raise 404
+- ✅ `all(limit, offset)` - List with pagination
+- ✅ `update(instance)` - Update with auto-commit
+- ✅ `delete(instance)` - Delete with auto-commit
+- ✅ `count()` - Count total records
+
+**Comparison:**
+
+```python
+# ❌ Laravel/Eloquent (Active Record) - NOT possible in async Python!
+user = User.find(1)        # Where does session come from?
+user.name = "Updated"
+user.save()                # ContextVar global state required
+
+# ✅ FastTrack (Repository Pattern) - Explicit and testable
+repo = UserRepository(session)  # Explicit dependency
+user = await repo.find(1)
+user.name = "Updated"
+await repo.update(user)         # Manual transaction control
+
+# Benefits:
+# + Explicit dependencies (testable)
+# + Works everywhere (HTTP, CLI, jobs, tests)
+# + Manual transaction control
+# + Type-safe with MyPy
+# + No ContextVar global state
+```
+
+**Database Migrations with Alembic:**
+```bash
+# Create migration
+alembic revision --autogenerate -m "Add users table"
+
+# Apply migrations
+alembic upgrade head
+
+# Rollback
+alembic downgrade -1
+
+# See migrations/README.md for complete guide
+```
+
 ---
 
 ## 🏗️ **Architecture**
@@ -391,8 +597,17 @@ def list_users(session: DatabaseSession = Inject(DatabaseSession)):
 larafast/
 ├── src/ftf/
 │   ├── core/                          # IoC Container (Sprint 1.2) ✅
-│   │   ├── container.py               # Main DI container (152 lines, 84.21% coverage)
+│   │   ├── container.py               # Main DI container (152 lines, lifecycle, override)
 │   │   ├── exceptions.py              # DI-specific exceptions
+│   │   └── __init__.py
+│   ├── database/                      # Database Layer (Sprint 2.2) ✅ NEW
+│   │   ├── engine.py                  # AsyncEngine singleton (SQLite/PostgreSQL)
+│   │   ├── session.py                 # AsyncSession factory (scoped)
+│   │   ├── base.py                    # SQLAlchemy declarative base
+│   │   ├── repository.py              # Generic CRUD repository
+│   │   └── __init__.py
+│   ├── models/                        # Database Models (Sprint 2.2) ✅ NEW
+│   │   ├── user.py                    # Example User model
 │   │   └── __init__.py
 │   ├── http/                          # FastAPI Integration (Sprint 2.1) ✅
 │   │   ├── app.py                     # FastTrackFramework kernel
@@ -406,20 +621,32 @@ larafast/
 │   ├── exercises/                     # Sprint learning exercises
 │   │   ├── sprint_1_1_async_ingestor.py
 │   │   ├── sprint_1_2_demo.py
-│   │   └── sprint_1_2_active_record_trap.py
+│   │   └── sprint_1_2_active_record_trap.py  # Why NOT Active Record
 │   ├── main.py                        # Application entry point ✅
 │   └── __init__.py
 ├── tests/
-│   ├── unit/                          # Unit tests (61 tests) ✅
-│   │   ├── test_container.py          # Core container tests (24 tests)
-│   │   ├── test_container_async.py    # Concurrency tests (12 tests) 🆕
-│   │   ├── test_container_lifecycle.py # Lifecycle tests (10 tests) 🆕
-│   │   ├── test_container_override.py  # Override tests (15 tests) 🆕
+│   ├── unit/                          # Unit tests (91 tests) ✅
+│   │   ├── test_container.py          # Core container tests (37 tests)
+│   │   ├── test_container_async.py    # Concurrency tests (12 tests)
+│   │   ├── test_container_lifecycle.py # Lifecycle tests (10 tests)
+│   │   ├── test_container_override.py  # Override tests (15 tests)
+│   │   ├── test_repository.py         # Database CRUD tests (17 tests) ✨ NEW
 │   │   └── __init__.py
-│   ├── integration/                   # Integration tests (13 tests) ✅
+│   ├── integration/                   # Integration tests (22 tests) ✅
 │   │   ├── test_http_integration.py
-│   │   └── test_welcome_controller.py
+│   │   ├── test_welcome_controller.py
+│   │   ├── test_database_integration.py  # HTTP + DB tests (9 tests) ✨ NEW
+│   │   └── __init__.py
 │   └── conftest.py
+├── examples/                          # Working Examples ✨ NEW
+│   ├── database_example.py            # Complete CRUD API (runnable)
+│   └── README.md                      # Examples documentation
+├── migrations/                        # Alembic Migrations ✨ NEW
+│   ├── env.py                         # Alembic environment
+│   ├── script.py.mako                 # Migration template
+│   ├── versions/                      # Migration files
+│   └── README.md                      # Migration guide
+├── alembic.ini                        # Alembic configuration ✨ NEW
 ├── pyproject.toml                     # Poetry + tooling config ✅
 ├── README.md                          # This file
 ├── SPRINT_SUMMARY.md                  # Sprint 1.x learnings

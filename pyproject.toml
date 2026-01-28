@@ -20,16 +20,15 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.13"
 aiofiles = "^24.1.0"  # Async file I/O (Sprint 1.1)
+fastapi = "^0.128.0"  # Web framework (Sprint 2.x)
+uvicorn = "^0.40.0"  # ASGI server
+httpx = "^0.28.1"  # HTTP client for testing
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.0"}  # ORM with async support (Sprint 2.2)
+alembic = "^1.13.0"  # Database migrations (Sprint 2.2)
+aiosqlite = "^0.20.0"  # Async SQLite driver (Sprint 2.2)
 # Future dependencies (uncomment when needed):
-# fastapi = "^0.115.0"
-# uvicorn = {extras = ["standard"], version = "^0.32.0"}
-# sqlmodel = "^0.0.22"
-# alembic = "^1.13.0"
 # pydantic = "^2.9.0"
 # python-dotenv = "^1.0.0"
-fastapi = "^0.128.0"
-uvicorn = "^0.40.0"
-httpx = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
 # Testing
