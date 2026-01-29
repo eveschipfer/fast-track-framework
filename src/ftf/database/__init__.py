@@ -11,6 +11,7 @@ Public API:
     AsyncSessionFactory: Factory for creating AsyncSession instances
     Base: SQLAlchemy declarative base for models
     BaseRepository: Generic repository with CRUD operations
+    QueryBuilder: Fluent query builder for complex queries
 
 WHY REPOSITORY PATTERN:
     - Explicit dependencies (testable)
@@ -24,6 +25,7 @@ See: src/ftf/exercises/sprint_1_2_active_record_trap.py for rationale
 
 from .base import Base
 from .engine import create_engine, get_engine
+from .query_builder import QueryBuilder
 from .repository import BaseRepository
 from .session import AsyncSessionFactory, get_session
 
@@ -38,4 +40,6 @@ __all__ = [
     "Base",
     # Repository
     "BaseRepository",
+    # Query Builder
+    "QueryBuilder",
 ]

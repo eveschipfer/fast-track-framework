@@ -59,12 +59,15 @@ COMPARISON TO ELOQUENT:
 See: src/ftf/exercises/sprint_1_2_active_record_trap.py for anti-pattern details
 """
 
-from typing import Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base import Base
+
+if TYPE_CHECKING:
+    from .query_builder import QueryBuilder
 
 T = TypeVar("T", bound=Base)
 
@@ -249,3 +252,43 @@ class BaseRepository(Generic[T]):
         stmt = select(func.count()).select_from(self.model)
         result = await self.session.execute(stmt)
         return result.scalar_one()
+
+    def query(self) -> "QueryBuilder[T]":
+        """
+        Create fluent query builder for this model.
+
+        Returns a QueryBuilder instance that provides a Laravel Eloquent-inspired
+        fluent interface for building complex queries with method chaining.
+
+        Returns:
+            QueryBuilder[T]: Fluent query builder for this model type
+
+        Example:
+            >>> # Simple query
+            >>> users = await repo.query().where(User.age >= 18).get()
+            >>>
+            >>> # Complex query with chaining
+            >>> async def find_active_adults(self) -> list[User]:
+            ...     return await (
+            ...         self.query()
+            ...         .where(User.age >= 18)
+            ...         .where(User.status == "active")
+            ...         .order_by(User.created_at, "desc")
+            ...         .limit(50)
+            ...         .get()
+            ...     )
+            >>>
+            >>> # With eager loading (prevent N+1)
+            >>> posts = await (
+            ...     repo.query()
+            ...     .with_(Post.author)
+            ...     .latest()
+            ...     .get()
+            ... )
+
+        See: docs/query-builder.md for complete API reference
+        """
+        # Import here to avoid circular dependency
+        from .query_builder import QueryBuilder
+
+        return QueryBuilder(self.session, self.model)
