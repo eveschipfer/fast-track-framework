@@ -23,7 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from ftf.database import Base, BaseRepository, create_engine
+from fast_query import Base, BaseRepository, create_engine
 from ftf.models import Comment, Post, User
 from tests.utils import QueryCounter
 

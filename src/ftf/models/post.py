@@ -16,7 +16,7 @@ Relationships:
 
 Example Usage:
     # With eager loading (REQUIRED in async)
-    from ftf.database import BaseRepository
+    from fast_query import BaseRepository
     from ftf.models import Post
 
     class PostRepository(BaseRepository[Post]):
@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ftf.database import Base
+from fast_query import Base
 
 if TYPE_CHECKING:
     from .comment import Comment

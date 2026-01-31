@@ -14,7 +14,7 @@ Models:
 
 Example:
     from ftf.models import User, Post, Comment, Role
-    from ftf.database import BaseRepository
+    from fast_query import BaseRepository
 
     class UserRepository(BaseRepository[User]):
         async def get_with_posts(self, user_id: int) -> User:

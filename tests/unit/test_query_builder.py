@@ -19,8 +19,7 @@ from sqlalchemy import String
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column
 
-from ftf.database import Base, BaseRepository, create_engine
-from ftf.database.query_builder import QueryBuilder
+from fast_query import Base, BaseRepository, QueryBuilder, create_engine
 
 
 # Test Models
@@ -482,16 +481,16 @@ async def test_first_or_fail_returns_result(
 async def test_first_or_fail_raises_404(
     session: AsyncSession, sample_users: list[TestUser]
 ) -> None:
-    """Test first_or_fail() raises HTTPException 404 when not found."""
-    from fastapi import HTTPException
+    """Test first_or_fail() raises RecordNotFound when not found."""
+    from fast_query import RecordNotFound
 
     repo = TestUserRepository(session)
 
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(RecordNotFound) as exc_info:
         await repo.query().where(TestUser.name == "NonExistent").first_or_fail()
 
-    assert exc_info.value.status_code == 404
-    assert "TestUser not found" in str(exc_info.value.detail)
+    assert exc_info.value.model_name == "TestUser"
+    assert "TestUser not found" in str(exc_info.value)
 
 
 @pytest.mark.asyncio

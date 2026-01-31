@@ -15,7 +15,7 @@ WHY REPOSITORY PATTERN:
     - Type Safe: Full MyPy support
 
 Example:
-    from ftf.database import BaseRepository, Base
+    from fast_query import BaseRepository, Base
     from sqlalchemy import String
     from sqlalchemy.orm import Mapped, mapped_column
 
@@ -30,7 +30,7 @@ Example:
         def __init__(self, session: AsyncSession):
             super().__init__(session, User)
 
-    # Register in container
+    # Register in container (if using FTF)
     app.register(UserRepository, scope="transient")
 
     # Use in route
@@ -48,7 +48,7 @@ COMPARISON TO ELOQUENT:
         user.name = "Bob"
         user.save()
 
-    FastTrack (Repository):
+    FastQuery (Repository):
         repo = UserRepository(session)
         user = await repo.find(1)
         user.name = "Bob"
@@ -56,17 +56,20 @@ COMPARISON TO ELOQUENT:
 
     Trade-off: More verbose, but explicit and testable.
 
-See: src/ftf/exercises/sprint_1_2_active_record_trap.py for anti-pattern details
+See: Fast Track Framework documentation for anti-pattern details
 """
 
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base import Base
+from .exceptions import RecordNotFound
 
 if TYPE_CHECKING:
+    from .mixins import SoftDeletesMixin
     from .query_builder import QueryBuilder
 
 T = TypeVar("T", bound=Base)
@@ -151,7 +154,7 @@ class BaseRepository(Generic[T]):
 
     async def find_or_fail(self, id: int) -> T:
         """
-        Find record by primary key or raise 404.
+        Find record by primary key or raise RecordNotFound.
 
         Args:
             id: Primary key value
@@ -160,21 +163,17 @@ class BaseRepository(Generic[T]):
             T: Model instance (guaranteed to exist)
 
         Raises:
-            HTTPException: 404 if record not found
+            RecordNotFound: If record not found
 
         Example:
             >>> user = await repo.find_or_fail(123)
-            >>> # No None check needed - either returns user or raises 404
+            >>> # No None check needed - either returns user or raises
             >>> print(user.name)
         """
         result = await self.find(id)
 
         if result is None:
-            # Import here to avoid circular dependency
-            from fastapi import HTTPException
-
-            msg = f"{self.model.__name__} not found"
-            raise HTTPException(status_code=404, detail=msg)
+            raise RecordNotFound(self.model.__name__, id)
 
         return result
 
@@ -227,16 +226,37 @@ class BaseRepository(Generic[T]):
         """
         Delete record from database.
 
+        Smart Delete Logic:
+            - If model has SoftDeletesMixin: Performs soft delete (sets deleted_at)
+            - If model doesn't have mixin: Performs hard delete (removes row)
+
         Args:
             instance: Model instance to delete
 
         Example:
+            >>> # Model with SoftDeletesMixin
             >>> user = await repo.find(123)
             >>> await repo.delete(user)
-            >>> # User is now deleted
+            >>> # user.deleted_at is set, record still in DB
+            >>>
+            >>> # Model without SoftDeletesMixin
+            >>> tag = await repo.find(456)
+            >>> await repo.delete(tag)
+            >>> # Row is permanently removed from database
         """
-        await self.session.delete(instance)
-        await self.session.commit()
+        # Import here to avoid circular import
+        from .mixins import SoftDeletesMixin
+
+        # Check if model has SoftDeletesMixin
+        if isinstance(instance, SoftDeletesMixin):
+            # Soft delete: Set deleted_at timestamp
+            instance.deleted_at = datetime.now(timezone.utc)
+            await self.session.commit()
+            await self.session.refresh(instance)
+        else:
+            # Hard delete: Remove from database
+            await self.session.delete(instance)
+            await self.session.commit()
 
     async def count(self) -> int:
         """

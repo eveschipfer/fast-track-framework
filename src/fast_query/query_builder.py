@@ -17,8 +17,8 @@ WHY QUERY BUILDER:
     - Async First: All terminal methods are async
 
 Example:
-    from ftf.database import BaseRepository, QueryBuilder
-    from ftf.models import User
+    from fast_query import BaseRepository, QueryBuilder
+    from myapp.models import User
 
     class UserRepository(BaseRepository[User]):
         async def find_active_adults(self) -> list[User]:
@@ -39,7 +39,7 @@ COMPARISON TO ELOQUENT:
                     ->limit(50)
                     ->get();
 
-    FastTrack (Repository + Query Builder):
+    FastQuery (Repository + Query Builder):
         users = await (
             repo.query()
             .where(User.age >= 18)
@@ -78,6 +78,7 @@ from sqlalchemy.orm import InstrumentedAttribute, joinedload, selectinload
 from sqlalchemy.sql import ColumnElement
 
 from .base import Base
+from .exceptions import RecordNotFound
 
 T = TypeVar("T", bound=Base)
 
@@ -713,17 +714,16 @@ class QueryBuilder(Generic[T]):
 
     async def first_or_fail(self) -> T:
         """
-        Execute query and return first result or raise 404.
+        Execute query and return first result or raise RecordNotFound.
 
         Terminal method that executes the query and returns the first
-        matching record. Raises HTTPException with 404 status if no
-        record found.
+        matching record. Raises RecordNotFound if no record found.
 
         Returns:
             T: First model instance (guaranteed to exist)
 
         Raises:
-            HTTPException: 404 if no record found
+            RecordNotFound: If no record found
 
         Example:
             >>> # Get first active user or fail
@@ -732,17 +732,13 @@ class QueryBuilder(Generic[T]):
             ...     .where(User.status == "active")
             ...     .first_or_fail()
             ... )
-            >>> # No None check needed - either returns user or raises 404
+            >>> # No None check needed - either returns user or raises
             >>> print(user.name)
         """
         result = await self.first()
 
         if result is None:
-            # Import here to avoid circular dependency
-            from fastapi import HTTPException
-
-            msg = f"{self.model.__name__} not found"
-            raise HTTPException(status_code=404, detail=msg)
+            raise RecordNotFound(self.model.__name__)
 
         return result
 

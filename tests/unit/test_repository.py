@@ -20,7 +20,7 @@ from sqlalchemy import String, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column
 
-from ftf.database import Base, BaseRepository, create_engine
+from fast_query import Base, BaseRepository, create_engine
 
 
 # ============================================================================
@@ -154,14 +154,15 @@ async def test_find_or_fail_returns_user(user_repo: TestRepoUserRepository) -> N
 
 @pytest.mark.asyncio
 async def test_find_or_fail_raises_404(user_repo: TestRepoUserRepository) -> None:
-    """Test find_or_fail raises HTTPException(404) when not found."""
-    from fastapi import HTTPException
+    """Test find_or_fail raises RecordNotFound when not found."""
+    from fast_query import RecordNotFound
 
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(RecordNotFound) as exc_info:
         await user_repo.find_or_fail(999)
 
-    assert exc_info.value.status_code == 404
-    assert "TestRepoUser not found" in str(exc_info.value.detail)
+    assert exc_info.value.model_name == "TestRepoUser"
+    assert exc_info.value.identifier == 999
+    assert "TestRepoUser not found: 999" in str(exc_info.value)
 
 
 @pytest.mark.asyncio

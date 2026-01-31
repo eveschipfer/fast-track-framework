@@ -3,31 +3,31 @@ Database Engine Configuration
 
 Provides singleton AsyncEngine for connection pooling.
 
-This module manages the global database engine instance which should
-be registered in the IoC container with scope="singleton" for application-wide
-connection pooling.
+This module manages the global database engine instance which should be
+created once at application startup and shared across all database operations.
 
 WHY SINGLETON:
     - Connection pools are expensive to create
-    - Should be shared across all requests
+    - Should be shared across all requests/operations
     - Lives for entire application lifetime
     - Properly disposed on shutdown
 
 Example:
-    from ftf.database import create_engine
-    from ftf.http import FastTrackFramework
+    from fast_query import create_engine
     from sqlalchemy.ext.asyncio import AsyncEngine
 
-    app = FastTrackFramework()
-
-    # Create and register engine
+    # Create engine at application startup
     engine = create_engine("postgresql+asyncpg://user:pass@localhost/db")
-    app.container.register_instance(AsyncEngine, engine)
+
+    # Register with your dependency injection container (if using one)
+    container.register_instance(AsyncEngine, engine)
+
+    # Or use directly
+    async with engine.begin() as conn:
+        result = await conn.execute(text("SELECT 1"))
 
     # Cleanup on shutdown
-    @app.on_event("shutdown")
-    async def shutdown():
-        await engine.dispose()
+    await engine.dispose()
 """
 
 from typing import Optional
@@ -48,8 +48,8 @@ def create_engine(
     """
     Create SQLAlchemy AsyncEngine (singleton pattern).
 
-    This should be called once at application startup and the engine
-    should be registered in the IoC container.
+    This should be called once at application startup. The engine manages
+    a connection pool and should be disposed on application shutdown.
 
     Args:
         database_url: Database connection URL
@@ -65,9 +65,11 @@ def create_engine(
         AsyncEngine: Configured database engine
 
     Example:
+        >>> from fast_query import create_engine
         >>> engine = create_engine("sqlite+aiosqlite:///./app.db")
-        >>> # Register in container
-        >>> container.register_instance(AsyncEngine, engine)
+        >>> # Use engine for session creation
+        >>> from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+        >>> SessionFactory = async_sessionmaker(engine, class_=AsyncSession)
     """
     global _engine
 
@@ -117,6 +119,7 @@ def get_engine() -> AsyncEngine:
         RuntimeError: If engine has not been initialized
 
     Example:
+        >>> from fast_query import get_engine
         >>> engine = get_engine()
         >>> async with engine.begin() as conn:
         ...     await conn.execute(text("SELECT 1"))

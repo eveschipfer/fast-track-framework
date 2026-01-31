@@ -8,7 +8,7 @@ All models should inherit from Base to be tracked by Alembic for migrations.
 Example:
     from sqlalchemy import String
     from sqlalchemy.orm import Mapped, mapped_column
-    from ftf.database import Base
+    from fast_query import Base
 
     class User(Base):
         __tablename__ = "users"

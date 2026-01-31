@@ -22,7 +22,7 @@ from sqlalchemy import String
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
-from ftf.database import AsyncSessionFactory, Base, BaseRepository, create_engine
+from fast_query import AsyncSessionFactory, Base, BaseRepository, create_engine
 from ftf.http import FastTrackFramework, Inject
 from ftf.http.app import ScopedMiddleware
 

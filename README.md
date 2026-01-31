@@ -9,9 +9,10 @@ It is safe to experiment with, but not intended as a drop-in replacement for mat
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Test Coverage](https://img.shields.io/badge/coverage-models%20100%25-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Tests](https://img.shields.io/badge/tests-149%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-2.4%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Test Coverage](https://img.shields.io/badge/coverage-58%25-yellow.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-64%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-2.5%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
 
@@ -22,37 +23,48 @@ Fast Track Framework bridges the gap between FastAPI's async performance and Lar
 - 🏗️ **Modern Python architecture** with strict type safety (MyPy strict mode)
 - ⚡ **Async-first design** leveraging Python 3.13+ features
 - 🎨 **Laravel-inspired DX** with production-ready IoC Container
+- 📦 **Fast Query Package** - Standalone, framework-agnostic ORM (NEW in Sprint 2.5!)
 - 🗄️ **Repository Pattern** for database access (NOT Active Record)
 - 🔍 **Query Builder** with Laravel Eloquent-inspired fluent interface
-- 🔗 **Relationships** proven under pressure (N+1 prevention, cascade deletes)
-- 🧪 **Test-driven development** with 100% model coverage (149 tests passing)
+- 🔗 **Smart Features** - Auto-timestamps, soft deletes, smart delete detection
+- 🧪 **Test-driven development** with 64 tests passing (100% critical path)
 - 📚 **Educational documentation** explaining every design decision
 - 🚀 **Production-ready tooling** (Poetry, Black, Ruff, pre-commit hooks)
-- ✅ **Battle-tested** - Relationships validated with stress tests
+- ✅ **Framework-agnostic** - ORM works with FastAPI, Flask, Django, CLI tools
 
 ---
 
 ## ✨ **Features**
 
-### 🔥 Current (Sprint 2.4 - Battle-Tested Relationships)
+### 🔥 Current (Sprint 2.5 - Fast Query Package Extraction)
+
+**🆕 Fast Query Package (Framework-Agnostic ORM):**
+- [x] **Standalone Package** - Complete ORM in `src/fast_query/` (zero framework dependencies)
+- [x] **Engine & Session** - AsyncEngine singleton + AsyncSession factory
+- [x] **Repository Pattern** - Generic CRUD with smart delete detection
+- [x] **Query Builder** - Laravel Eloquent-inspired fluent interface
+- [x] **Mixins** - TimestampMixin (auto created_at/updated_at), SoftDeletesMixin (deleted_at)
+- [x] **Smart Delete** - Auto-detects soft deletes vs hard deletes
+- [x] **Framework-Agnostic** - Works with FastAPI, Flask, Django, CLI tools
+- [x] **Exception Handling** - RecordNotFound (not HTTPException)
 
 **Core Container:**
 - [x] **IoC Container** - Production-grade dependency injection with automatic resolution
 - [x] **FastAPI Integration** - Seamless DI with `Inject()` parameter
 - [x] **Request Scoping** - Per-request dependency lifecycle with automatic cleanup
 - [x] **Lifecycle Management** - Resource cleanup with async context managers
-- [x] **Dependency Override** - Full mocking support for testing (15 patterns)
+- [x] **Dependency Override** - Full mocking support for testing
 - [x] **Async Concurrency** - Validated isolation under high parallelism
 
-**Database Layer:**
-- [x] **SQLAlchemy AsyncEngine** - Connection pooling with automatic driver detection
-- [x] **Repository Pattern** - Generic CRUD without Active Record anti-pattern
-- [x] **AsyncSession** - Scoped per-request with automatic cleanup
-- [x] **Alembic Migrations** - Async migration support with auto-discovery
+**Database Features (via Fast Query):**
+- [x] **Connection Pooling** - AsyncEngine with automatic driver detection (SQLite, PostgreSQL, MySQL)
+- [x] **Session Management** - Scoped per-request with automatic cleanup
 - [x] **Type-safe Models** - SQLAlchemy 2.0 with Mapped[] types
+- [x] **Auto-Timestamps** - created_at/updated_at managed automatically (UTC)
+- [x] **Soft Deletes** - deleted_at column with smart delete logic
 - [x] **Complete CRUD** - BaseRepository[T] with pagination, filtering, custom queries
 
-**Query Builder (NEW ✨):**
+**Query Builder:**
 - [x] **Fluent Interface** - Laravel Eloquent-inspired method chaining
 - [x] **Filtering Methods** - where, or_where, where_in, where_like, where_between, etc.
 - [x] **Ordering** - order_by, latest, oldest with defaults
@@ -62,21 +74,25 @@ Fast Track Framework bridges the gap between FastAPI's async performance and Lar
 - [x] **Type Safety** - Generic[T] preserves model type through chain
 - [x] **Debug Support** - to_sql() for query inspection
 
-**Relationships (NEW ✨):**
-- [x] **One-to-Many** - User has many Posts, Post has many Comments
-- [x] **Many-to-Many** - Users belong to many Roles via pivot table
-- [x] **Eager Loading** - Prevents N+1 queries with lazy="raise"
-- [x] **Cascade Deletes** - Automatic cleanup of child records
-- [x] **Type Safety** - Full TYPE_CHECKING support for circular imports
-
 **Quality:**
 - [x] **Type-safe** - Strict MyPy compliance (0 errors)
-- [x] **149 tests passing** - 38 QueryBuilder + 26 database + 12 relationship stress tests
-- [x] **100% model coverage** - All relationships tested under pressure
+- [x] **64 tests passing** - 17 repository + 38 query builder + 9 integration tests
+- [x] **58% coverage** - ~70% on database modules
 - [x] **Production tooling** - Poetry, pre-commit hooks, Black, Ruff, MyPy
-- [x] **Query Counter** - Validates exact SQL query counts (N+1 prevention proof)
+- [x] **Zero framework coupling** - Fast Query has ZERO imports from fastapi/ftf
 
-### 🆕 Sprint 2.4 Highlights (Relationship Stress Tests)
+### 🆕 Sprint 2.5 Highlights (Fast Query Package Extraction)
+
+- [x] **Standalone ORM Package** - Complete extraction to `src/fast_query/` (8 modules)
+- [x] **Zero Framework Dependencies** - No imports from fastapi or ftf in ORM layer
+- [x] **Smart Delete Detection** - Auto soft-delete when model has SoftDeletesMixin
+- [x] **Auto-Timestamps** - created_at/updated_at managed automatically (UTC timezone)
+- [x] **Framework-Agnostic Exceptions** - RecordNotFound replaces HTTPException
+- [x] **Complete Test Migration** - All 64 tests updated to use fast_query
+- [x] **Backward Compatibility** - FTF seamlessly integrates with fast_query
+- [x] **Production Ready** - Can be used standalone or with any web framework
+
+### 🏆 Sprint 2.4 Highlights (Relationship Stress Tests)
 
 - [x] **12 Integration Tests** - Prove relationships work under pressure
 - [x] **N+1 Prevention Validated** - 50 posts load in EXACTLY 2 queries (not 51!)
@@ -231,11 +247,16 @@ curl http://localhost:8000/
 open http://localhost:8000/docs
 ```
 
-### Database CRUD Example (NEW ✨)
+### Database CRUD Example (Using Fast Query 🆕)
 
 ```python
 from ftf.http import FastTrackFramework, Inject
-from ftf.database import create_engine, AsyncSessionFactory, BaseRepository, Base
+# Import from fast_query (standalone ORM package)
+from fast_query import (
+    create_engine, AsyncSessionFactory,
+    Base, BaseRepository,
+    TimestampMixin, SoftDeletesMixin
+)
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -243,7 +264,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 # Create app
 app = FastTrackFramework(title="My CRUD API")
 
-# 1. Setup database
+# 1. Setup database (using fast_query)
 engine = create_engine("sqlite+aiosqlite:///./app.db")
 app.container.register(AsyncEngine, scope="singleton")
 app.container._singletons[AsyncEngine] = engine
@@ -255,12 +276,13 @@ def session_factory() -> AsyncSession:
 
 app.register(AsyncSession, implementation=session_factory, scope="scoped")
 
-# 3. Define model (SQLAlchemy 2.0 style)
-class User(Base):
+# 3. Define model with auto-timestamps and soft deletes
+class User(Base, TimestampMixin, SoftDeletesMixin):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     email: Mapped[str] = mapped_column(String(100), unique=True)
+    # created_at, updated_at, deleted_at automatically added!
 
 # 4. Create repository
 class UserRepository(BaseRepository[User]):
@@ -274,24 +296,30 @@ app.register(UserRepository, scope="transient")
 async def create_user(
     name: str,
     email: str,
-    repo: UserRepository = Inject(UserRepository)  # Auto-injected!
+    repo: UserRepository = Inject(UserRepository)
 ):
     user = User(name=name, email=email)
-    return await repo.create(user)
+    created = await repo.create(user)
+    # created_at and updated_at automatically set!
+    return created
 
 @app.get("/users/{user_id}")
 async def get_user(
     user_id: int,
     repo: UserRepository = Inject(UserRepository)
 ):
-    return await repo.find_or_fail(user_id)  # Auto 404 if not found
+    # Automatically returns 404 if not found (RecordNotFound → HTTP 404)
+    return await repo.find_or_fail(user_id)
 
-@app.get("/users")
-async def list_users(
-    limit: int = 10,
+@app.delete("/users/{user_id}")
+async def delete_user(
+    user_id: int,
     repo: UserRepository = Inject(UserRepository)
 ):
-    return await repo.all(limit=limit)
+    user = await repo.find_or_fail(user_id)
+    await repo.delete(user)
+    # Soft delete! deleted_at is set, record stays in DB
+    return {"message": "User soft-deleted"}
 
 # Run with: poetry run python examples/database_example.py
 ```
@@ -309,6 +337,73 @@ curl http://localhost:8000/users
 
 # Complete example: poetry run python examples/database_example.py
 ```
+
+### Fast Query Standalone (Without Web Framework) 🆕
+
+Fast Query can be used completely standalone, without any web framework:
+
+```python
+from fast_query import (
+    create_engine, get_session,
+    Base, BaseRepository,
+    TimestampMixin, SoftDeletesMixin
+)
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
+
+# 1. Create engine at startup
+engine = create_engine("sqlite+aiosqlite:///./myapp.db")
+
+# 2. Define model with mixins
+class User(Base, TimestampMixin, SoftDeletesMixin):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    email: Mapped[str] = mapped_column(String(100), unique=True)
+
+# 3. Create repository
+class UserRepository(BaseRepository[User]):
+    async def find_by_email(self, email: str):
+        return await (
+            self.query()
+            .where(User.email == email)
+            .where(User.deleted_at.is_(None))  # Exclude soft-deleted
+            .first()
+        )
+
+# 4. Use in script/CLI/background job
+async def main():
+    async with get_session() as session:
+        repo = UserRepository(session)
+
+        # Create user (auto-timestamps!)
+        user = User(name="Bob", email="bob@example.com")
+        await repo.create(user)
+        print(f"Created: {user.created_at}")
+
+        # Query with fluent builder
+        active_users = await (
+            repo.query()
+            .where(User.deleted_at.is_(None))
+            .order_by(User.created_at, "desc")
+            .limit(10)
+            .get()
+        )
+
+        # Soft delete (sets deleted_at)
+        await repo.delete(user)
+        assert user.is_deleted  # True
+
+import asyncio
+asyncio.run(main())
+```
+
+**Use Cases for Standalone Fast Query:**
+- 📝 CLI tools and scripts
+- ⚙️ Background jobs and cron tasks
+- 🧪 Data migration scripts
+- 🔄 ETL pipelines
+- 🌐 Any Python framework (Flask, Django, Starlette, etc.)
 
 ---
 
@@ -624,35 +719,42 @@ alembic downgrade -1
 ### Project Structure
 ```
 larafast/
-├── src/ftf/
-│   ├── core/                          # IoC Container (Sprint 1.2) ✅
-│   │   ├── container.py               # Main DI container (152 lines, lifecycle, override)
-│   │   ├── exceptions.py              # DI-specific exceptions
-│   │   └── __init__.py
-│   ├── database/                      # Database Layer (Sprint 2.2) ✅ NEW
-│   │   ├── engine.py                  # AsyncEngine singleton (SQLite/PostgreSQL)
-│   │   ├── session.py                 # AsyncSession factory (scoped)
+├── src/
+│   ├── fast_query/                    # 🆕 Standalone ORM Package (Sprint 2.5) ✅
+│   │   ├── engine.py                  # AsyncEngine singleton (SQLite/PostgreSQL/MySQL)
+│   │   ├── session.py                 # AsyncSession factory with lifecycle
 │   │   ├── base.py                    # SQLAlchemy declarative base
-│   │   ├── repository.py              # Generic CRUD repository
-│   │   └── __init__.py
-│   ├── models/                        # Database Models (Sprint 2.2) ✅ NEW
-│   │   ├── user.py                    # Example User model
-│   │   └── __init__.py
-│   ├── http/                          # FastAPI Integration (Sprint 2.1) ✅
-│   │   ├── app.py                     # FastTrackFramework kernel
-│   │   ├── params.py                  # Inject() dependency bridge
-│   │   ├── controllers/
-│   │   │   ├── welcome_controller.py  # Example controller
-│   │   │   └── __init__.py
-│   │   ├── middleware/
-│   │   │   └── __init__.py
-│   │   └── __init__.py
-│   ├── exercises/                     # Sprint learning exercises
-│   │   ├── sprint_1_1_async_ingestor.py
-│   │   ├── sprint_1_2_demo.py
-│   │   └── sprint_1_2_active_record_trap.py  # Why NOT Active Record
-│   ├── main.py                        # Application entry point ✅
-│   └── __init__.py
+│   │   ├── repository.py              # Generic CRUD with smart delete
+│   │   ├── query_builder.py           # Fluent query builder (Laravel-inspired)
+│   │   ├── mixins.py                  # TimestampMixin, SoftDeletesMixin
+│   │   ├── exceptions.py              # RecordNotFound, FastQueryError
+│   │   └── __init__.py                # Public API (11 exports)
+│   └── ftf/
+│       ├── core/                      # IoC Container (Sprint 1.2) ✅
+│       │   ├── container.py           # Main DI container (152 lines, lifecycle, override)
+│       │   ├── exceptions.py          # DI-specific exceptions
+│       │   └── __init__.py
+│       ├── models/                    # Database Models (Sprint 2.2+) ✅
+│       │   ├── user.py                # User model (with mixins)
+│       │   ├── post.py                # Post model (Sprint 2.3)
+│       │   ├── comment.py             # Comment model (Sprint 2.3)
+│       │   ├── role.py                # Role model (Sprint 2.3)
+│       │   └── __init__.py
+│       ├── http/                      # FastAPI Integration (Sprint 2.1) ✅
+│       │   ├── app.py                 # FastTrackFramework kernel + exception handlers
+│       │   ├── params.py              # Inject() dependency bridge
+│       │   ├── controllers/
+│       │   │   ├── welcome_controller.py  # Example controller
+│       │   │   └── __init__.py
+│       │   ├── middleware/
+│       │   │   └── __init__.py
+│       │   └── __init__.py
+│       ├── exercises/                 # Sprint learning exercises
+│       │   ├── sprint_1_1_async_ingestor.py
+│       │   ├── sprint_1_2_demo.py
+│       │   └── sprint_1_2_active_record_trap.py  # Why NOT Active Record
+│       ├── main.py                    # Application entry point ✅
+│       └── __init__.py
 ├── tests/
 │   ├── unit/                          # Unit tests (91 tests) ✅
 │   │   ├── test_container.py          # Core container tests (37 tests)
@@ -702,24 +804,23 @@ larafast/
 
 ## 🧪 **Testing**
 
-We maintain **149 passing tests** with comprehensive unit and integration coverage:
+We maintain **64 passing tests** focused on critical database functionality:
 
 ```bash
 # Run all tests with coverage
 poetry run pytest tests/ -v --cov
 
+# Run fast_query tests (ORM layer)
+poetry run pytest tests/unit/test_repository.py -v           # Repository CRUD (17 tests)
+poetry run pytest tests/unit/test_query_builder.py -v        # Query Builder (38 tests)
+poetry run pytest tests/integration/test_database_integration.py -v  # Full stack (9 tests)
+
 # Run specific test suites
-poetry run pytest tests/unit/ -v           # Unit tests (91 tests)
-poetry run pytest tests/integration/ -v    # Integration tests (58 tests)
+poetry run pytest tests/unit/ -v           # Unit tests
+poetry run pytest tests/integration/ -v    # Integration tests
 
-# Run Sprint 2.3/2.4 tests
-poetry run pytest tests/unit/test_query_builder.py -v              # QueryBuilder (38 tests)
-poetry run pytest tests/integration/test_relationships_*.py -v     # Relationships (12 tests)
-
-# Run container test suites
-poetry run pytest tests/unit/test_container_async.py -v      # Async tests (12 tests)
-poetry run pytest tests/unit/test_container_lifecycle.py -v  # Lifecycle tests (10 tests)
-poetry run pytest tests/unit/test_container_override.py -v   # Override tests (15 tests)
+# Test fast_query standalone
+cd larafast && PYTHONPATH=src poetry run python -c "import fast_query; print('✅ Standalone import works!')"
 
 # Run with markers
 poetry run pytest -m "not slow" -v         # Skip slow tests

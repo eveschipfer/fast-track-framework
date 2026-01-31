@@ -6,10 +6,16 @@ Example model using SQLAlchemy 2.0 style with Mapped types and relationships.
 This demonstrates:
     - SQLAlchemy 2.0 declarative style
     - Type-safe column definitions
+    - TimestampMixin for auto-managed created_at/updated_at
+    - SoftDeletesMixin for soft delete functionality
     - One-to-many relationships (HasMany: posts, comments)
     - Many-to-many relationship (BelongsToMany: roles)
     - lazy="raise" for async safety
     - TYPE_CHECKING imports to avoid circular dependencies
+
+Mixins:
+    TimestampMixin: Automatically manages created_at and updated_at (UTC)
+    SoftDeletesMixin: Enables soft delete with deleted_at column
 
 Relationships:
     posts: List[Post] (one-to-many) - User has many posts
@@ -17,9 +23,9 @@ Relationships:
     roles: List[Role] (many-to-many) - User has many roles
 
 Example Usage:
-    # Creating users
+    # Creating users (timestamps auto-set)
     from ftf.models import User
-    from ftf.database import get_session
+    from fast_query import get_session
 
     async with get_session() as session:
         user = User(
@@ -28,23 +34,31 @@ Example Usage:
         )
         session.add(user)
         await session.commit()
+        # user.created_at and user.updated_at are now set
 
     # With Repository Pattern (recommended)
-    from ftf.database import BaseRepository
+    from fast_query import BaseRepository
 
     class UserRepository(BaseRepository[User]):
         def __init__(self, session: AsyncSession):
             super().__init__(session, User)
 
         async def find_by_email(self, email: str) -> Optional[User]:
-            stmt = select(User).where(User.email == email)
-            result = await self.session.execute(stmt)
-            return result.scalar_one_or_none()
+            return await (
+                self.query()
+                .where(User.email == email)
+                .first()
+            )
+
+    # Soft delete (sets deleted_at instead of removing)
+    await repo.delete(user)
+    assert user.is_deleted  # True
 
     # Eager loading relationships
     user = await (
         repo.query()
         .where(User.id == 1)
+        .where(User.deleted_at.is_(None))  # Exclude soft-deleted
         .with_(User.posts, User.roles)  # Load posts and roles
         .first_or_fail()
     )
@@ -57,7 +71,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ftf.database import Base
+from fast_query import Base, TimestampMixin, SoftDeletesMixin
 
 if TYPE_CHECKING:
     from .comment import Comment
@@ -65,14 +79,23 @@ if TYPE_CHECKING:
     from .role import Role
 
 
-class User(Base):
+class User(Base, TimestampMixin, SoftDeletesMixin):
     """
     User model for authentication and user management.
+
+    Inherits from:
+        Base: SQLAlchemy declarative base
+        TimestampMixin: Auto-managed created_at and updated_at (UTC)
+        SoftDeletesMixin: Soft delete with deleted_at column
 
     Attributes:
         id: Primary key (auto-generated)
         name: User's full name
         email: Unique email address
+        created_at: When user was created (auto-set, from TimestampMixin)
+        updated_at: When user was last updated (auto-set, from TimestampMixin)
+        deleted_at: When user was soft-deleted (None if active, from SoftDeletesMixin)
+        is_deleted: Property returning True if soft-deleted (from SoftDeletesMixin)
         posts: Posts created by this user (one-to-many)
         comments: Comments created by this user (one-to-many)
         roles: Roles assigned to this user (many-to-many)
@@ -84,6 +107,15 @@ class User(Base):
         >>> user = User(name="Bob", email="bob@example.com")
         >>> print(user)
         User(id=None, name='Bob', email='bob@example.com')
+        >>>
+        >>> # Timestamps are auto-set on create
+        >>> await repo.create(user)
+        >>> assert user.created_at is not None
+        >>> assert user.updated_at is not None
+        >>>
+        >>> # Soft delete
+        >>> await repo.delete(user)
+        >>> assert user.is_deleted  # True
     """
 
     __tablename__ = "users"

@@ -53,7 +53,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ftf.database import Base
+from fast_query import Base
 
 if TYPE_CHECKING:
     from .user import User

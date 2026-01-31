@@ -12,10 +12,18 @@ Features:
 
 Main Components:
     core: IoC container and dependency injection
-    database: SQLAlchemy async integration with Repository Pattern
     models: Database models (User, etc.)
-    http: FastAPI extensions (coming soon)
+    http: FastAPI extensions
     cli: Artisan-like CLI tools (coming soon)
+
+Database Layer:
+    Fast Track Framework uses the standalone fast_query package for all
+    database operations. Import from fast_query for ORM functionality:
+        from fast_query import (
+            create_engine, get_session,
+            Base, BaseRepository, QueryBuilder,
+            TimestampMixin, SoftDeletesMixin
+        )
 
 Quick Start:
     >>> from ftf import Container
@@ -55,7 +63,7 @@ __all__ = [
     "DependencyResolutionError",
     "CircularDependencyError",
     "UnregisteredDependencyError",
-    # Note: database and models modules are available but not exported here
-    # Import directly: from ftf.database import Base, BaseRepository
-    # Import directly: from ftf.models import User
+    # Note: Database ORM functionality is provided by the standalone fast_query package
+    # Import directly: from fast_query import Base, BaseRepository, create_engine, etc.
+    # Import directly: from ftf.models import User (FTF-specific models)
 ]

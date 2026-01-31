@@ -1,38 +1,42 @@
 """
 Database Session Factory
 
-Provides scoped AsyncSession for per-request database access.
+Provides AsyncSession factory for database access with proper lifecycle management.
 
-This module creates session factories that should be registered in the
-IoC container with scope="scoped" to ensure one session per HTTP request.
+This module creates session factories that can be used with any dependency injection
+framework or manually in scripts, CLI tools, and background jobs.
 
-WHY SCOPED:
-    - One session per HTTP request
-    - Automatic cleanup when request ends
-    - Isolated transactions between requests
-    - Works with container.scoped_context() middleware
+WHY SESSION FACTORY:
+    - Proper transaction management (commit/rollback)
+    - Connection pooling via engine
+    - Configurable for different use cases
+    - Works with or without dependency injection
 
-Example:
-    from ftf.database import AsyncSessionFactory
-    from ftf.http import FastTrackFramework
+Example (Manual Use):
+    from fast_query import get_session, Base
+
+    class User(Base):
+        __tablename__ = "users"
+        # ... columns
+
+    async with get_session() as session:
+        user = User(name="Alice", email="alice@example.com")
+        session.add(user)
+        # Auto-commits on success, auto-rolls back on exception
+
+Example (With Dependency Injection):
+    from fast_query import AsyncSessionFactory
     from sqlalchemy.ext.asyncio import AsyncSession
 
-    app = FastTrackFramework()
+    # Create factory
+    factory = AsyncSessionFactory()
 
-    # Register session factory (scoped)
-    def session_factory() -> AsyncSession:
-        factory = AsyncSessionFactory()
+    # Register with your DI container (e.g., FastAPI, Flask-Injector)
+    def session_provider() -> AsyncSession:
         return factory()
 
-    app.register(
-        AsyncSession,
-        implementation=session_factory,
-        scope="scoped"
-    )
-
-    # Use in routes via dependency injection
-    @app.get("/users")
-    async def get_users(session: AsyncSession = Inject(AsyncSession)):
+    # Use in routes/handlers via injection
+    async def get_users(session: AsyncSession):
         result = await session.execute(select(User))
         return result.scalars().all()
 """
@@ -50,18 +54,19 @@ def AsyncSessionFactory() -> async_sessionmaker[AsyncSession]:
     Create session factory from engine.
 
     This factory creates new AsyncSession instances with proper configuration
-    for FastAPI usage. Sessions should be managed by the IoC container with
-    scoped lifetime.
+    for async applications. Sessions should be managed either by a dependency
+    injection container or manually using context managers.
 
     Returns:
         async_sessionmaker: Factory that creates AsyncSession instances
 
     Configuration:
-        - expire_on_commit=False: Keep objects accessible after commit (FastAPI pattern)
+        - expire_on_commit=False: Keep objects accessible after commit
         - autoflush=False: Manual control over flush operations
         - autocommit=False: Explicit transaction control (manual commit/rollback)
 
     Example:
+        >>> from fast_query import AsyncSessionFactory
         >>> factory = AsyncSessionFactory()
         >>> async with factory() as session:
         ...     user = User(name="Alice")
@@ -82,27 +87,28 @@ def AsyncSessionFactory() -> async_sessionmaker[AsyncSession]:
 @asynccontextmanager
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """
-    Context manager for session (for manual use outside of DI).
+    Context manager for session (for manual use outside of dependency injection).
 
-    This is useful for scripts, CLI commands, or background jobs where
-    you need manual session management outside of the HTTP request lifecycle.
+    This is useful for scripts, CLI commands, background jobs, or any code
+    outside of a web request lifecycle where you need manual session management.
 
     Yields:
         AsyncSession: Database session with automatic commit/rollback
 
     Example:
-        >>> from ftf.database import get_session
+        >>> from fast_query import get_session, Base
         >>>
         >>> async with get_session() as session:
         ...     user = User(name="Alice", email="alice@example.com")
         ...     session.add(user)
-        ...     await session.commit()  # Auto-committed on success
+        ...     # Auto-commits on success
         ...
         >>> # If exception occurs, auto-rollback happens
 
     Note:
-        For HTTP routes, use Inject(AsyncSession) instead - the container
-        manages session lifecycle automatically via middleware.
+        For web frameworks with dependency injection (FastAPI, Flask, etc.),
+        use AsyncSessionFactory() and register it with your DI container instead.
+        The container will manage session lifecycle automatically.
     """
     factory = AsyncSessionFactory()
 
