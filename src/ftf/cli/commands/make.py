@@ -451,3 +451,116 @@ def make_job(
         console.print(f"[red]✗ File already exists:[/red] {file_path}")
         console.print("[dim]Use --force to overwrite[/dim]")
         raise typer.Exit(code=1)
+
+
+@app.command("auth")
+def make_auth(
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a complete authentication system (macro command).
+
+    This command creates all files needed for JWT authentication:
+    - User model with email and password fields
+    - UserRepository extending BaseRepository
+    - LoginRequest and RegisterRequest with validation
+    - AuthController with /register, /login, /me endpoints
+
+    This is a "macro" command that generates multiple files at once,
+    similar to Laravel's `php artisan make:auth`.
+
+    Args:
+        force: Overwrite existing files
+
+    Example:
+        $ ftf make auth
+        🔐 Generating authentication system...
+        ✓ User model created: src/ftf/models/user.py
+        ✓ UserRepository created: src/ftf/repositories/user_repository.py
+        ✓ LoginRequest created: src/ftf/http/requests/auth/login_request.py
+        ✓ RegisterRequest created: src/ftf/http/requests/auth/register_request.py
+        ✓ AuthController created: src/ftf/http/controllers/auth_controller.py
+        🎉 Authentication scaffolding complete!
+    """
+    # Import here to avoid circular dependency
+    from ftf.cli.templates import (
+        get_auth_controller_template,
+        get_login_request_template,
+        get_register_request_template,
+        get_user_model_template,
+        get_user_repository_template,
+    )
+
+    console.print("[bold cyan]🔐 Generating authentication system...[/bold cyan]\n")
+
+    files_created = 0
+    files_skipped = 0
+
+    # 1. User model
+    console.print("[dim]Creating User model...[/dim]")
+    user_model_path = Path("src/ftf/models/user.py")
+    if create_file(user_model_path, get_user_model_template(), force):
+        console.print(f"[green]  ✓ User model:[/green] {user_model_path}")
+        files_created += 1
+    else:
+        console.print(f"[yellow]  ⊘ Exists:[/yellow] {user_model_path}")
+        files_skipped += 1
+
+    # 2. UserRepository
+    console.print("[dim]Creating UserRepository...[/dim]")
+    user_repo_path = Path("src/ftf/repositories/user_repository.py")
+    if create_file(user_repo_path, get_user_repository_template(), force):
+        console.print(f"[green]  ✓ UserRepository:[/green] {user_repo_path}")
+        files_created += 1
+    else:
+        console.print(f"[yellow]  ⊘ Exists:[/yellow] {user_repo_path}")
+        files_skipped += 1
+
+    # 3. Auth requests directory
+    auth_requests_dir = Path("src/ftf/http/requests/auth")
+    auth_requests_dir.mkdir(parents=True, exist_ok=True)
+    (auth_requests_dir / "__init__.py").write_text('"""Auth validators."""\n')
+
+    # 4. LoginRequest
+    console.print("[dim]Creating LoginRequest...[/dim]")
+    login_path = auth_requests_dir / "login_request.py"
+    if create_file(login_path, get_login_request_template(), force):
+        console.print(f"[green]  ✓ LoginRequest:[/green] {login_path}")
+        files_created += 1
+    else:
+        console.print(f"[yellow]  ⊘ Exists:[/yellow] {login_path}")
+        files_skipped += 1
+
+    # 5. RegisterRequest
+    console.print("[dim]Creating RegisterRequest...[/dim]")
+    register_path = auth_requests_dir / "register_request.py"
+    if create_file(register_path, get_register_request_template(), force):
+        console.print(f"[green]  ✓ RegisterRequest:[/green] {register_path}")
+        files_created += 1
+    else:
+        console.print(f"[yellow]  ⊘ Exists:[/yellow] {register_path}")
+        files_skipped += 1
+
+    # 6. AuthController
+    console.print("[dim]Creating AuthController...[/dim]")
+    controller_path = Path("src/ftf/http/controllers/auth_controller.py")
+    if create_file(controller_path, get_auth_controller_template(), force):
+        console.print(f"[green]  ✓ AuthController:[/green] {controller_path}")
+        files_created += 1
+    else:
+        console.print(f"[yellow]  ⊘ Exists:[/yellow] {controller_path}")
+        files_skipped += 1
+
+    # Summary
+    console.print()
+    console.print("[bold green]🎉 Authentication scaffolding complete![/bold green]")
+    console.print(f"[green]✓ Created {files_created} files[/green]")
+    if files_skipped > 0:
+        console.print(f"[yellow]⊘ Skipped {files_skipped} existing files (use --force)[/yellow]")
+
+    # Next steps
+    console.print("\n[bold cyan]📋 Next Steps:[/bold cyan]")
+    console.print("1. Create migration: [dim]ftf make migration create_users_table[/dim]")
+    console.print("2. Run migration: [dim]ftf db migrate[/dim]")
+    console.print("3. Set JWT secret: [dim]export JWT_SECRET_KEY='your-secret'[/dim]")
+    console.print("4. Register routes: [dim]app.include_router(auth_controller.router)[/dim]")

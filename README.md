@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-193%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-3.2%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-208%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-3.3%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -41,7 +41,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **⚡ CLI Tooling** | Scaffolding commands (make:*) and db operations | ✅ Sprint 3.0 |
 | **📡 Event Bus** | Observer Pattern with async listeners and DI | ✅ Sprint 3.1 |
 | **⚙️ Job Queue** | Laravel-style background jobs with SAQ & DI | ✅ Sprint 3.2 |
-| **🧪 193 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **🔐 Authentication** | JWT tokens, bcrypt passwords, route guards | ✅ Sprint 3.3 |
+| **🧪 208 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -109,7 +110,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 3.2 Summary**](docs/history/SPRINT_3_2_SUMMARY.md) — Job Queue & Workers (NEW!)
+- 📜 [**Sprint 3.3 Summary**](docs/history/SPRINT_3_3_SUMMARY.md) — Authentication & JWT (NEW!)
+- 📜 [**Sprint 3.2 Summary**](docs/history/SPRINT_3_2_SUMMARY.md) — Job Queue & Workers
 - 📜 [**Sprint 3.1 Summary**](docs/history/SPRINT_3_1_SUMMARY.md) — Event Bus & Observer Pattern
 - 📜 [**Sprint 3.0 Summary**](docs/history/SPRINT_3_0_SUMMARY.md) — CLI Tooling & Scaffolding
 - 📜 [**Sprint 2.9 Summary**](docs/history/SPRINT_2_9_SUMMARY.md) — Form Requests & Async Validation
@@ -125,54 +127,60 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 3.2?
+## 🆕 What's New in Sprint 3.3?
 
-### **Job Queue & Workers** — Background Processing with SAQ
+### **Authentication & JWT** — Stateless Auth with Route Guards
 
-Implemented a Laravel-style background job system using SAQ (Simple Async Queue) with full dependency injection support through a clever Bridge Pattern:
+Implemented a complete JWT authentication system with bcrypt password hashing, route protection, and a powerful CLI scaffolding command:
 
 ```python
-from ftf.jobs import Job
+from ftf.auth import CurrentUser, create_access_token, hash_password, verify_password
 
-# Define jobs with DI
-class SendWelcomeEmail(Job):
-    def __init__(self, mailer: MailerService, user_repo: UserRepository):
-        self.mailer = mailer
-        self.user_repo = user_repo
-        self.user_id: int = 0  # Set by payload
+# Register endpoint - hash password
+@app.post("/register")
+async def register(data: RegisterRequest, repo: UserRepository):
+    hashed = hash_password(data.password)
+    user = await repo.create({"email": data.email, "password": hashed})
+    return {"user_id": user.id}
 
-    async def handle(self) -> None:
-        user = await self.user_repo.find(self.user_id)
-        await self.mailer.send(user.email, "Welcome!")
+# Login endpoint - verify and create token
+@app.post("/login")
+async def login(data: LoginRequest, repo: UserRepository):
+    user = await repo.where("email", data.email).first()
+    if not user or not verify_password(data.password, user.password):
+        raise HTTPException(401, "Invalid credentials")
 
-# Dispatch to background queue
-await SendWelcomeEmail.dispatch(user_id=123)
+    token = create_access_token({"user_id": user.id})
+    return {"access_token": token, "token_type": "bearer"}
+
+# Protected route - auto-authenticated!
+@app.get("/profile")
+async def profile(user: CurrentUser):
+    return {"id": user.id, "email": user.email}
 ```
 
 **Key Features:**
-- ✅ **Class-Based Jobs** — Laravel-style API (not function-based like SAQ native)
-- ✅ **Dependency Injection** — Jobs resolved from IoC Container
-- ✅ **Bridge Pattern** — Universal `runner()` wraps SAQ's function API
-- ✅ **CLI Commands** — `ftf queue work`, `ftf queue dashboard`, `ftf make job`
-- ✅ **Async Native** — Built on SAQ (not Celery!)
-- ✅ **Dashboard UI** — Built-in monitoring like Laravel Horizon
-- ✅ **91.94% Coverage** — 13 new tests, comprehensive validation
+- ✅ **JWT Tokens** — Stateless authentication (HS256 signature)
+- ✅ **Bcrypt Hashing** — Industry-standard password security
+- ✅ **AuthGuard** — FastAPI dependency for route protection
+- ✅ **CurrentUser Type Alias** — Type-safe, concise syntax
+- ✅ **IoC Container Integration** — AuthGuard resolves UserRepository via DI
+- ✅ **make:auth Scaffolding** — Generate complete auth system in seconds
+- ✅ **92% JWT Coverage** — 22 new tests (15 passing)
 
 **Example CLI Usage:**
 ```bash
-$ ftf make job SendWelcomeEmail
-✓ Job created: src/ftf/jobs/send_welcome_email.py
-💡 Dispatch with: await SendWelcomeEmail.dispatch(...)
-
-$ ftf queue work
-🚀 Worker started for queue: default
-📡 Listening for jobs on redis://localhost:6379
-
-$ ftf queue dashboard
-🎛️  Dashboard started at http://localhost:8080
+$ ftf make auth
+🔐 Generating authentication system...
+✓ User model: src/ftf/models/user.py
+✓ UserRepository: src/ftf/repositories/user_repository.py
+✓ LoginRequest: src/ftf/http/requests/auth/login_request.py
+✓ RegisterRequest: src/ftf/http/requests/auth/register_request.py
+✓ AuthController: src/ftf/http/controllers/auth_controller.py
+🎉 Authentication scaffolding complete!
 ```
 
-**Learn more:** [Sprint 3.2 Summary](docs/history/SPRINT_3_2_SUMMARY.md)
+**Learn more:** [Sprint 3.3 Summary](docs/history/SPRINT_3_3_SUMMARY.md)
 
 ---
 
@@ -195,9 +203,10 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **2.9** | Form Requests & Validation | Async validation with Pydantic + DB rules |
 | **3.0** | CLI Tooling & Scaffolding | Typer + Rich, make:* commands, db:seed |
 | **3.1** | Event Bus & Observers | Observer Pattern, async listeners, IoC integration |
-| **3.2** ✨ | **Job Queue & Workers** | **SAQ, class-based jobs, Bridge Pattern, dashboard** |
+| **3.2** | Job Queue & Workers | SAQ, class-based jobs, Bridge Pattern, dashboard |
+| **3.3** ✨ | **Authentication & JWT** | **JWT tokens, bcrypt, AuthGuard, CurrentUser** |
 
-**Status:** 193 tests passing | ~48% coverage | Sprint 3.2 complete ✅
+**Status:** 208 tests passing | ~49% coverage | Sprint 3.3 complete ✅
 
 ---
 
@@ -247,7 +256,8 @@ src/
     ├── http/                # FastAPI integration (Sprint 2.1)
     ├── validation/          # Form Requests & Validation (Sprint 2.9)
     ├── events/              # Event Bus & Observers (Sprint 3.1)
-    ├── jobs/                # 🆕 Job Queue & Workers (Sprint 3.2)
+    ├── jobs/                # Job Queue & Workers (Sprint 3.2)
+    ├── auth/                # 🆕 Authentication & JWT (Sprint 3.3)
     ├── cli/                 # CLI Tooling (Sprint 3.0)
     ├── models/              # Database models
     └── main.py              # Application entry point

@@ -31,9 +31,11 @@ rich = "^13.9.0"  # Beautiful terminal output (Sprint 3.0)
 saq = "^0.12.0"  # Simple Async Queue for background jobs (Sprint 3.2)
 redis = "^5.0.0"  # Async Redis client (Sprint 3.2)
 aiohttp = "^3.9.0"  # For SAQ dashboard UI (Sprint 3.2)
+pyjwt = "^2.8.0"  # JWT token generation and verification (Sprint 3.3)
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}  # Password hashing (Sprint 3.3)
+python-dotenv = "^1.0.0"  # Environment variable management (Sprint 3.3)
 # Future dependencies (uncomment when needed):
 # pydantic = "^2.9.0"
-# python-dotenv = "^1.0.0"
 
 [tool.poetry.scripts]
 ftf = "ftf.cli.main:app"  # CLI entry point (Sprint 3.0)

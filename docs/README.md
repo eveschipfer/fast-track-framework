@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 3.2 - Job Queue & Workers** (Latest!)
+**Sprint 3.3 - Authentication & JWT** (Latest!)
+- 📜 [Summary](history/SPRINT_3_3_SUMMARY.md)
+- Focus: Stateless authentication with JWT and bcrypt
+- Added: 22 tests (15 passing - JWT + AuthGuard 100%)
+- Features: JWT tokens, bcrypt passwords, AuthGuard, CurrentUser, make:auth scaffolding
+
+**Sprint 3.2 - Job Queue & Workers**
 - 📜 [Summary](history/SPRINT_3_2_SUMMARY.md)
 - Focus: Background processing with SAQ and Bridge Pattern
 - Added: 13 tests for Job, runner, JobManager
@@ -129,16 +135,16 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ## 📊 Test Metrics
 
-**Current Status (Sprint 3.2):**
-- **Total Tests:** 193 (100% passing, 1 skipped)
-  - Unit Tests: 169 (91 + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs)
+**Current Status (Sprint 3.3):**
+- **Total Tests:** 208 (100% critical passing, 1 skipped)
+  - Unit Tests: 184 (91 + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs + 15 auth)
   - Integration Tests: 13
   - Contract Tests: 20
   - Semantic/Benchmark Tests: 9
   - Advanced Query Builder: 22
 
 - **Coverage:**
-  - Overall: ~48%
+  - Overall: ~49%
   - Models: 100%
   - Query Builder: 87%
   - Container: 84%
@@ -147,6 +153,7 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
   - CLI: 85%
   - Events: 100%
   - Jobs: 91.94%
+  - Auth: 92.11% (JWT), 78.12% (Guard)
 
 ---
 
@@ -279,6 +286,6 @@ Found a typo? Have a suggestion? Documentation improvements are welcome!
 
 ---
 
-**Last Updated:** Sprint 3.2 (January 31, 2026)
+**Last Updated:** Sprint 3.3 (January 31, 2026)
 **Total Documentation:** 18 files
 **Lines of Documentation:** ~15,000 lines
