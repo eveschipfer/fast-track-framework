@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 3.1 - Event Bus & Observer Pattern** (Latest!)
+**Sprint 3.2 - Job Queue & Workers** (Latest!)
+- 📜 [Summary](history/SPRINT_3_2_SUMMARY.md)
+- Focus: Background processing with SAQ and Bridge Pattern
+- Added: 13 tests for Job, runner, JobManager
+- Features: Class-based jobs, DI support, queue:work/dashboard commands, 91.94% coverage
+
+**Sprint 3.1 - Event Bus & Observer Pattern**
 - 📜 [Summary](history/SPRINT_3_1_SUMMARY.md)
 - Focus: Async event-driven architecture with IoC integration
 - Added: 13 tests for Event, Listener, EventDispatcher
@@ -123,16 +129,16 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ## 📊 Test Metrics
 
-**Current Status (Sprint 3.1):**
-- **Total Tests:** 180 (100% passing, 1 skipped)
-  - Unit Tests: 156 (91 + 21 factory + 16 validation + 15 CLI + 13 events)
+**Current Status (Sprint 3.2):**
+- **Total Tests:** 193 (100% passing, 1 skipped)
+  - Unit Tests: 169 (91 + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs)
   - Integration Tests: 13
   - Contract Tests: 20
   - Semantic/Benchmark Tests: 9
   - Advanced Query Builder: 22
 
 - **Coverage:**
-  - Overall: ~47%
+  - Overall: ~48%
   - Models: 100%
   - Query Builder: 87%
   - Container: 84%
@@ -140,6 +146,7 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
   - Validation: 71-94%
   - CLI: 85%
   - Events: 100%
+  - Jobs: 91.94%
 
 ---
 
@@ -272,6 +279,6 @@ Found a typo? Have a suggestion? Documentation improvements are welcome!
 
 ---
 
-**Last Updated:** Sprint 3.1 (January 31, 2026)
+**Last Updated:** Sprint 3.2 (January 31, 2026)
 **Total Documentation:** 18 files
 **Lines of Documentation:** ~15,000 lines

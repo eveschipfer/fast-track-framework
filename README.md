@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-180%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-3.1%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-193%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-3.2%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -40,7 +40,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **✅ Form Requests** | Async validation with Pydantic + database rules | ✅ Sprint 2.9 |
 | **⚡ CLI Tooling** | Scaffolding commands (make:*) and db operations | ✅ Sprint 3.0 |
 | **📡 Event Bus** | Observer Pattern with async listeners and DI | ✅ Sprint 3.1 |
-| **🧪 180 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **⚙️ Job Queue** | Laravel-style background jobs with SAQ & DI | ✅ Sprint 3.2 |
+| **🧪 193 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -108,7 +109,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 3.1 Summary**](docs/history/SPRINT_3_1_SUMMARY.md) — Event Bus & Observer Pattern (NEW!)
+- 📜 [**Sprint 3.2 Summary**](docs/history/SPRINT_3_2_SUMMARY.md) — Job Queue & Workers (NEW!)
+- 📜 [**Sprint 3.1 Summary**](docs/history/SPRINT_3_1_SUMMARY.md) — Event Bus & Observer Pattern
 - 📜 [**Sprint 3.0 Summary**](docs/history/SPRINT_3_0_SUMMARY.md) — CLI Tooling & Scaffolding
 - 📜 [**Sprint 2.9 Summary**](docs/history/SPRINT_2_9_SUMMARY.md) — Form Requests & Async Validation
 - 📜 [**Sprint 2.8 Summary**](docs/history/SPRINT_2_8_SUMMARY.md) — Factory & Seeder System
@@ -123,55 +125,54 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 3.1?
+## 🆕 What's New in Sprint 3.2?
 
-### **Event Bus & Observer Pattern** — Async Event-Driven Architecture
+### **Job Queue & Workers** — Background Processing with SAQ
 
-Implemented a robust event dispatcher system with Observer Pattern, enabling decoupled event-driven architecture with full dependency injection support:
+Implemented a Laravel-style background job system using SAQ (Simple Async Queue) with full dependency injection support through a clever Bridge Pattern:
 
 ```python
-from ftf.events import Event, Listener, EventDispatcher, dispatch
-from dataclasses import dataclass
+from ftf.jobs import Job
 
-# Define events (DTOs)
-@dataclass
-class UserRegistered(Event):
-    user_id: int
-    email: str
-
-# Create listeners with DI
-class SendWelcomeEmail(Listener[UserRegistered]):
-    def __init__(self, mailer: Mailer):  # Auto-injected!
+# Define jobs with DI
+class SendWelcomeEmail(Job):
+    def __init__(self, mailer: MailerService, user_repo: UserRepository):
         self.mailer = mailer
+        self.user_repo = user_repo
+        self.user_id: int = 0  # Set by payload
 
-    async def handle(self, event: UserRegistered) -> None:
-        await self.mailer.send(event.email, "Welcome!")
+    async def handle(self) -> None:
+        user = await self.user_repo.find(self.user_id)
+        await self.mailer.send(user.email, "Welcome!")
 
-# Register and dispatch
-dispatcher.register(UserRegistered, SendWelcomeEmail)
-await dispatch(UserRegistered(user_id=1, email="user@test.com"))
+# Dispatch to background queue
+await SendWelcomeEmail.dispatch(user_id=123)
 ```
 
 **Key Features:**
-- ✅ **Observer Pattern** — Multiple listeners for same event (fan-out)
-- ✅ **Generic Type Safety** — `Listener[E]` with full MyPy support
-- ✅ **Dependency Injection** — Listeners resolved from IoC Container
-- ✅ **Async Concurrent Execution** — `asyncio.gather()` runs listeners in parallel
-- ✅ **Fail-Safe Processing** — One listener failure doesn't stop others
-- ✅ **CLI Scaffolding** — `ftf make event` and `ftf make listener` commands
-- ✅ **100% Test Coverage** — 13 new tests, all passing
+- ✅ **Class-Based Jobs** — Laravel-style API (not function-based like SAQ native)
+- ✅ **Dependency Injection** — Jobs resolved from IoC Container
+- ✅ **Bridge Pattern** — Universal `runner()` wraps SAQ's function API
+- ✅ **CLI Commands** — `ftf queue work`, `ftf queue dashboard`, `ftf make job`
+- ✅ **Async Native** — Built on SAQ (not Celery!)
+- ✅ **Dashboard UI** — Built-in monitoring like Laravel Horizon
+- ✅ **91.94% Coverage** — 13 new tests, comprehensive validation
 
 **Example CLI Usage:**
 ```bash
-$ ftf make event UserRegistered
-✓ Event created: src/ftf/events/user_registered.py
+$ ftf make job SendWelcomeEmail
+✓ Job created: src/ftf/jobs/send_welcome_email.py
+💡 Dispatch with: await SendWelcomeEmail.dispatch(...)
 
-$ ftf make listener SendWelcomeEmail --event UserRegistered
-✓ Listener created: src/ftf/listeners/send_welcome_email.py
-Remember to register this listener for UserRegistered!
+$ ftf queue work
+🚀 Worker started for queue: default
+📡 Listening for jobs on redis://localhost:6379
+
+$ ftf queue dashboard
+🎛️  Dashboard started at http://localhost:8080
 ```
 
-**Learn more:** [Sprint 3.1 Summary](docs/history/SPRINT_3_1_SUMMARY.md)
+**Learn more:** [Sprint 3.2 Summary](docs/history/SPRINT_3_2_SUMMARY.md)
 
 ---
 
@@ -193,9 +194,10 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **2.8** | Factory & Seeder System | Test data generation with Faker |
 | **2.9** | Form Requests & Validation | Async validation with Pydantic + DB rules |
 | **3.0** | CLI Tooling & Scaffolding | Typer + Rich, make:* commands, db:seed |
-| **3.1** ✨ | **Event Bus & Observers** | **Observer Pattern, async listeners, IoC integration** |
+| **3.1** | Event Bus & Observers | Observer Pattern, async listeners, IoC integration |
+| **3.2** ✨ | **Job Queue & Workers** | **SAQ, class-based jobs, Bridge Pattern, dashboard** |
 
-**Status:** 180 tests passing | ~47% coverage | Sprint 3.1 complete ✅
+**Status:** 193 tests passing | ~48% coverage | Sprint 3.2 complete ✅
 
 ---
 
@@ -244,7 +246,8 @@ src/
     ├── core/                # IoC Container (Sprint 1.2)
     ├── http/                # FastAPI integration (Sprint 2.1)
     ├── validation/          # Form Requests & Validation (Sprint 2.9)
-    ├── events/              # 🆕 Event Bus & Observers (Sprint 3.1)
+    ├── events/              # Event Bus & Observers (Sprint 3.1)
+    ├── jobs/                # 🆕 Job Queue & Workers (Sprint 3.2)
     ├── cli/                 # CLI Tooling (Sprint 3.0)
     ├── models/              # Database models
     └── main.py              # Application entry point

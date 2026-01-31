@@ -27,6 +27,7 @@ from rich.console import Console
 from ftf.cli.templates import (
     get_event_template,
     get_factory_template,
+    get_job_template,
     get_listener_template,
     get_model_template,
     get_repository_template,
@@ -402,6 +403,50 @@ def make_listener(
             console.print(
                 f"[yellow]Remember to register this listener for {event}![/yellow]"
             )
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+
+@app.command("job")
+def make_job(
+    name: str,
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a Job class for background processing.
+
+    Jobs are class-based units of work that can be dispatched to a queue and
+    executed asynchronously by workers. Jobs support dependency injection
+    through the IoC Container.
+
+    Args:
+        name: Name of the job (e.g., "SendWelcomeEmail", "ProcessPayment")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make job SendWelcomeEmail
+        ✓ Job created: src/ftf/jobs/send_welcome_email.py
+
+        $ ftf make job ProcessPayment --force
+        ✓ Job created: src/ftf/jobs/process_payment.py (overwritten)
+    """
+    # Convert to snake_case for filename
+    filename = to_snake_case(name)
+
+    # Determine file path (src/ftf/jobs/)
+    file_path = Path("src/ftf/jobs") / f"{filename}.py"
+
+    # Generate content
+    content = get_job_template(name)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Job created:[/green] {file_path}")
+        console.print(
+            "[yellow]💡 Dispatch with:[/yellow] await {}.dispatch(...)".format(name)
+        )
     else:
         console.print(f"[red]✗ File already exists:[/red] {file_path}")
         console.print("[dim]Use --force to overwrite[/dim]")
