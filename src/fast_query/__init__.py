@@ -35,6 +35,10 @@ Public API:
     - FastQueryError: Base exception
     - RecordNotFound: Record not found exception
 
+    # Testing & Development (Sprint 2.8)
+    - Factory: Base class for model factories
+    - Seeder: Base class for database seeders
+
 Example (Complete Workflow):
     from fast_query import (
         create_engine,
@@ -108,6 +112,10 @@ from .mixins import TimestampMixin, SoftDeletesMixin
 # Exceptions
 from .exceptions import FastQueryError, RecordNotFound
 
+# Testing & Development (Sprint 2.8)
+from .factories import Factory
+from .seeding import Seeder
+
 # Public API
 __all__ = [
     # Engine & Session
@@ -125,6 +133,9 @@ __all__ = [
     # Exceptions
     "FastQueryError",
     "RecordNotFound",
+    # Testing & Development
+    "Factory",
+    "Seeder",
 ]
 
 # Version

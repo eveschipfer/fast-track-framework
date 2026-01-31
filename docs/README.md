@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 2.7 - Contract Tests & Semantic Regression** (Latest!)
+**Sprint 2.8 - Factory & Seeder System** (Latest!)
+- 📜 [Summary](history/SPRINT_2_8_SUMMARY.md)
+- Focus: Laravel-inspired test data generation
+- Added: 21 tests for factories and seeders
+- Features: Model factories, database seeders, Faker integration
+
+**Sprint 2.7 - Contract Tests & Semantic Regression**
 - 📜 [Summary](history/SPRINT_2_7_SUMMARY.md)
 - Focus: Quality engineering, performance as correctness
 - Added: 29 tests (20 contract + 9 semantic)
@@ -99,19 +105,20 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ## 📊 Test Metrics
 
-**Current Status (Sprint 2.7):**
-- **Total Tests:** 115 (100% passing)
-  - Unit Tests: 91
+**Current Status (Sprint 2.8):**
+- **Total Tests:** 136 (100% passing)
+  - Unit Tests: 112 (91 + 21 factory tests)
   - Integration Tests: 13
   - Contract Tests: 20
   - Semantic/Benchmark Tests: 9
   - Advanced Query Builder: 22
 
 - **Coverage:**
-  - Overall: 43%
+  - Overall: ~45%
   - Models: 100%
   - Query Builder: 87%
   - Container: 84%
+  - Factories: 100%
 
 ---
 
