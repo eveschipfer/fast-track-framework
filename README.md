@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-334%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-3.4%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-360%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-3.5%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -43,7 +43,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **⚙️ Job Queue** | Laravel-style background jobs with SAQ & DI | ✅ Sprint 3.2 |
 | **🔐 Authentication** | JWT tokens, bcrypt passwords, route guards | ✅ Sprint 3.3 |
 | **🛡️ HTTP Kernel** | Global exception handling, CORS, GZip, middleware | ✅ Sprint 3.4 |
-| **🧪 334 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **🌍 i18n System** | Multi-language support, JSON translations, CLI tools | ✅ Sprint 3.5 |
+| **🧪 360 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -111,7 +112,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 3.4 Summary**](docs/history/SPRINT_3_4_SUMMARY.md) — HTTP Kernel & Exception Handler (NEW!)
+- 📜 [**Sprint 3.5 Summary**](docs/history/SPRINT_3_5_SUMMARY.md) — i18n System & CLI Extensibility (NEW!)
+- 📜 [**Sprint 3.4 Summary**](docs/history/SPRINT_3_4_SUMMARY.md) — HTTP Kernel & Exception Handler
 - 📜 [**Sprint 3.3 Summary**](docs/history/SPRINT_3_3_SUMMARY.md) — Authentication & JWT
 - 📜 [**Sprint 3.2 Summary**](docs/history/SPRINT_3_2_SUMMARY.md) — Job Queue & Workers
 - 📜 [**Sprint 3.1 Summary**](docs/history/SPRINT_3_1_SUMMARY.md) — Event Bus & Observer Pattern
@@ -129,11 +131,59 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 3.4?
+## 🆕 What's New in Sprint 3.5?
+
+### **i18n System & CLI Extensibility** — Global Multi-Language Support
+
+Implemented lightweight internationalization system with JSON-based translations and CLI extensibility, inspired by Laravel's `resources/lang/` and Artisan commands:
+
+```python
+from ftf.i18n import trans, t, set_locale, has
+
+# Simple translation
+message = trans("auth.failed")  # "These credentials do not match our records."
+
+# With placeholders
+message = trans("validation.min", field="Password", min=8)
+# "The Password must be at least 8 characters."
+
+# Switch language
+set_locale("pt_BR")  # Portuguese (Brazil)
+message = trans("auth.failed")
+# "Essas credenciais não correspondem aos nossos registros."
+
+# Check if translation exists
+if has("auth.throttle"):
+    message = trans("auth.throttle", seconds=60)
+```
+
+**Key Features:**
+- ✅ **JSON Translations** — Portable, non-executable format (en, pt_BR)
+- ✅ **Dot Notation Keys** — Hierarchical organization (auth.failed, validation.required)
+- ✅ **Placeholder Replacement** — Simple :field, :min, :max syntax
+- ✅ **Translator Singleton** — Single instance, hot-swappable locales
+- ✅ **Cascade Loading** — User translations override framework defaults
+- ✅ **CLI Commands** — make:cmd, make:lang for extensibility
+- ✅ **26 Tests** — 100% passing, 96.83% coverage
+
+**Example CLI Usage:**
+```bash
+$ ftf make:cmd deploy
+✓ Command created: src/ftf/cli/commands/deploy.py
+
+$ ftf make:lang de
+✓ Translation file created: src/resources/lang/de.json
+```
+
+**Learn more:** [Sprint 3.5 Summary](docs/history/SPRINT_3_5_SUMMARY.md)
+
+---
+
+## 🔙 Previous: Sprint 3.4
 
 ### **HTTP Kernel & Exception Handler** — Production-Ready Error Handling
 
-Implemented centralized exception handling and middleware configuration, inspired by Laravel's `app/Exceptions/Handler.php` and `app/Http/Kernel.php`:
+Centralized exception handling and middleware configuration:
 
 ```python
 from ftf.http import FastTrackFramework, Inject, AuthenticationError, AuthorizationError
@@ -206,9 +256,10 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **3.1** | Event Bus & Observers | Observer Pattern, async listeners, IoC integration |
 | **3.2** | Job Queue & Workers | SAQ, class-based jobs, Bridge Pattern, dashboard |
 | **3.3** | Authentication & JWT | JWT tokens, bcrypt, AuthGuard, CurrentUser |
-| **3.4** ✨ | **HTTP Kernel** | **Global exceptions, CORS, GZip, middleware** |
+| **3.4** | HTTP Kernel | Global exceptions, CORS, GZip, middleware |
+| **3.5** ✨ | **i18n & CLI** | **JSON translations, multi-language, make:cmd/lang** |
 
-**Status:** 334 tests passing | ~66% coverage | Sprint 3.4 complete ✅
+**Status:** 360 tests passing | ~66% coverage | Sprint 3.5 complete ✅
 
 ---
 
@@ -227,12 +278,12 @@ cd larafast && PYTHONPATH=src poetry run python -c "import fast_query; print('�
 ```
 
 **Test Results:**
-- 167 tests passing (100% pass rate, 1 skipped)
-  - 143 unit tests (91 + 21 factory + 16 validation + 15 CLI)
-  - 13 integration tests
-  - 20 contract tests (SQL generation)
-  - 9 semantic regression tests (O(1) complexity)
-- ~47% overall coverage
+- 360 tests passing (100% pass rate)
+  - Unit tests: 235 (91 container + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs + 15 auth + 25 http_kernel + 26 i18n)
+  - Integration tests: 13
+  - Contract tests: 20 (SQL generation)
+  - Semantic regression tests: 9 (O(1) complexity)
+- ~66% overall coverage
 - Zero framework coupling verified ✅
 
 **Learn more:** [Testing Guide](docs/guides/testing.md)
@@ -262,8 +313,11 @@ src/
     ├── events/              # Event Bus & Observers (Sprint 3.1)
     ├── jobs/                # Job Queue & Workers (Sprint 3.2)
     ├── auth/                # Authentication & JWT (Sprint 3.3)
+    ├── i18n/                # 🆕 Internationalization (Sprint 3.5)
     ├── cli/                 # CLI Tooling (Sprint 3.0)
     ├── models/              # Database models
+    ├── resources/           # 🆕 Framework resources (Sprint 3.5)
+    │   └── lang/            # Framework translations (en, pt_BR)
     └── main.py              # Application entry point
 ```
 

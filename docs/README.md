@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 3.4 - HTTP Kernel & Exception Handler** (Latest!)
+**Sprint 3.5 - i18n System & CLI Extensibility** (Latest!)
+- 📜 [Summary](history/SPRINT_3_5_SUMMARY.md)
+- Focus: Multi-language support with JSON translations and CLI extensibility
+- Added: 26 tests (100% passing, 96.83% coverage on i18n module)
+- Features: Translator singleton, dot notation keys, placeholders, make:cmd, make:lang
+
+**Sprint 3.4 - HTTP Kernel & Exception Handler**
 - 📜 [Summary](history/SPRINT_3_4_SUMMARY.md)
 - Focus: Centralized exception handling and middleware configuration
 - Added: 25 tests (100% passing, 93%+ coverage)
@@ -141,9 +147,9 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ## 📊 Test Metrics
 
-**Current Status (Sprint 3.4):**
-- **Total Tests:** 334 (100% critical passing, 7 skipped)
-  - Unit Tests: 209 (91 + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs + 15 auth + 25 http_kernel)
+**Current Status (Sprint 3.5):**
+- **Total Tests:** 360 (100% critical passing)
+  - Unit Tests: 235 (91 container + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs + 15 auth + 25 http_kernel + 26 i18n)
   - Integration Tests: 13
   - Contract Tests: 20
   - Semantic/Benchmark Tests: 9
@@ -161,6 +167,7 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
   - Jobs: 91.94%
   - Auth: 92.11% (JWT), 78.12% (Guard)
   - HTTP Kernel: 93.62% (Exceptions), 85.29% (Middleware)
+  - i18n: 96.83% (Core), 100% (Helpers)
 
 ---
 
@@ -177,13 +184,15 @@ docs/
 ├── architecture/                # Architecture & design
 │   └── decisions.md            # Design decisions & rationale
 ├── history/                     # Sprint summaries
-│   ├── SPRINT_2_7_SUMMARY.md   # Contract tests (latest)
-│   ├── SPRINT_2_6_SUMMARY.md   # Advanced query builder
-│   ├── sprint-2-5-summary.md   # Fast Query extraction
-│   ├── SPRINT_2_4_SUMMARY.md   # Relationship tests
-│   ├── SPRINT_2_3_SUMMARY.md   # Query builder & relationships
-│   ├── SPRINT_2_2_*.md         # Database foundation (3 files)
-│   └── SPRINT_2_1_SUMMARY.md   # FastAPI integration
+│   ├── SPRINT_3_5_SUMMARY.md   # i18n & CLI (latest)
+│   ├── SPRINT_3_4_SUMMARY.md   # HTTP Kernel
+│   ├── SPRINT_3_3_SUMMARY.md   # Authentication
+│   ├── SPRINT_3_2_SUMMARY.md   # Job Queue
+│   ├── SPRINT_3_1_SUMMARY.md   # Event Bus
+│   ├── SPRINT_3_0_SUMMARY.md   # CLI Tooling
+│   ├── SPRINT_2_9_SUMMARY.md   # Form Requests
+│   ├── SPRINT_2_8_SUMMARY.md   # Factories & Seeders
+│   └── ... (earlier sprints)
 └── quality/                     # Quality reports
     ├── ASYNC_CONCURRENCY_VALIDATION.md
     ├── LIFECYCLE_MANAGEMENT_VALIDATION.md
@@ -293,6 +302,6 @@ Found a typo? Have a suggestion? Documentation improvements are welcome!
 
 ---
 
-**Last Updated:** Sprint 3.4 (January 31, 2026)
-**Total Documentation:** 18 files
-**Lines of Documentation:** ~15,000 lines
+**Last Updated:** Sprint 3.5 (January 31, 2026)
+**Total Documentation:** 19 files
+**Lines of Documentation:** ~16,000 lines

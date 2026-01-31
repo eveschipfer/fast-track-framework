@@ -628,3 +628,128 @@ def make_auth(
     console.print("2. Run migration: [dim]ftf db migrate[/dim]")
     console.print("3. Set JWT secret: [dim]export JWT_SECRET_KEY='your-secret'[/dim]")
     console.print("4. Register routes: [dim]app.include_router(auth_controller.router)[/dim]")
+
+
+@app.command("cmd")
+def make_command(
+    name: str,
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a custom CLI command.
+
+    Creates a new Typer command file that can be registered in the main CLI.
+    This allows users to extend the ftf CLI with custom commands.
+
+    Args:
+        name: Name of the command (e.g., "deploy", "backup")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make:command deploy
+        ✓ Command created: src/ftf/cli/commands/deploy.py
+
+        $ ftf make:command backup --force
+        ✓ Command created: src/ftf/cli/commands/backup.py (overwritten)
+
+    Educational Note:
+        This allows users to create custom commands for their specific needs:
+        - Deployment scripts
+        - Database backups
+        - Data migrations
+        - Custom tooling
+
+        Unlike Laravel (which has auto-discovery), you need to manually
+        register the command in src/ftf/cli/main.py for now.
+    """
+    # Convert to snake_case for filename
+    filename = to_snake_case(name)
+
+    # Determine file path (src/ftf/cli/commands/)
+    file_path = Path("src/ftf/cli/commands") / f"{filename}.py"
+
+    # Generate content from template
+    from ftf.cli.templates import get_command_template
+
+    content = get_command_template(name)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Command created:[/green] {file_path}")
+        console.print()
+        console.print("[bold yellow]⚠️  Manual Registration Required:[/bold yellow]")
+        console.print("Add this command to [cyan]src/ftf/cli/main.py[/cyan]:")
+        console.print()
+        console.print(f"[dim]from ftf.cli.commands.{filename} import app as {filename}_app")
+        console.print(f"app.add_typer({filename}_app, name='{name.lower()}')")
+        console.print()
+        console.print(f"[dim]Then run:[/dim] ftf {name.lower()} --help")
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+
+@app.command("lang")
+def make_lang(
+    locale: str,
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a translation file for a new locale.
+
+    Creates a new JSON translation file with default skeleton translations.
+    Translation files are stored in src/resources/lang/{locale}.json.
+
+    Args:
+        locale: Locale code (e.g., "pt_BR", "es", "fr", "de")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make:lang pt_BR
+        ✓ Translation file created: src/resources/lang/pt_BR.json
+
+        $ ftf make:lang es --force
+        ✓ Translation file created: src/resources/lang/es.json (overwritten)
+
+    Educational Note:
+        Translation files use JSON format with dot notation keys:
+
+        {
+            "auth.failed": "Credenciais inválidas",
+            "validation.required": "O campo :field é obrigatório"
+        }
+
+        This is similar to Laravel's translation files but using JSON
+        instead of PHP arrays for better portability.
+    """
+    # Create resources/lang directory if it doesn't exist
+    lang_dir = Path("src/resources/lang")
+    lang_dir.mkdir(parents=True, exist_ok=True)
+
+    # Determine file path
+    file_path = lang_dir / f"{locale}.json"
+
+    # Generate content from template
+    from ftf.cli.templates import get_lang_template
+
+    content = get_lang_template(locale)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Translation file created:[/green] {file_path}")
+        console.print()
+        console.print("[bold cyan]💡 Next Steps:[/bold cyan]")
+        console.print("1. Edit translation keys in the JSON file")
+        console.print("2. Use translations in your code:")
+        console.print()
+        console.print("[dim]from ftf.i18n import trans, set_locale[/dim]")
+        console.print(f"[dim]set_locale('{locale}')[/dim]")
+        console.print("[dim]message = trans('auth.failed')[/dim]")
+        console.print()
+        console.print("[dim]Set default locale:[/dim]")
+        console.print(f"[dim]export DEFAULT_LOCALE='{locale}'[/dim]")
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
