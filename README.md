@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-152%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-2.9%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-167%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-3.0%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -38,7 +38,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🔗 Relationships** | One-to-many, many-to-many with eager loading | ✅ Sprint 2.3 |
 | **🏭 Factories & Seeders** | Laravel-inspired test data generation with Faker | ✅ Sprint 2.8 |
 | **✅ Form Requests** | Async validation with Pydantic + database rules | ✅ Sprint 2.9 |
-| **🧪 152 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **⚡ CLI Tooling** | Scaffolding commands (make:*) and db operations | ✅ Sprint 3.0 |
+| **🧪 167 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -119,47 +120,49 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 2.9?
+## 🆕 What's New in Sprint 3.0?
 
-### **Form Requests & Async Validation** — Best of Pydantic + Async
+### **CLI Tooling & Scaffolding** — From Library to Framework
 
-Implemented a Laravel-inspired validation system that combines **Pydantic's structural validation** with **async database validation**:
+Implemented a professional CLI using Typer and Rich that transforms FTF from a "collection of libraries" into a complete framework with Laravel-like scaffolding:
 
-```python
-# Define a Form Request
-from ftf.validation import FormRequest, Validate, Rule
-from pydantic import EmailStr
+```bash
+# Generate a complete CRUD feature in seconds
+ftf make model Product
+ftf make repository ProductRepository
+ftf make request StoreProductRequest
+ftf make factory ProductFactory
+ftf make seeder ProductSeeder
 
-class StoreUserRequest(FormRequest):
-    name: str
-    email: EmailStr
-
-    async def authorize(self, session: AsyncSession) -> bool:
-        # Check permissions (runs FIRST)
-        return True
-
-    async def rules(self, session: AsyncSession) -> None:
-        # Validate business logic (runs SECOND)
-        await Rule.unique(session, User, "email", self.email)
-
-# Use in route
-@app.post("/users")
-async def create(request: StoreUserRequest = Validate(StoreUserRequest)):
-    # request is fully validated and authorized!
-    user = User(**request.dict())
-    return {"message": "User created"}
+# Run database seeders
+ftf db seed
 ```
 
 **Key Features:**
-- ✅ **Pydantic + Async** — Structural validation + async DB checks
-- ✅ **Authorization** — Async authorize() method (403 on failure)
-- ✅ **Database Rules** — Rule.unique(), Rule.exists() for DB validation
-- ✅ **Type-safe** — Full MyPy support with Pydantic
-- ✅ **Update scenarios** — ignore_id parameter for "unique except self"
-- ✅ **OpenAPI docs** — Preserves Swagger documentation
-- ✅ **Clean API** — Laravel-inspired but async-first
+- ✅ **5 Scaffolding Commands** — make:model, make:repository, make:request, make:factory, make:seeder
+- ✅ **Auto-detection** — Repository auto-detects model name from class name
+- ✅ **Governance Enforcement** — Templates include validation warnings automatically
+- ✅ **Rich Output** — Beautiful terminal formatting with colors
+- ✅ **Smart Features** — PascalCase → snake_case, pluralization, --force flag
+- ✅ **Database Operations** — db:seed with async support
+- ✅ **Developer Experience** — 30x faster than manual scaffolding (30s vs 15min)
 
-**Learn more:** [Sprint 2.9 Summary](docs/history/SPRINT_2_9_SUMMARY.md)
+**Example Output:**
+```bash
+$ ftf make request StoreProductRequest
+✓ Request created: src/ftf/requests/store_product_request.py
+⚠️  Remember: rules() is for validation only!
+```
+
+**Generated code includes governance warning:**
+```python
+"""
+⚠️ WARNING: rules() is for data validation only.
+DO NOT mutate data or perform side effects here.
+"""
+```
+
+**Learn more:** [Sprint 3.0 Summary](docs/history/SPRINT_3_0_SUMMARY.md)
 
 ---
 
@@ -179,9 +182,10 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **2.6** | Advanced Query Builder | Nested eager loading, scopes, where_has |
 | **2.7** | Quality Engineering | Contract tests, semantic regression |
 | **2.8** | Factory & Seeder System | Test data generation with Faker |
-| **2.9** ✨ | **Form Requests & Validation** | **Async validation with Pydantic + DB rules** |
+| **2.9** | Form Requests & Validation | Async validation with Pydantic + DB rules |
+| **3.0** ✨ | **CLI Tooling & Scaffolding** | **Typer + Rich, make:* commands, db:seed** |
 
-**Status:** 152 tests passing | ~46% coverage | Sprint 2.9 complete ✅
+**Status:** 167 tests passing | ~47% coverage | Sprint 3.0 complete ✅
 
 ---
 
@@ -200,12 +204,12 @@ cd larafast && PYTHONPATH=src poetry run python -c "import fast_query; print('�
 ```
 
 **Test Results:**
-- 152 tests passing (100% pass rate, 1 skipped)
-  - 128 unit tests (91 + 21 factory + 16 validation)
+- 167 tests passing (100% pass rate, 1 skipped)
+  - 143 unit tests (91 + 21 factory + 16 validation + 15 CLI)
   - 13 integration tests
   - 20 contract tests (SQL generation)
   - 9 semantic regression tests (O(1) complexity)
-- ~46% overall coverage
+- ~47% overall coverage
 - Zero framework coupling verified ✅
 
 **Learn more:** [Testing Guide](docs/guides/testing.md)
@@ -229,7 +233,8 @@ src/
 └── ftf/
     ├── core/                # IoC Container (Sprint 1.2)
     ├── http/                # FastAPI integration (Sprint 2.1)
-    ├── validation/          # 🆕 Form Requests & Validation (Sprint 2.9)
+    ├── validation/          # Form Requests & Validation (Sprint 2.9)
+    ├── cli/                 # 🆕 CLI Tooling (Sprint 3.0)
     ├── models/              # Database models
     └── main.py              # Application entry point
 ```

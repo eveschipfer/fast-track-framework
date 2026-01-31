@@ -26,9 +26,14 @@ httpx = "^0.28.1"  # HTTP client for testing
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.0"}  # ORM with async support (Sprint 2.2)
 alembic = "^1.13.0"  # Database migrations (Sprint 2.2)
 aiosqlite = "^0.20.0"  # Async SQLite driver (Sprint 2.2)
+typer = "^0.15.0"  # CLI framework (Sprint 3.0)
+rich = "^13.9.0"  # Beautiful terminal output (Sprint 3.0)
 # Future dependencies (uncomment when needed):
 # pydantic = "^2.9.0"
 # python-dotenv = "^1.0.0"
+
+[tool.poetry.scripts]
+ftf = "ftf.cli.main:app"  # CLI entry point (Sprint 3.0)
 
 [tool.poetry.group.dev.dependencies]
 # Testing
