@@ -1,0 +1,249 @@
+# 📚 Fast Track Framework - Documentation Hub
+
+Complete documentation for the Fast Track Framework and Fast Query ORM.
+
+---
+
+## 🚀 Getting Started
+
+**New to the project? Start here:**
+
+1. **[Quick Start Guide](guides/quickstart.md)** — Get up and running in 5 minutes
+2. **[Database & ORM Guide](guides/database.md)** — Learn Fast Query and Repository Pattern
+3. **[IoC Container Guide](guides/container.md)** — Master dependency injection
+
+---
+
+## 📖 Guides
+
+### Core Guides
+- 📖 [**Quick Start**](guides/quickstart.md) — Installation, hello world, first API
+- 🗄️ [**Database & ORM**](guides/database.md) — Fast Query package, repositories, query builder
+- 🏗️ [**IoC Container**](guides/container.md) — Dependency injection, scopes, lifecycle
+- 🧪 [**Testing**](guides/testing.md) — Writing tests, fixtures, best practices
+
+---
+
+## 🧠 Architecture
+
+### Design Decisions
+- 🧠 [**Architecture Decisions**](architecture/decisions.md) — Why Repository Pattern? Why type-hints?
+
+**Key Concepts:**
+- Repository Pattern vs Active Record
+- Framework-agnostic ORM design
+- Type-hint based dependency injection
+- Async-first architecture
+
+---
+
+## 📜 Sprint History
+
+### Recent Sprints
+
+**Sprint 2.7 - Contract Tests & Semantic Regression** (Latest!)
+- 📜 [Summary](history/SPRINT_2_7_SUMMARY.md)
+- Focus: Quality engineering, performance as correctness
+- Added: 29 tests (20 contract + 9 semantic)
+- Tests SQL generation and O(1) query complexity
+
+**Sprint 2.6 - Advanced Query Builder**
+- 📜 [Summary](history/SPRINT_2_6_SUMMARY.md)
+- Focus: Nested eager loading, global scopes, local scopes, where_has
+- Added: 22 advanced feature tests
+
+**Sprint 2.5 - Fast Query Package**
+- 📜 [Summary](history/sprint-2-5-summary.md)
+- Focus: Extract ORM to standalone package
+- Result: Framework-agnostic fast_query package
+
+**Sprint 2.4 - Relationship Stress Tests**
+- 📜 [Summary](history/SPRINT_2_4_SUMMARY.md)
+- Focus: N+1 prevention validation
+- Added: 12 integration tests
+
+**Sprint 2.3 - Query Builder & Relationships**
+- 📜 [Summary](history/SPRINT_2_3_SUMMARY.md)
+- Focus: Fluent query builder, model relationships
+- Added: 38 query builder tests
+
+**Sprint 2.2 - Database Foundation**
+- 📜 [Summary](history/SPRINT_2_2_SUMMARY.md)
+- 📜 [Implementation Guide](history/SPRINT_2_2_DATABASE_IMPLEMENTATION.md)
+- 📜 [Test Results](history/SPRINT_2_2_TEST_RESULTS.md)
+- Focus: SQLAlchemy, Repository Pattern, Alembic
+
+**Sprint 2.1 - FastAPI Integration**
+- 📜 [Summary](history/SPRINT_2_1_SUMMARY.md)
+- Focus: HTTP integration, routing, middleware
+
+### All Sprints
+- 📂 [**Complete Sprint History**](history/) — All sprint summaries and reports
+
+---
+
+## 🔬 Quality Reports
+
+### Validation Reports
+- 🔬 [**Async Concurrency Validation**](quality/ASYNC_CONCURRENCY_VALIDATION.md) — Async isolation analysis
+- 🛡️ [**Lifecycle Management Validation**](quality/LIFECYCLE_MANAGEMENT_VALIDATION.md) — Resource cleanup guide
+- 🧪 [**Dependency Override Validation**](quality/DEPENDENCY_OVERRIDE_VALIDATION.md) — Testing patterns guide
+- 📊 [**Technical Debt Resolution**](quality/TECHNICAL_DEBT_RESOLUTION.md) — Complete quality report
+
+### Testing Documentation
+- 🧪 [**Testing Guide**](guides/testing.md) — How to write and run tests
+- 🔬 [**Contract Tests**](../tests/contract/) — SQL generation contracts
+- 📊 [**Benchmark Tests**](../tests/benchmarks/) — Semantic regression tests
+
+---
+
+## 📊 Test Metrics
+
+**Current Status (Sprint 2.7):**
+- **Total Tests:** 115 (100% passing)
+  - Unit Tests: 91
+  - Integration Tests: 13
+  - Contract Tests: 20
+  - Semantic/Benchmark Tests: 9
+  - Advanced Query Builder: 22
+
+- **Coverage:**
+  - Overall: 43%
+  - Models: 100%
+  - Query Builder: 87%
+  - Container: 84%
+
+---
+
+## 🗂️ Documentation Structure
+
+```
+docs/
+├── README.md                    # This file (documentation hub)
+├── guides/                      # User guides
+│   ├── quickstart.md           # Quick start guide
+│   ├── database.md             # Database & ORM guide
+│   ├── container.md            # IoC Container guide
+│   └── testing.md              # Testing guide
+├── architecture/                # Architecture & design
+│   └── decisions.md            # Design decisions & rationale
+├── history/                     # Sprint summaries
+│   ├── SPRINT_2_7_SUMMARY.md   # Contract tests (latest)
+│   ├── SPRINT_2_6_SUMMARY.md   # Advanced query builder
+│   ├── sprint-2-5-summary.md   # Fast Query extraction
+│   ├── SPRINT_2_4_SUMMARY.md   # Relationship tests
+│   ├── SPRINT_2_3_SUMMARY.md   # Query builder & relationships
+│   ├── SPRINT_2_2_*.md         # Database foundation (3 files)
+│   └── SPRINT_2_1_SUMMARY.md   # FastAPI integration
+└── quality/                     # Quality reports
+    ├── ASYNC_CONCURRENCY_VALIDATION.md
+    ├── LIFECYCLE_MANAGEMENT_VALIDATION.md
+    ├── DEPENDENCY_OVERRIDE_VALIDATION.md
+    └── TECHNICAL_DEBT_RESOLUTION.md
+```
+
+---
+
+## 🎯 Quick Links
+
+### For New Developers
+1. [Quick Start](guides/quickstart.md) → Install and run
+2. [Database Guide](guides/database.md) → Build your first CRUD API
+3. [Testing Guide](guides/testing.md) → Write tests
+
+### For Contributors
+1. [Architecture Decisions](architecture/decisions.md) → Understand design choices
+2. [Quality Reports](quality/) → See validation reports
+3. [Sprint History](history/) → Understand evolution
+
+### For Advanced Users
+1. [IoC Container Deep Dive](guides/container.md) → Master DI
+2. [Advanced Query Features](guides/database.md#advanced-query-features-sprint-26) → Nested loading, scopes
+3. [Contract Testing](../tests/contract/) → Prevent regressions
+
+---
+
+## 📈 Framework Evolution
+
+### Phase 1: Foundation (Sprints 1.x)
+- Async Python fundamentals
+- IoC Container with DI
+- Type safety and testing
+
+### Phase 2: Database Layer (Sprints 2.1-2.5)
+- FastAPI integration
+- SQLAlchemy 2.0 with Repository Pattern
+- Query Builder with relationships
+- Framework-agnostic ORM extraction
+
+### Phase 3: Advanced Features (Sprints 2.6-2.7)
+- Nested eager loading with dot notation
+- Global scopes (soft deletes)
+- Local scopes and relationship filters
+- Contract tests and semantic regression prevention
+
+### Phase 4: Production Ready (Sprints 2.8+)
+- CLI tools (Artisan-like)
+- Authentication system
+- Event dispatcher
+- Background jobs
+
+---
+
+## 🔍 Find What You Need
+
+### "I want to..."
+
+**...learn the basics**
+→ [Quick Start Guide](guides/quickstart.md)
+
+**...build a CRUD API**
+→ [Database Guide](guides/database.md)
+
+**...understand dependency injection**
+→ [IoC Container Guide](guides/container.md)
+
+**...write tests**
+→ [Testing Guide](guides/testing.md)
+
+**...prevent N+1 queries**
+→ [Database Guide - Eager Loading](guides/database.md#eager-loading)
+
+**...understand design decisions**
+→ [Architecture Decisions](architecture/decisions.md)
+
+**...see how the framework evolved**
+→ [Sprint History](history/)
+
+**...review code quality**
+→ [Quality Reports](quality/)
+
+---
+
+## 📝 Documentation Standards
+
+All documentation in this project follows these principles:
+
+1. **Educational First** — Explain "why", not just "what"
+2. **Code Examples** — Show, don't just tell
+3. **Progressive Disclosure** — Simple first, advanced later
+4. **Cross-Referenced** — Link related concepts
+5. **Up-to-Date** — Updated with each sprint
+
+---
+
+## 🤝 Contributing to Docs
+
+Found a typo? Have a suggestion? Documentation improvements are welcome!
+
+1. Documentation source: `docs/`
+2. Follow existing structure and style
+3. Include code examples
+4. Test code examples work
+5. Update this index if adding new docs
+
+---
+
+**Last Updated:** Sprint 2.7 (January 31, 2026)
+**Total Documentation:** 18 files
+**Lines of Documentation:** ~15,000 lines

@@ -103,8 +103,17 @@ async def get_user(
 - 🏗️ [**IoC Container**](docs/guides/container.md) — Dependency injection, scopes, lifecycle management
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
-### History
+### Sprint History
+- 📜 [**Sprint 2.7 Summary**](docs/history/SPRINT_2_7_SUMMARY.md) — Contract Tests & Semantic Regression (NEW!)
+- 📜 [**Sprint 2.6 Summary**](docs/history/SPRINT_2_6_SUMMARY.md) — Advanced Query Builder Features
 - 📜 [**Sprint 2.5 Summary**](docs/history/sprint-2-5-summary.md) — Fast Query extraction (framework-agnostic ORM)
+- 📜 [**Sprint 2.4 Summary**](docs/history/SPRINT_2_4_SUMMARY.md) — Relationship Stress Tests
+- 📜 [**Sprint 2.3 Summary**](docs/history/SPRINT_2_3_SUMMARY.md) — Query Builder & Relationships
+- 📜 [**All Sprint Documentation**](docs/history/) — Complete sprint history
+
+### Quality Reports
+- 🔬 [**Testing Guide**](docs/guides/testing.md) — Comprehensive testing documentation
+- 🛡️ [**Quality Reports**](docs/quality/) — Validation reports and technical debt resolution
 
 ---
 
