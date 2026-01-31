@@ -70,11 +70,12 @@ BUILDER METHODS (return Self for chaining):
     - with_(), with_joined() (eager loading)
 """
 
-from typing import Any, Generic, Literal, TypeVar
+from typing import Any, Callable, Generic, Literal, TypeVar
 
 from sqlalchemy import Select, and_, between, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, joinedload, selectinload
+from sqlalchemy.orm.relationships import RelationshipProperty
 from sqlalchemy.sql import ColumnElement
 
 from .base import Base
@@ -142,6 +143,10 @@ class QueryBuilder(Generic[T]):
         self.model = model
         self._stmt: Select[tuple[T]] = select(model)
         self._eager_loads: list[Any] = []
+
+        # Global scope flags for soft deletes (Sprint 2.6)
+        self._include_trashed = False  # If True, include soft-deleted records
+        self._only_trashed = False     # If True, only show soft-deleted records
 
     # ===========================
     # FILTERING METHODS
@@ -566,7 +571,9 @@ class QueryBuilder(Generic[T]):
     # RELATIONSHIP LOADING
     # ===========================
 
-    def with_(self, *relationships: InstrumentedAttribute[Any]) -> "QueryBuilder[T]":
+    def with_(
+        self, *relationships: InstrumentedAttribute[Any] | str
+    ) -> "QueryBuilder[T]":
         """
         Eager load relationships using selectinload (N+1 prevention).
 
@@ -574,8 +581,10 @@ class QueryBuilder(Generic[T]):
         SELECT for each relationship. More efficient for one-to-many
         relationships than joinedload.
 
+        **NEW in Sprint 2.6:** Supports dot notation for nested relationships!
+
         Args:
-            *relationships: Relationship attributes to eager load
+            *relationships: Relationship attributes to eager load (objects or strings)
 
         Returns:
             QueryBuilder[T]: Self for method chaining
@@ -598,11 +607,24 @@ class QueryBuilder(Generic[T]):
             ...     .with_(Post.author, Post.comments)
             ...     .get()
             ... )
+            >>>
+            >>> # NEW: Nested relationships with dot notation (Sprint 2.6)
+            >>> users = await (
+            ...     user_repo.query()
+            ...     .with_("posts.comments", "posts.author")
+            ...     .get()
+            ... )
+            >>> # Now user.posts[0].comments and user.posts[0].author are loaded!
 
         See: docs/relationships.md for N+1 prevention guide
         """
         for rel in relationships:
-            self._eager_loads.append(selectinload(rel))
+            if isinstance(rel, str):
+                # Parse dot notation for nested relationships (Sprint 2.6)
+                self._eager_loads.append(self._parse_nested_relationship(rel))
+            else:
+                # Existing behavior: object-based loading
+                self._eager_loads.append(selectinload(rel))
         return self
 
     def with_joined(
@@ -648,6 +670,272 @@ class QueryBuilder(Generic[T]):
         return self
 
     # ===========================
+    # GLOBAL SCOPES (Soft Deletes - Sprint 2.6)
+    # ===========================
+
+    def with_trashed(self) -> "QueryBuilder[T]":
+        """
+        Include soft-deleted records in query results.
+
+        By default, queries automatically exclude soft-deleted records when
+        the model has SoftDeletesMixin. Use this method to include them.
+
+        Returns:
+            QueryBuilder[T]: Self for method chaining
+
+        Example:
+            >>> # Include both active and soft-deleted users
+            >>> all_users = await (
+            ...     user_repo.query()
+            ...     .with_trashed()
+            ...     .get()
+            ... )
+            >>>
+            >>> # Count including deleted
+            >>> total_count = await user_repo.query().with_trashed().count()
+
+        See Also:
+            only_trashed() - Show only soft-deleted records
+        """
+        self._include_trashed = True
+        self._only_trashed = False
+        return self
+
+    def only_trashed(self) -> "QueryBuilder[T]":
+        """
+        Show only soft-deleted records.
+
+        Restricts query to only return records that have been soft-deleted
+        (deleted_at is not NULL).
+
+        Returns:
+            QueryBuilder[T]: Self for method chaining
+
+        Example:
+            >>> # Get only soft-deleted users
+            >>> deleted_users = await (
+            ...     user_repo.query()
+            ...     .only_trashed()
+            ...     .get()
+            ... )
+            >>>
+            >>> # Count deleted users
+            >>> deleted_count = await user_repo.query().only_trashed().count()
+
+        See Also:
+            with_trashed() - Include both active and deleted records
+        """
+        self._only_trashed = True
+        self._include_trashed = False
+        return self
+
+    # ===========================
+    # LOCAL SCOPES (Sprint 2.6)
+    # ===========================
+
+    def scope(self, scope_callable: Callable[["QueryBuilder[T]"], "QueryBuilder[T]"]) -> "QueryBuilder[T]":
+        """
+        Apply a local scope (reusable query logic).
+
+        Allows defining reusable query methods that can be applied to any query.
+        The callable receives this QueryBuilder and returns a modified QueryBuilder.
+
+        Args:
+            scope_callable: Function that takes QueryBuilder and returns modified QueryBuilder
+
+        Returns:
+            QueryBuilder[T]: Self for method chaining
+
+        Example:
+            >>> # Define scope as static method in model
+            >>> class User(Base):
+            ...     @staticmethod
+            ...     def active(query: QueryBuilder["User"]) -> QueryBuilder["User"]:
+            ...         return query.where(User.status == "active")
+            >>>
+            >>> # Use scope in queries
+            >>> active_users = await (
+            ...     user_repo.query()
+            ...     .scope(User.active)
+            ...     .get()
+            ... )
+            >>>
+            >>> # Or as lambda
+            >>> adults = await (
+            ...     user_repo.query()
+            ...     .scope(lambda q: q.where(User.age >= 18))
+            ...     .get()
+            ... )
+            >>>
+            >>> # Chain multiple scopes
+            >>> users = await (
+            ...     user_repo.query()
+            ...     .scope(User.active)
+            ...     .scope(User.verified)
+            ...     .get()
+            ... )
+        """
+        return scope_callable(self)
+
+    # ===========================
+    # RELATIONSHIP FILTERS (Sprint 2.6)
+    # ===========================
+
+    def where_has(self, relationship_name: str) -> "QueryBuilder[T]":
+        """
+        Filter records that have at least one related record.
+
+        Checks for the existence of a relationship. Uses SQLAlchemy's has()
+        for to-one relationships or any() for to-many relationships.
+
+        Args:
+            relationship_name: Name of the relationship (as string)
+
+        Returns:
+            QueryBuilder[T]: Self for method chaining
+
+        Raises:
+            AttributeError: If relationship doesn't exist on model
+
+        Example:
+            >>> # Get users who have at least one post
+            >>> users_with_posts = await (
+            ...     user_repo.query()
+            ...     .where_has("posts")
+            ...     .get()
+            ... )
+            >>>
+            >>> # Get posts that have at least one comment
+            >>> posts_with_comments = await (
+            ...     post_repo.query()
+            ...     .where_has("comments")
+            ...     .get()
+            ... )
+            >>>
+            >>> # Combine with other filters
+            >>> active_users_with_posts = await (
+            ...     user_repo.query()
+            ...     .where(User.status == "active")
+            ...     .where_has("posts")
+            ...     .get()
+            ... )
+        """
+        # Get the relationship property from the model
+        if not hasattr(self.model, relationship_name):
+            raise AttributeError(
+                f"Model {self.model.__name__} has no relationship '{relationship_name}'"
+            )
+
+        rel_attr = getattr(self.model, relationship_name)
+
+        # Check if it's actually a relationship
+        if not isinstance(rel_attr.property, RelationshipProperty):
+            raise AttributeError(
+                f"Attribute '{relationship_name}' on {self.model.__name__} is not a relationship"
+            )
+
+        # Determine if it's a to-one or to-many relationship
+        # For to-one (uselist=False), use has()
+        # For to-many (uselist=True), use any()
+        if rel_attr.property.uselist:
+            # One-to-many or many-to-many (collection)
+            self._stmt = self._stmt.where(rel_attr.any())
+        else:
+            # Many-to-one or one-to-one (scalar)
+            self._stmt = self._stmt.where(rel_attr.has())
+
+        return self
+
+    # ===========================
+    # INTERNAL HELPER METHODS (Sprint 2.6)
+    # ===========================
+
+    def _parse_nested_relationship(self, path: str) -> Any:
+        """
+        Parse dot-separated relationship path into nested selectinload.
+
+        Converts strings like "posts.comments" into:
+            selectinload(User.posts).selectinload(Post.comments)
+
+        Args:
+            path: Dot-separated relationship path (e.g., "posts.comments.author")
+
+        Returns:
+            SQLAlchemy load option (selectinload chain)
+
+        Raises:
+            AttributeError: If any relationship in path doesn't exist
+
+        Example:
+            >>> # "posts.comments" becomes:
+            >>> # selectinload(User.posts).selectinload(Post.comments)
+        """
+        parts = path.split(".")
+        if len(parts) < 2:
+            # Single relationship, treat as normal
+            if not hasattr(self.model, parts[0]):
+                raise AttributeError(
+                    f"Model {self.model.__name__} has no relationship '{parts[0]}'"
+                )
+            return selectinload(getattr(self.model, parts[0]))
+
+        # Build nested selectinload chain
+        current_model = self.model
+        load_option = None
+
+        for i, part in enumerate(parts):
+            if not hasattr(current_model, part):
+                parent_path = ".".join(parts[:i])
+                raise AttributeError(
+                    f"Model {current_model.__name__} has no relationship '{part}' "
+                    f"(in path '{path}', after '{parent_path}')"
+                )
+
+            rel_attr = getattr(current_model, part)
+
+            if i == 0:
+                # First relationship - start the chain
+                load_option = selectinload(rel_attr)
+            else:
+                # Nested relationship - chain it
+                load_option = load_option.selectinload(rel_attr)
+
+            # Get the related model for next iteration
+            # This allows us to validate the next relationship exists
+            if hasattr(rel_attr.property, "mapper"):
+                current_model = rel_attr.property.mapper.class_
+
+        return load_option
+
+    def _apply_global_scope(self) -> None:
+        """
+        Apply global scope for soft deletes if model has SoftDeletesMixin.
+
+        This method is called by all terminal methods (get, first, count, etc.)
+        to automatically filter out soft-deleted records unless explicitly
+        requested with with_trashed() or only_trashed().
+
+        Behavior:
+            - Default: Exclude soft-deleted (deleted_at IS NULL)
+            - with_trashed(): Include all records (no filter)
+            - only_trashed(): Only soft-deleted (deleted_at IS NOT NULL)
+        """
+        from .mixins import SoftDeletesMixin
+
+        # Check if model has SoftDeletesMixin
+        if not issubclass(self.model, SoftDeletesMixin):
+            return  # No soft deletes, skip global scope
+
+        # Apply filter based on flags
+        if self._only_trashed:
+            # Show only soft-deleted records
+            self._stmt = self._stmt.where(self.model.deleted_at.isnot(None))
+        elif not self._include_trashed:
+            # Default: exclude soft-deleted records
+            self._stmt = self._stmt.where(self.model.deleted_at.is_(None))
+        # If _include_trashed is True, don't apply any filter (show all)
+
+    # ===========================
     # TERMINAL METHODS (Execute Query)
     # ===========================
 
@@ -658,20 +946,26 @@ class QueryBuilder(Generic[T]):
         Terminal method that executes the query and returns all matching
         records as a list.
 
+        **Sprint 2.6:** Automatically excludes soft-deleted records if model
+        has SoftDeletesMixin (unless with_trashed() or only_trashed() is used).
+
         Returns:
             list[T]: List of model instances (may be empty)
 
         Example:
-            >>> # Get all active users
+            >>> # Get all active users (soft-deleted excluded automatically)
             >>> users = await (
             ...     repo.query()
             ...     .where(User.status == "active")
             ...     .get()
             ... )
             >>>
-            >>> # Get all (use with caution on large tables)
-            >>> all_users = await repo.query().get()
+            >>> # Include soft-deleted users
+            >>> all_users = await repo.query().with_trashed().get()
         """
+        # Apply global scope for soft deletes (Sprint 2.6)
+        self._apply_global_scope()
+
         # Apply eager loading
         stmt = self._stmt
         for load_option in self._eager_loads:
@@ -687,11 +981,14 @@ class QueryBuilder(Generic[T]):
         Terminal method that executes the query and returns the first
         matching record, or None if no records found.
 
+        **Sprint 2.6:** Automatically excludes soft-deleted records if model
+        has SoftDeletesMixin.
+
         Returns:
             Optional[T]: First model instance or None
 
         Example:
-            >>> # Get first active user
+            >>> # Get first active user (soft-deleted excluded)
             >>> user = await (
             ...     repo.query()
             ...     .where(User.status == "active")
@@ -703,6 +1000,9 @@ class QueryBuilder(Generic[T]):
             ... else:
             ...     print("No active users found")
         """
+        # Apply global scope for soft deletes (Sprint 2.6)
+        self._apply_global_scope()
+
         stmt = self._stmt.limit(1)
 
         # Apply eager loading
@@ -749,11 +1049,14 @@ class QueryBuilder(Generic[T]):
         Terminal method that executes a COUNT query and returns the
         number of matching records.
 
+        **Sprint 2.6:** Automatically excludes soft-deleted records if model
+        has SoftDeletesMixin.
+
         Returns:
             int: Number of matching records
 
         Example:
-            >>> # Count active users
+            >>> # Count active users (soft-deleted excluded)
             >>> total = await (
             ...     repo.query()
             ...     .where(User.status == "active")
@@ -761,9 +1064,12 @@ class QueryBuilder(Generic[T]):
             ... )
             >>> print(f"Found {total} active users")
             >>>
-            >>> # Count all
-            >>> total_users = await repo.query().count()
+            >>> # Count all including deleted
+            >>> total_users = await repo.query().with_trashed().count()
         """
+        # Apply global scope for soft deletes (Sprint 2.6)
+        self._apply_global_scope()
+
         # Build COUNT query from current statement
         subquery = self._stmt.subquery()
         count_stmt = select(func.count()).select_from(subquery)
@@ -803,6 +1109,9 @@ class QueryBuilder(Generic[T]):
         Terminal method that executes the query and returns a list of
         values from the specified column only.
 
+        **Sprint 2.6:** Automatically excludes soft-deleted records if model
+        has SoftDeletesMixin.
+
         Args:
             column: Column attribute to extract values from
 
@@ -810,18 +1119,16 @@ class QueryBuilder(Generic[T]):
             list[Any]: List of column values (may be empty)
 
         Example:
-            >>> # Get all user emails
+            >>> # Get all user emails (soft-deleted excluded)
             >>> emails = await repo.query().pluck(User.email)
             >>> # ['alice@test.com', 'bob@test.com', ...]
             >>>
-            >>> # Get IDs of active users
-            >>> active_ids = await (
-            ...     repo.query()
-            ...     .where(User.status == "active")
-            ...     .pluck(User.id)
-            ... )
-            >>> # [1, 3, 5, 7, ...]
+            >>> # Get IDs including deleted users
+            >>> all_ids = await repo.query().with_trashed().pluck(User.id)
         """
+        # Apply global scope for soft deletes (Sprint 2.6)
+        self._apply_global_scope()
+
         stmt = select(column)
         # Copy WHERE clause from main statement
         if self._stmt.whereclause is not None:

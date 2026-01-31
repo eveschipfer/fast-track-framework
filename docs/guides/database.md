@@ -8,6 +8,11 @@ Fast Query is a standalone, framework-agnostic ORM package extracted from Fast T
 - [Core Components](#core-components)
 - [Repository Pattern](#repository-pattern)
 - [Query Builder](#query-builder)
+- [Advanced Query Features (Sprint 2.6)](#advanced-query-features-sprint-26) 🆕
+  - [Global Scopes (Soft Deletes)](#global-scopes-soft-deletes-)
+  - [Local Scopes](#local-scopes-reusable-query-logic-)
+  - [Relationship Filters](#relationship-filters-where_has-)
+  - [Combining Advanced Features](#combining-advanced-features)
 - [Mixins](#mixins)
 - [Smart Delete](#smart-delete)
 - [Standalone Usage](#standalone-usage)
@@ -24,6 +29,12 @@ Fast Query is a standalone, framework-agnostic ORM package extracted from Fast T
 ✅ **Auto-Timestamps** - Automatically managed `created_at`/`updated_at`
 ✅ **Smart Deletes** - Auto-detects soft vs hard delete
 ✅ **Type-Safe** - Full MyPy support with Generic types
+
+**🆕 Sprint 2.6 Advanced Features:**
+✅ **Nested Eager Loading** - Dot notation for deep relationships (`"posts.comments.author"`)
+✅ **Global Scopes** - Automatic soft delete filtering with `with_trashed()` and `only_trashed()`
+✅ **Local Scopes** - Reusable query logic with `.scope(User.active)`
+✅ **Relationship Filters** - Filter by relationship existence with `.where_has("posts")`
 
 ---
 
@@ -281,6 +292,238 @@ users = await (
     .with_joined(User.posts)  # joinedload (single query)
     .get()
 )
+```
+
+### Advanced Eager Loading (Sprint 2.6) 🆕
+
+**Nested relationships with dot notation:**
+
+```python
+# Load nested relationships using strings
+users = await (
+    repo.query()
+    .with_("posts.comments", "posts.author")
+    .get()
+)
+
+# Access deeply nested relationships (all loaded!)
+for user in users:
+    for post in user.posts:
+        print(post.author.name)       # Already loaded!
+        for comment in post.comments:
+            print(comment.content)     # Already loaded!
+```
+
+**Mix object-based and string-based:**
+
+```python
+# Combine both syntaxes
+users = await (
+    repo.query()
+    .with_(User.posts, "posts.comments.author")
+    .get()
+)
+```
+
+**Benefits:**
+- ✅ More concise for deep nesting
+- ✅ Validates relationship paths automatically
+- ✅ Backward compatible with object-based loading
+
+---
+
+## Advanced Query Features (Sprint 2.6)
+
+### Global Scopes (Soft Deletes) 🆕
+
+**Automatic soft delete filtering** for models with `SoftDeletesMixin`:
+
+```python
+# Default: Excludes soft-deleted records automatically
+users = await repo.query().get()
+# Only returns users where deleted_at IS NULL
+
+# Include soft-deleted records
+all_users = await repo.query().with_trashed().get()
+# Returns both active and deleted users
+
+# Only soft-deleted records
+deleted_users = await repo.query().only_trashed().get()
+# Only returns users where deleted_at IS NOT NULL
+```
+
+**Works with all terminal methods:**
+
+```python
+# Count active users
+active_count = await repo.query().count()
+
+# Count all users (including deleted)
+total_count = await repo.query().with_trashed().count()
+
+# Count only deleted users
+deleted_count = await repo.query().only_trashed().count()
+
+# First active user
+user = await repo.query().first()
+
+# First deleted user
+deleted = await repo.query().only_trashed().first()
+```
+
+**Note:** Global scope only applies to models with `SoftDeletesMixin`. Models without the mixin (like Post, Comment) are unaffected.
+
+---
+
+### Local Scopes (Reusable Query Logic) 🆕
+
+**Define reusable query methods:**
+
+```python
+# Define scopes in your model
+class User(Base, TimestampMixin, SoftDeletesMixin):
+    # ... columns ...
+
+    @staticmethod
+    def active(query):
+        """Scope to filter active users."""
+        return query.where(User.status == "active")
+
+    @staticmethod
+    def verified(query):
+        """Scope to filter verified users."""
+        return query.where(User.email_verified_at.isnot(None))
+
+    @staticmethod
+    def premium(query):
+        """Scope to filter premium users."""
+        return query.where(User.subscription_tier == "premium")
+```
+
+**Use scopes in queries:**
+
+```python
+# Single scope
+active_users = await repo.query().scope(User.active).get()
+
+# Chain multiple scopes
+verified_active_users = await (
+    repo.query()
+    .scope(User.active)
+    .scope(User.verified)
+    .get()
+)
+
+# Combine scopes with other filters
+premium_adults = await (
+    repo.query()
+    .scope(User.premium)
+    .where(User.age >= 18)
+    .order_by(User.created_at, "desc")
+    .get()
+)
+```
+
+**Use lambdas for inline scopes:**
+
+```python
+# Inline lambda scope
+adults = await (
+    repo.query()
+    .scope(lambda q: q.where(User.age >= 18))
+    .get()
+)
+```
+
+**Benefits:**
+- ✅ DRY: Define complex logic once, reuse everywhere
+- ✅ Composable: Chain multiple scopes
+- ✅ Testable: Each scope can be tested independently
+- ✅ Readable: Named scopes make queries self-documenting
+
+---
+
+### Relationship Filters (where_has) 🆕
+
+**Filter records based on relationship existence:**
+
+```python
+# Get users who have at least one post
+users_with_posts = await (
+    repo.query()
+    .where_has("posts")
+    .get()
+)
+
+# Get posts that have at least one comment
+posts_with_comments = await (
+    post_repo.query()
+    .where_has("comments")
+    .get()
+)
+
+# Combine with other filters
+active_authors = await (
+    repo.query()
+    .where(User.status == "active")
+    .where_has("posts")
+    .order_by(User.created_at, "desc")
+    .get()
+)
+```
+
+**Works with all relationship types:**
+
+```python
+# One-to-many (uses SQLAlchemy's any())
+users_with_posts = await repo.query().where_has("posts").get()
+
+# Many-to-one (uses SQLAlchemy's has())
+posts_with_author = await post_repo.query().where_has("author").get()
+
+# Many-to-many
+users_with_roles = await repo.query().where_has("roles").get()
+```
+
+**Error handling:**
+
+```python
+# Invalid relationship name
+await repo.query().where_has("invalid_rel").get()
+# Raises: AttributeError: Model User has no relationship 'invalid_rel'
+
+# Not a relationship (just a column)
+await repo.query().where_has("name").get()
+# Raises: AttributeError: Attribute 'name' on User is not a relationship
+```
+
+---
+
+### Combining Advanced Features
+
+**Real-world example using all Sprint 2.6 features:**
+
+```python
+# Complex query: Active users with posts, eager load nested relationships
+authors = await (
+    user_repo.query()
+    .scope(User.active)              # Local scope (reusable logic)
+    .scope(User.verified)            # Chain multiple scopes
+    .where_has("posts")              # Relationship filter
+    .with_("posts.comments.author")  # Nested eager loading
+    .order_by(User.created_at, "desc")
+    .limit(50)
+    .get()
+)
+
+# Everything loaded! No N+1 queries, all filters applied
+for author in authors:
+    print(f"Author: {author.name}")  # Active, verified, has posts
+    for post in author.posts:
+        print(f"  Post: {post.title}")
+        for comment in post.comments:
+            # Comment author already loaded (nested eager loading)
+            print(f"    Comment by {comment.author.name}: {comment.content}")
 ```
 
 ---
