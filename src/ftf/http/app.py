@@ -30,39 +30,6 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from ftf.core import Container, clear_scoped_cache_async, set_scoped_cache
-from fast_query import RecordNotFound
-
-
-async def handle_record_not_found(request: Request, exc: RecordNotFound) -> JSONResponse:  # noqa: ARG001
-    """
-    Global exception handler for RecordNotFound.
-
-    Converts framework-agnostic RecordNotFound exceptions from fast_query
-    into HTTP 404 JSON responses using FastAPI's standard error format.
-
-    This demonstrates the clean separation between ORM layer (fast_query)
-    and HTTP layer (FastAPI). The ORM layer knows nothing about HTTP,
-    while the web framework handles the HTTP-specific concerns.
-
-    Args:
-        request: The incoming HTTP request (unused)
-        exc: The RecordNotFound exception from fast_query
-
-    Returns:
-        JSONResponse: 404 response with error details in FastAPI format
-
-    Example:
-        >>> # In repository
-        >>> raise RecordNotFound("User", 123)
-        >>>
-        >>> # Automatically converted to:
-        >>> {"detail": "User not found: 123"}
-        >>> # with status_code=404
-    """
-    return JSONResponse(
-        status_code=404,
-        content={"detail": str(exc)},
-    )
 
 
 class FastTrackFramework(FastAPI):
@@ -116,8 +83,12 @@ class FastTrackFramework(FastAPI):
         # Initialize FastAPI with our lifespan handler
         super().__init__(*args, **kwargs)
 
-        # Register global exception handler for RecordNotFound
-        self.add_exception_handler(RecordNotFound, handle_record_not_found)
+        # Register all global exception handlers (Sprint 3.4)
+        # This includes: RecordNotFound -> 404, AuthenticationError -> 401,
+        # AuthorizationError -> 403, ValidationException -> 422
+        from ftf.http.exceptions import ExceptionHandler
+
+        ExceptionHandler.register_all(self)
 
     @asynccontextmanager
     async def _lifespan(self, app: FastAPI) -> AsyncIterator[None]:  # noqa: ARG002

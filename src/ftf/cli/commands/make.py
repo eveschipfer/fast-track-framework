@@ -29,6 +29,7 @@ from ftf.cli.templates import (
     get_factory_template,
     get_job_template,
     get_listener_template,
+    get_middleware_template,
     get_model_template,
     get_repository_template,
     get_request_template,
@@ -446,6 +447,69 @@ def make_job(
         console.print(f"[green]✓ Job created:[/green] {file_path}")
         console.print(
             "[yellow]💡 Dispatch with:[/yellow] await {}.dispatch(...)".format(name)
+        )
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+
+@app.command("middleware")
+def make_middleware(
+    name: str,
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a Middleware class for HTTP request processing.
+
+    Middleware allows you to filter HTTP requests entering your application.
+    This is useful for logging, authentication, CORS, rate limiting, etc.
+
+    Args:
+        name: Name of the middleware (e.g., "LogRequests", "RateLimiter")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make middleware LogRequests
+        ✓ Middleware created: src/ftf/http/middleware/log_requests.py
+
+        $ ftf make middleware RateLimiter --force
+        ✓ Middleware created: src/ftf/http/middleware/rate_limiter.py (overwritten)
+
+    Educational Note:
+        Middleware follows the "onion" pattern: each layer wraps the next.
+        Request flows through middleware layers, then to route handler,
+        then response flows back through middleware in reverse order.
+
+        Example middleware flow:
+            Request → CORS → Auth → Logging → Route Handler
+            Response ← CORS ← Auth ← Logging ← Route Handler
+    """
+    # Convert to snake_case for filename
+    filename = to_snake_case(name)
+
+    # Determine file path (src/ftf/http/middleware/)
+    middleware_dir = Path("src/ftf/http/middleware")
+    middleware_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create __init__.py if it doesn't exist
+    init_file = middleware_dir / "__init__.py"
+    if not init_file.exists():
+        init_file.write_text('"""Custom middleware classes."""\n')
+
+    file_path = middleware_dir / f"{filename}.py"
+
+    # Generate content
+    content = get_middleware_template(name)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Middleware created:[/green] {file_path}")
+        console.print(
+            "[yellow]💡 Register with:[/yellow] app.add_middleware({})".format(name)
+        )
+        console.print(
+            "[dim]Or use BaseHTTPMiddleware for async dispatch method[/dim]"
         )
     else:
         console.print(f"[red]✗ File already exists:[/red] {file_path}")

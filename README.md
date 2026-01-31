@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-208%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-3.3%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-334%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-3.4%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -42,7 +42,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **📡 Event Bus** | Observer Pattern with async listeners and DI | ✅ Sprint 3.1 |
 | **⚙️ Job Queue** | Laravel-style background jobs with SAQ & DI | ✅ Sprint 3.2 |
 | **🔐 Authentication** | JWT tokens, bcrypt passwords, route guards | ✅ Sprint 3.3 |
-| **🧪 208 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **🛡️ HTTP Kernel** | Global exception handling, CORS, GZip, middleware | ✅ Sprint 3.4 |
+| **🧪 334 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -110,7 +111,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 3.3 Summary**](docs/history/SPRINT_3_3_SUMMARY.md) — Authentication & JWT (NEW!)
+- 📜 [**Sprint 3.4 Summary**](docs/history/SPRINT_3_4_SUMMARY.md) — HTTP Kernel & Exception Handler (NEW!)
+- 📜 [**Sprint 3.3 Summary**](docs/history/SPRINT_3_3_SUMMARY.md) — Authentication & JWT
 - 📜 [**Sprint 3.2 Summary**](docs/history/SPRINT_3_2_SUMMARY.md) — Job Queue & Workers
 - 📜 [**Sprint 3.1 Summary**](docs/history/SPRINT_3_1_SUMMARY.md) — Event Bus & Observer Pattern
 - 📜 [**Sprint 3.0 Summary**](docs/history/SPRINT_3_0_SUMMARY.md) — CLI Tooling & Scaffolding
@@ -127,60 +129,59 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 3.3?
+## 🆕 What's New in Sprint 3.4?
 
-### **Authentication & JWT** — Stateless Auth with Route Guards
+### **HTTP Kernel & Exception Handler** — Production-Ready Error Handling
 
-Implemented a complete JWT authentication system with bcrypt password hashing, route protection, and a powerful CLI scaffolding command:
+Implemented centralized exception handling and middleware configuration, inspired by Laravel's `app/Exceptions/Handler.php` and `app/Http/Kernel.php`:
 
 ```python
-from ftf.auth import CurrentUser, create_access_token, hash_password, verify_password
+from ftf.http import FastTrackFramework, Inject, AuthenticationError, AuthorizationError
+from ftf.http.middleware import MiddlewareManager
 
-# Register endpoint - hash password
-@app.post("/register")
-async def register(data: RegisterRequest, repo: UserRepository):
-    hashed = hash_password(data.password)
-    user = await repo.create({"email": data.email, "password": hashed})
-    return {"user_id": user.id}
+# Create app - exception handling auto-configured!
+app = FastTrackFramework()
 
-# Login endpoint - verify and create token
-@app.post("/login")
-async def login(data: LoginRequest, repo: UserRepository):
-    user = await repo.where("email", data.email).first()
-    if not user or not verify_password(data.password, user.password):
-        raise HTTPException(401, "Invalid credentials")
+# One-line middleware setup
+MiddlewareManager.configure_all(app)  # CORS + GZip + Security
 
-    token = create_access_token({"user_id": user.id})
-    return {"access_token": token, "token_type": "bearer"}
+# Exceptions auto-convert to JSON
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, repo: UserRepository = Inject()):
+    return await repo.find_or_fail(user_id)
+    # RecordNotFound → 404: {"detail": "User not found: 123"}
 
-# Protected route - auto-authenticated!
-@app.get("/profile")
-async def profile(user: CurrentUser):
-    return {"id": user.id, "email": user.email}
+@app.get("/admin")
+async def admin_panel(user: CurrentUser):
+    if not user.is_admin:
+        raise AuthorizationError("Admins only")
+        # → 403: {"detail": "Admins only"}
 ```
 
 **Key Features:**
-- ✅ **JWT Tokens** — Stateless authentication (HS256 signature)
-- ✅ **Bcrypt Hashing** — Industry-standard password security
-- ✅ **AuthGuard** — FastAPI dependency for route protection
-- ✅ **CurrentUser Type Alias** — Type-safe, concise syntax
-- ✅ **IoC Container Integration** — AuthGuard resolves UserRepository via DI
-- ✅ **make:auth Scaffolding** — Generate complete auth system in seconds
-- ✅ **92% JWT Coverage** — 22 new tests (15 passing)
+- ✅ **Global Exception Handling** — Auto-converts exceptions to JSON (never HTML)
+- ✅ **Standard HTTP Errors** — 404, 401, 403, 422 with consistent format
+- ✅ **CORS Middleware** — Environment-based config (`CORS_ORIGINS`)
+- ✅ **GZip Compression** — 70-90% reduction for JSON responses
+- ✅ **TrustedHost Security** — Prevents Host header attacks
+- ✅ **make:middleware CLI** — Generate custom middleware classes
+- ✅ **93% Coverage** — 25 new tests, all passing
 
 **Example CLI Usage:**
 ```bash
-$ ftf make auth
-🔐 Generating authentication system...
-✓ User model: src/ftf/models/user.py
-✓ UserRepository: src/ftf/repositories/user_repository.py
-✓ LoginRequest: src/ftf/http/requests/auth/login_request.py
-✓ RegisterRequest: src/ftf/http/requests/auth/register_request.py
-✓ AuthController: src/ftf/http/controllers/auth_controller.py
-🎉 Authentication scaffolding complete!
+$ ftf make:middleware LogRequests
+✓ Middleware created: src/ftf/http/middleware/log_requests.py
+💡 Register with: app.add_middleware(LogRequests)
 ```
 
-**Learn more:** [Sprint 3.3 Summary](docs/history/SPRINT_3_3_SUMMARY.md)
+**Environment Configuration:**
+```bash
+# .env file
+CORS_ORIGINS="http://localhost:3000,https://myapp.com"
+ALLOWED_HOSTS="localhost,myapp.com,*.myapp.com"
+```
+
+**Learn more:** [Sprint 3.4 Summary](docs/history/SPRINT_3_4_SUMMARY.md)
 
 ---
 
@@ -204,9 +205,10 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **3.0** | CLI Tooling & Scaffolding | Typer + Rich, make:* commands, db:seed |
 | **3.1** | Event Bus & Observers | Observer Pattern, async listeners, IoC integration |
 | **3.2** | Job Queue & Workers | SAQ, class-based jobs, Bridge Pattern, dashboard |
-| **3.3** ✨ | **Authentication & JWT** | **JWT tokens, bcrypt, AuthGuard, CurrentUser** |
+| **3.3** | Authentication & JWT | JWT tokens, bcrypt, AuthGuard, CurrentUser |
+| **3.4** ✨ | **HTTP Kernel** | **Global exceptions, CORS, GZip, middleware** |
 
-**Status:** 208 tests passing | ~49% coverage | Sprint 3.3 complete ✅
+**Status:** 334 tests passing | ~66% coverage | Sprint 3.4 complete ✅
 
 ---
 
@@ -254,10 +256,12 @@ src/
 └── ftf/
     ├── core/                # IoC Container (Sprint 1.2)
     ├── http/                # FastAPI integration (Sprint 2.1)
+    │   ├── exceptions.py    # 🆕 Global exception handling (Sprint 3.4)
+    │   └── middleware/      # 🆕 CORS, GZip, TrustedHost (Sprint 3.4)
     ├── validation/          # Form Requests & Validation (Sprint 2.9)
     ├── events/              # Event Bus & Observers (Sprint 3.1)
     ├── jobs/                # Job Queue & Workers (Sprint 3.2)
-    ├── auth/                # 🆕 Authentication & JWT (Sprint 3.3)
+    ├── auth/                # Authentication & JWT (Sprint 3.3)
     ├── cli/                 # CLI Tooling (Sprint 3.0)
     ├── models/              # Database models
     └── main.py              # Application entry point

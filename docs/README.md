@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 3.3 - Authentication & JWT** (Latest!)
+**Sprint 3.4 - HTTP Kernel & Exception Handler** (Latest!)
+- 📜 [Summary](history/SPRINT_3_4_SUMMARY.md)
+- Focus: Centralized exception handling and middleware configuration
+- Added: 25 tests (100% passing, 93%+ coverage)
+- Features: Global exception handlers, CORS, GZip, TrustedHost, make:middleware
+
+**Sprint 3.3 - Authentication & JWT**
 - 📜 [Summary](history/SPRINT_3_3_SUMMARY.md)
 - Focus: Stateless authentication with JWT and bcrypt
 - Added: 22 tests (15 passing - JWT + AuthGuard 100%)
@@ -135,16 +141,16 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ## 📊 Test Metrics
 
-**Current Status (Sprint 3.3):**
-- **Total Tests:** 208 (100% critical passing, 1 skipped)
-  - Unit Tests: 184 (91 + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs + 15 auth)
+**Current Status (Sprint 3.4):**
+- **Total Tests:** 334 (100% critical passing, 7 skipped)
+  - Unit Tests: 209 (91 + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs + 15 auth + 25 http_kernel)
   - Integration Tests: 13
   - Contract Tests: 20
   - Semantic/Benchmark Tests: 9
   - Advanced Query Builder: 22
 
 - **Coverage:**
-  - Overall: ~49%
+  - Overall: ~66%
   - Models: 100%
   - Query Builder: 87%
   - Container: 84%
@@ -154,6 +160,7 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
   - Events: 100%
   - Jobs: 91.94%
   - Auth: 92.11% (JWT), 78.12% (Guard)
+  - HTTP Kernel: 93.62% (Exceptions), 85.29% (Middleware)
 
 ---
 
@@ -286,6 +293,6 @@ Found a typo? Have a suggestion? Documentation improvements are welcome!
 
 ---
 
-**Last Updated:** Sprint 3.3 (January 31, 2026)
+**Last Updated:** Sprint 3.4 (January 31, 2026)
 **Total Documentation:** 18 files
 **Lines of Documentation:** ~15,000 lines
