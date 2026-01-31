@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-167%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-3.0%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-180%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-3.1%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -39,7 +39,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🏭 Factories & Seeders** | Laravel-inspired test data generation with Faker | ✅ Sprint 2.8 |
 | **✅ Form Requests** | Async validation with Pydantic + database rules | ✅ Sprint 2.9 |
 | **⚡ CLI Tooling** | Scaffolding commands (make:*) and db operations | ✅ Sprint 3.0 |
-| **🧪 167 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **📡 Event Bus** | Observer Pattern with async listeners and DI | ✅ Sprint 3.1 |
+| **🧪 180 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -107,7 +108,9 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 2.9 Summary**](docs/history/SPRINT_2_9_SUMMARY.md) — Form Requests & Async Validation (NEW!)
+- 📜 [**Sprint 3.1 Summary**](docs/history/SPRINT_3_1_SUMMARY.md) — Event Bus & Observer Pattern (NEW!)
+- 📜 [**Sprint 3.0 Summary**](docs/history/SPRINT_3_0_SUMMARY.md) — CLI Tooling & Scaffolding
+- 📜 [**Sprint 2.9 Summary**](docs/history/SPRINT_2_9_SUMMARY.md) — Form Requests & Async Validation
 - 📜 [**Sprint 2.8 Summary**](docs/history/SPRINT_2_8_SUMMARY.md) — Factory & Seeder System
 - 📜 [**Sprint 2.7 Summary**](docs/history/SPRINT_2_7_SUMMARY.md) — Contract Tests & Semantic Regression
 - 📜 [**Sprint 2.6 Summary**](docs/history/SPRINT_2_6_SUMMARY.md) — Advanced Query Builder Features
@@ -120,49 +123,55 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 3.0?
+## 🆕 What's New in Sprint 3.1?
 
-### **CLI Tooling & Scaffolding** — From Library to Framework
+### **Event Bus & Observer Pattern** — Async Event-Driven Architecture
 
-Implemented a professional CLI using Typer and Rich that transforms FTF from a "collection of libraries" into a complete framework with Laravel-like scaffolding:
+Implemented a robust event dispatcher system with Observer Pattern, enabling decoupled event-driven architecture with full dependency injection support:
 
-```bash
-# Generate a complete CRUD feature in seconds
-ftf make model Product
-ftf make repository ProductRepository
-ftf make request StoreProductRequest
-ftf make factory ProductFactory
-ftf make seeder ProductSeeder
+```python
+from ftf.events import Event, Listener, EventDispatcher, dispatch
+from dataclasses import dataclass
 
-# Run database seeders
-ftf db seed
+# Define events (DTOs)
+@dataclass
+class UserRegistered(Event):
+    user_id: int
+    email: str
+
+# Create listeners with DI
+class SendWelcomeEmail(Listener[UserRegistered]):
+    def __init__(self, mailer: Mailer):  # Auto-injected!
+        self.mailer = mailer
+
+    async def handle(self, event: UserRegistered) -> None:
+        await self.mailer.send(event.email, "Welcome!")
+
+# Register and dispatch
+dispatcher.register(UserRegistered, SendWelcomeEmail)
+await dispatch(UserRegistered(user_id=1, email="user@test.com"))
 ```
 
 **Key Features:**
-- ✅ **5 Scaffolding Commands** — make:model, make:repository, make:request, make:factory, make:seeder
-- ✅ **Auto-detection** — Repository auto-detects model name from class name
-- ✅ **Governance Enforcement** — Templates include validation warnings automatically
-- ✅ **Rich Output** — Beautiful terminal formatting with colors
-- ✅ **Smart Features** — PascalCase → snake_case, pluralization, --force flag
-- ✅ **Database Operations** — db:seed with async support
-- ✅ **Developer Experience** — 30x faster than manual scaffolding (30s vs 15min)
+- ✅ **Observer Pattern** — Multiple listeners for same event (fan-out)
+- ✅ **Generic Type Safety** — `Listener[E]` with full MyPy support
+- ✅ **Dependency Injection** — Listeners resolved from IoC Container
+- ✅ **Async Concurrent Execution** — `asyncio.gather()` runs listeners in parallel
+- ✅ **Fail-Safe Processing** — One listener failure doesn't stop others
+- ✅ **CLI Scaffolding** — `ftf make event` and `ftf make listener` commands
+- ✅ **100% Test Coverage** — 13 new tests, all passing
 
-**Example Output:**
+**Example CLI Usage:**
 ```bash
-$ ftf make request StoreProductRequest
-✓ Request created: src/ftf/requests/store_product_request.py
-⚠️  Remember: rules() is for validation only!
+$ ftf make event UserRegistered
+✓ Event created: src/ftf/events/user_registered.py
+
+$ ftf make listener SendWelcomeEmail --event UserRegistered
+✓ Listener created: src/ftf/listeners/send_welcome_email.py
+Remember to register this listener for UserRegistered!
 ```
 
-**Generated code includes governance warning:**
-```python
-"""
-⚠️ WARNING: rules() is for data validation only.
-DO NOT mutate data or perform side effects here.
-"""
-```
-
-**Learn more:** [Sprint 3.0 Summary](docs/history/SPRINT_3_0_SUMMARY.md)
+**Learn more:** [Sprint 3.1 Summary](docs/history/SPRINT_3_1_SUMMARY.md)
 
 ---
 
@@ -183,9 +192,10 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **2.7** | Quality Engineering | Contract tests, semantic regression |
 | **2.8** | Factory & Seeder System | Test data generation with Faker |
 | **2.9** | Form Requests & Validation | Async validation with Pydantic + DB rules |
-| **3.0** ✨ | **CLI Tooling & Scaffolding** | **Typer + Rich, make:* commands, db:seed** |
+| **3.0** | CLI Tooling & Scaffolding | Typer + Rich, make:* commands, db:seed |
+| **3.1** ✨ | **Event Bus & Observers** | **Observer Pattern, async listeners, IoC integration** |
 
-**Status:** 167 tests passing | ~47% coverage | Sprint 3.0 complete ✅
+**Status:** 180 tests passing | ~47% coverage | Sprint 3.1 complete ✅
 
 ---
 
@@ -234,7 +244,8 @@ src/
     ├── core/                # IoC Container (Sprint 1.2)
     ├── http/                # FastAPI integration (Sprint 2.1)
     ├── validation/          # Form Requests & Validation (Sprint 2.9)
-    ├── cli/                 # 🆕 CLI Tooling (Sprint 3.0)
+    ├── events/              # 🆕 Event Bus & Observers (Sprint 3.1)
+    ├── cli/                 # CLI Tooling (Sprint 3.0)
     ├── models/              # Database models
     └── main.py              # Application entry point
 ```

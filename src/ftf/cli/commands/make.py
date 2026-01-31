@@ -25,7 +25,9 @@ import typer
 from rich.console import Console
 
 from ftf.cli.templates import (
+    get_event_template,
     get_factory_template,
+    get_listener_template,
     get_model_template,
     get_repository_template,
     get_request_template,
@@ -313,6 +315,93 @@ def make_seeder(
     # Create file
     if create_file(file_path, content, force):
         console.print(f"[green]✓ Seeder created:[/green] {file_path}")
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+
+@app.command("event")
+def make_event(
+    name: str,
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate an Event class (DTO).
+
+    Events are data containers that represent something that happened in the
+    system. They are dispatched through the Event Bus and handled by Listeners.
+
+    Args:
+        name: Name of the event (e.g., "UserRegistered", "OrderPlaced")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make event UserRegistered
+        ✓ Event created: src/ftf/events/user_registered.py
+
+        $ ftf make event OrderPlaced --force
+        ✓ Event created: src/ftf/events/order_placed.py (overwritten)
+    """
+    # Convert to snake_case for filename
+    filename = to_snake_case(name)
+
+    # Determine file path (src/ftf/events/)
+    file_path = Path("src/ftf/events") / f"{filename}.py"
+
+    # Generate content
+    content = get_event_template(name)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Event created:[/green] {file_path}")
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+
+@app.command("listener")
+def make_listener(
+    name: str,
+    event: str = typer.Option(None, "--event", "-e", help="Event name"),
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a Listener class for handling events.
+
+    Listeners handle specific events and are resolved from the IoC Container,
+    allowing dependency injection.
+
+    Args:
+        name: Name of the listener (e.g., "SendWelcomeEmail")
+        event: Event name this listener handles (e.g., "UserRegistered")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make listener SendWelcomeEmail --event UserRegistered
+        ✓ Listener created: src/ftf/listeners/send_welcome_email.py
+
+        $ ftf make listener LogUserActivity -e UserRegistered
+        ✓ Listener created: src/ftf/listeners/log_user_activity.py
+    """
+    # Convert to snake_case for filename
+    filename = to_snake_case(name)
+
+    # Determine file path (src/ftf/listeners/)
+    file_path = Path("src/ftf/listeners") / f"{filename}.py"
+
+    # Generate content
+    event_name = event if event else "Event"
+    content = get_listener_template(name, event_name)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Listener created:[/green] {file_path}")
+        if event:
+            console.print(
+                f"[yellow]Remember to register this listener for {event}![/yellow]"
+            )
     else:
         console.print(f"[red]✗ File already exists:[/red] {file_path}")
         console.print("[dim]Use --force to overwrite[/dim]")

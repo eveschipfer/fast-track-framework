@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 3.0 - CLI Tooling & Scaffolding** (Latest!)
+**Sprint 3.1 - Event Bus & Observer Pattern** (Latest!)
+- 📜 [Summary](history/SPRINT_3_1_SUMMARY.md)
+- Focus: Async event-driven architecture with IoC integration
+- Added: 13 tests for Event, Listener, EventDispatcher
+- Features: Observer Pattern, generic Listener[E], concurrent execution, CLI scaffolding
+
+**Sprint 3.0 - CLI Tooling & Scaffolding**
 - 📜 [Summary](history/SPRINT_3_0_SUMMARY.md)
 - Focus: Transform from library to framework with scaffolding CLI
 - Added: 15 tests for CLI commands
@@ -117,9 +123,9 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ## 📊 Test Metrics
 
-**Current Status (Sprint 3.0):**
-- **Total Tests:** 167 (100% passing, 1 skipped)
-  - Unit Tests: 143 (91 + 21 factory + 16 validation + 15 CLI)
+**Current Status (Sprint 3.1):**
+- **Total Tests:** 180 (100% passing, 1 skipped)
+  - Unit Tests: 156 (91 + 21 factory + 16 validation + 15 CLI + 13 events)
   - Integration Tests: 13
   - Contract Tests: 20
   - Semantic/Benchmark Tests: 9
@@ -133,6 +139,7 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
   - Factories: 100%
   - Validation: 71-94%
   - CLI: 85%
+  - Events: 100%
 
 ---
 
@@ -265,6 +272,6 @@ Found a typo? Have a suggestion? Documentation improvements are welcome!
 
 ---
 
-**Last Updated:** Sprint 2.7 (January 31, 2026)
+**Last Updated:** Sprint 3.1 (January 31, 2026)
 **Total Documentation:** 18 files
 **Lines of Documentation:** ~15,000 lines
