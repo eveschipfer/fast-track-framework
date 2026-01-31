@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 2.8 - Factory & Seeder System** (Latest!)
+**Sprint 2.9 - Form Requests & Async Validation** (Latest!)
+- 📜 [Summary](history/SPRINT_2_9_SUMMARY.md)
+- Focus: Laravel-inspired validation with async DB checks
+- Added: 16 tests for FormRequest and validation rules
+- Features: Async authorization, database validation (unique, exists)
+
+**Sprint 2.8 - Factory & Seeder System**
 - 📜 [Summary](history/SPRINT_2_8_SUMMARY.md)
 - Focus: Laravel-inspired test data generation
 - Added: 21 tests for factories and seeders
@@ -105,20 +111,21 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ## 📊 Test Metrics
 
-**Current Status (Sprint 2.8):**
-- **Total Tests:** 136 (100% passing)
-  - Unit Tests: 112 (91 + 21 factory tests)
+**Current Status (Sprint 2.9):**
+- **Total Tests:** 152 (100% passing, 1 skipped)
+  - Unit Tests: 128 (91 + 21 factory + 16 validation)
   - Integration Tests: 13
   - Contract Tests: 20
   - Semantic/Benchmark Tests: 9
   - Advanced Query Builder: 22
 
 - **Coverage:**
-  - Overall: ~45%
+  - Overall: ~46%
   - Models: 100%
   - Query Builder: 87%
   - Container: 84%
   - Factories: 100%
+  - Validation: 71-94%
 
 ---
 

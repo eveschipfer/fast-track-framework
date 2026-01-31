@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-136%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-2.8%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-152%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-2.9%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -37,7 +37,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **⚡ Smart Features** | Auto-timestamps, soft deletes, smart delete detection | ✅ Sprint 2.5 |
 | **🔗 Relationships** | One-to-many, many-to-many with eager loading | ✅ Sprint 2.3 |
 | **🏭 Factories & Seeders** | Laravel-inspired test data generation with Faker | ✅ Sprint 2.8 |
-| **🧪 136 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **✅ Form Requests** | Async validation with Pydantic + database rules | ✅ Sprint 2.9 |
+| **🧪 152 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -105,11 +106,11 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 2.8 Summary**](docs/history/SPRINT_2_8_SUMMARY.md) — Factory & Seeder System (NEW!)
+- 📜 [**Sprint 2.9 Summary**](docs/history/SPRINT_2_9_SUMMARY.md) — Form Requests & Async Validation (NEW!)
+- 📜 [**Sprint 2.8 Summary**](docs/history/SPRINT_2_8_SUMMARY.md) — Factory & Seeder System
 - 📜 [**Sprint 2.7 Summary**](docs/history/SPRINT_2_7_SUMMARY.md) — Contract Tests & Semantic Regression
 - 📜 [**Sprint 2.6 Summary**](docs/history/SPRINT_2_6_SUMMARY.md) — Advanced Query Builder Features
 - 📜 [**Sprint 2.5 Summary**](docs/history/sprint-2-5-summary.md) — Fast Query extraction (framework-agnostic ORM)
-- 📜 [**Sprint 2.4 Summary**](docs/history/SPRINT_2_4_SUMMARY.md) — Relationship Stress Tests
 - 📜 [**All Sprint Documentation**](docs/history/) — Complete sprint history
 
 ### Quality Reports
@@ -118,52 +119,47 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 2.8?
+## 🆕 What's New in Sprint 2.9?
 
-### **Factory & Seeder System** — Laravel-Inspired Test Data Generation
+### **Form Requests & Async Validation** — Best of Pydantic + Async
 
-Implemented a complete factory and seeder system for generating realistic test data with **Faker integration**:
+Implemented a Laravel-inspired validation system that combines **Pydantic's structural validation** with **async database validation**:
 
 ```python
-# Define a factory
-from fast_query import Factory
+# Define a Form Request
+from ftf.validation import FormRequest, Validate, Rule
+from pydantic import EmailStr
 
-class UserFactory(Factory[User]):
-    _model_class = User
+class StoreUserRequest(FormRequest):
+    name: str
+    email: EmailStr
 
-    def definition(self) -> dict[str, Any]:
-        return {
-            "name": self.faker.name(),
-            "email": self.faker.email(),
-        }
+    async def authorize(self, session: AsyncSession) -> bool:
+        # Check permissions (runs FIRST)
+        return True
 
-# Use it
-async with get_session() as session:
-    factory = UserFactory(session)
+    async def rules(self, session: AsyncSession) -> None:
+        # Validate business logic (runs SECOND)
+        await Rule.unique(session, User, "email", self.email)
 
-    # Create one
-    user = await factory.create()
-
-    # Create many
-    users = await factory.create_batch(10)
-
-    # With relationships
-    user = await factory.has_posts(5).create()
-
-    # With state modifiers
-    admin = await factory.state(lambda a: {**a, "is_admin": True}).create()
+# Use in route
+@app.post("/users")
+async def create(request: StoreUserRequest = Validate(StoreUserRequest)):
+    # request is fully validated and authorized!
+    user = User(**request.dict())
+    return {"message": "User created"}
 ```
 
 **Key Features:**
-- ✅ **Async-first** — Full async/await support for database operations
-- ✅ **Type-safe** — Generic Factory[T] with strict type hints
-- ✅ **Laravel-inspired** — Familiar API for Laravel developers
-- ✅ **Faker integration** — Realistic fake data out of the box
-- ✅ **Relationship hooks** — Create related models with `.has_posts(5)`
-- ✅ **State management** — Chain state transformations with `.state()`
-- ✅ **Database seeders** — Orchestrate data generation with seeders
+- ✅ **Pydantic + Async** — Structural validation + async DB checks
+- ✅ **Authorization** — Async authorize() method (403 on failure)
+- ✅ **Database Rules** — Rule.unique(), Rule.exists() for DB validation
+- ✅ **Type-safe** — Full MyPy support with Pydantic
+- ✅ **Update scenarios** — ignore_id parameter for "unique except self"
+- ✅ **OpenAPI docs** — Preserves Swagger documentation
+- ✅ **Clean API** — Laravel-inspired but async-first
 
-**Learn more:** [Sprint 2.8 Summary](docs/history/SPRINT_2_8_SUMMARY.md)
+**Learn more:** [Sprint 2.9 Summary](docs/history/SPRINT_2_9_SUMMARY.md)
 
 ---
 
@@ -182,9 +178,10 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **2.5** | Fast Query Extraction | Standalone ORM package |
 | **2.6** | Advanced Query Builder | Nested eager loading, scopes, where_has |
 | **2.7** | Quality Engineering | Contract tests, semantic regression |
-| **2.8** ✨ | **Factory & Seeder System** | **Test data generation with Faker** |
+| **2.8** | Factory & Seeder System | Test data generation with Faker |
+| **2.9** ✨ | **Form Requests & Validation** | **Async validation with Pydantic + DB rules** |
 
-**Status:** 136 tests passing | ~45% coverage | Sprint 2.8 complete ✅
+**Status:** 152 tests passing | ~46% coverage | Sprint 2.9 complete ✅
 
 ---
 
@@ -203,12 +200,12 @@ cd larafast && PYTHONPATH=src poetry run python -c "import fast_query; print('�
 ```
 
 **Test Results:**
-- 136 tests passing (100% pass rate)
-  - 112 unit tests (including 21 factory tests)
+- 152 tests passing (100% pass rate, 1 skipped)
+  - 128 unit tests (91 + 21 factory + 16 validation)
   - 13 integration tests
   - 20 contract tests (SQL generation)
   - 9 semantic regression tests (O(1) complexity)
-- ~45% overall coverage
+- ~46% overall coverage
 - Zero framework coupling verified ✅
 
 **Learn more:** [Testing Guide](docs/guides/testing.md)
@@ -232,6 +229,7 @@ src/
 └── ftf/
     ├── core/                # IoC Container (Sprint 1.2)
     ├── http/                # FastAPI integration (Sprint 2.1)
+    ├── validation/          # 🆕 Form Requests & Validation (Sprint 2.9)
     ├── models/              # Database models
     └── main.py              # Application entry point
 ```
