@@ -29,6 +29,8 @@
   "http.forbidden": "Forbidden.",
   "http.unprocessable": "The given data was invalid.",
   "http.internal_error": "Internal server error.",
+  "http.too_many_requests": "Too many requests.",
+  "http.rate_limit_exceeded": "Rate limit exceeded. Maximum :limit requests per :window seconds allowed.",
   "http.service_unavailable": "Service unavailable.",
 
   "database.connection_failed": "Database connection failed.",

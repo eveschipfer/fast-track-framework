@@ -30,6 +30,8 @@
   "http.unprocessable": "Os dados fornecidos são inválidos.",
   "http.internal_error": "Erro interno do servidor.",
   "http.service_unavailable": "Serviço indisponível.",
+  "http.too_many_requests": "Muitas requisições.",
+  "http.rate_limit_exceeded": "Limite de requisições excedido. Máximo de :limit requisições por :window segundos permitido.",
 
   "database.connection_failed": "Falha na conexão com o banco de dados.",
   "database.query_error": "Erro na consulta ao banco de dados.",

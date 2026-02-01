@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Tests](https://img.shields.io/badge/tests-360%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-3.6%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-3.7%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -45,6 +45,7 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🛡️ HTTP Kernel** | Global exception handling, CORS, GZip, middleware | ✅ Sprint 3.4 |
 | **🌍 i18n System** | Multi-language support, JSON translations, CLI tools | ✅ Sprint 3.5 |
 | **✅ Custom Validation** | Pydantic v2 rules with ftf make rule command | ✅ Sprint 3.6 |
+| **💾 Multi-Driver Cache** | File/Redis/Array drivers, rate limiting middleware | ✅ Sprint 3.7 |
 | **🧪 360 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
@@ -113,7 +114,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 3.6 Summary**](docs/history/SPRINT_3_6_SUMMARY.md) — Custom Validation Rules CLI (NEW!)
+- 📜 [**Sprint 3.7 Summary**](docs/history/SPRINT_3_7_SUMMARY.md) — Multi-Driver Caching & Rate Limiting (NEW!)
+- 📜 [**Sprint 3.6 Summary**](docs/history/SPRINT_3_6_SUMMARY.md) — Custom Validation Rules CLI
 - 📜 [**Sprint 3.5 Summary**](docs/history/SPRINT_3_5_SUMMARY.md) — i18n System & CLI Extensibility
 - 📜 [**Sprint 3.4 Summary**](docs/history/SPRINT_3_4_SUMMARY.md) — HTTP Kernel & Exception Handler
 - 📜 [**Sprint 3.3 Summary**](docs/history/SPRINT_3_3_SUMMARY.md) — Authentication & JWT
@@ -133,11 +135,97 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 3.6?
+## 🆕 What's New in Sprint 3.7?
+
+### **Multi-Driver Caching & Rate Limiting** — Laravel-Inspired Cache Facade
+
+Implemented production-ready caching system with multi-driver architecture (File/Redis/Array) and rate limiting middleware, inspired by Laravel's Cache facade:
+
+```python
+from ftf.cache import Cache
+
+# Get cached value
+user = await Cache.get("user:123")
+
+# Store with TTL (1 hour)
+await Cache.put("user:123", user, ttl=3600)
+
+# Remember pattern (cache on miss)
+user = await Cache.remember(
+    "user:123",
+    3600,
+    lambda: fetch_user(123)
+)
+
+# Rate limiting counter
+count = await Cache.increment(f"throttle:{ip}")
+```
+
+**Configuration (.env):**
+```bash
+# Development (no Redis required)
+CACHE_DRIVER=file
+CACHE_FILE_PATH=storage/framework/cache
+
+# Production (high performance)
+CACHE_DRIVER=redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Testing (in-memory)
+CACHE_DRIVER=array
+```
+
+**Rate Limiting Middleware:**
+```python
+from ftf.http import FastTrackFramework
+from ftf.http.middleware.throttle import ThrottleMiddleware
+
+app = FastTrackFramework()
+
+# 60 requests per minute
+app.add_middleware(
+    ThrottleMiddleware,
+    max_requests=60,
+    window_seconds=60
+)
+```
+
+**Key Features:**
+- ✅ **Multi-Driver**: File (dev), Redis (prod), Array (test)
+- ✅ **Zero Setup**: FileDriver works without Redis
+- ✅ **Pickle Support**: Cache complex Python objects (Pydantic, SQLAlchemy)
+- ✅ **Atomic Operations**: Thread-safe increment for rate limiting
+- ✅ **Rate Limiting**: 429 responses with X-RateLimit headers
+- ✅ **CLI Commands**: test, config, clear, forget
+
+**Example CLI Usage:**
+```bash
+$ ftf cache test
+✓ Cache is working correctly!
+
+$ ftf cache config
+Cache Configuration
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Setting   ┃ Value                   ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Driver    │ file                    │
+│ File Path │ storage/framework/cache │
+└───────────┴─────────────────────────┘
+
+$ ftf cache clear
+✓ Cache cleared successfully!
+```
+
+**Learn more:** [Sprint 3.7 Summary](docs/history/SPRINT_3_7_SUMMARY.md)
+
+---
+
+## 🔙 Previous: Sprint 3.6
 
 ### **Custom Validation Rules CLI** — Pydantic v2 AfterValidator Pattern
 
-Implemented `ftf make rule` command for generating custom validation rules following Pydantic v2 patterns, inspired by Laravel's `php artisan make:rule`:
+Generate custom validation rules following Pydantic v2 patterns:
 
 ```bash
 $ ftf make rule CpfIsValid
@@ -319,9 +407,10 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **3.3** | Authentication & JWT | JWT tokens, bcrypt, AuthGuard, CurrentUser |
 | **3.4** | HTTP Kernel | Global exceptions, CORS, GZip, middleware |
 | **3.5** | i18n & CLI | JSON translations, multi-language, make:cmd/lang |
-| **3.6** ✨ | **Custom Validation** | **Pydantic v2 rules, make:rule, i18n errors** |
+| **3.6** | Custom Validation | Pydantic v2 rules, make:rule, i18n errors |
+| **3.7** ✨ | **Multi-Driver Cache** | **File/Redis/Array, rate limiting, CLI** |
 
-**Status:** 360 tests passing | ~66% coverage | Sprint 3.6 complete ✅
+**Status:** 360 tests passing | ~66% coverage | Sprint 3.7 complete ✅
 
 ---
 

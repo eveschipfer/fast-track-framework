@@ -48,7 +48,7 @@ def version() -> None:
         Fast Track Framework v0.1.0 (Sprint 3.2)
     """
     console.print("[bold green]Fast Track Framework[/bold green] v0.1.0")
-    console.print("[dim]Sprint 3.2 - Job Queue & Workers[/dim]")
+    console.print("[dim]Sprint 3.7 - Multi-Driver Caching & Rate Limiting[/dim]")
 
 
 @app.callback()
@@ -69,14 +69,14 @@ def register_commands() -> None:
     Register all command groups.
 
     This function is called automatically when the CLI is imported.
-    It registers the make:*, db:*, and queue:* command groups.
+    It registers the make:*, db:*, queue:*, and cache:* command groups.
 
     Educational Note:
         We register commands lazily to avoid circular imports and to
         make the CLI modular. Each command group is in its own file
         and can be developed independently.
     """
-    from ftf.cli.commands import db, make, queue
+    from ftf.cli.commands import cache, db, make, queue
 
     # Register make:* commands (scaffolding)
     app.add_typer(make.app, name="make", help="Generate framework components")
@@ -86,6 +86,9 @@ def register_commands() -> None:
 
     # Register queue:* commands (background jobs)
     app.add_typer(queue.app, name="queue", help="Queue worker and dashboard")
+
+    # Register cache:* commands (cache management)
+    app.add_typer(cache.app, name="cache", help="Cache management operations")
 
 
 # Register commands when module is imported

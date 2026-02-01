@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 3.6 - Custom Validation Rules CLI** (Latest!)
+**Sprint 3.7 - Multi-Driver Caching & Rate Limiting** (Latest!)
+- 📜 [Summary](history/SPRINT_3_7_SUMMARY.md)
+- Focus: Production-ready caching with multi-driver architecture and rate limiting
+- Added: 9 files (cache drivers, middleware, CLI), 4 commands
+- Features: File/Redis/Array drivers, ThrottleMiddleware, pickle serialization, atomic operations
+
+**Sprint 3.6 - Custom Validation Rules CLI**
 - 📜 [Summary](history/SPRINT_3_6_SUMMARY.md)
 - Focus: Generate Pydantic v2 validation rules with ftf make rule command
 - Added: ftf make rule command, to_pascal_case function, get_rule_template
@@ -190,7 +196,8 @@ docs/
 ├── architecture/                # Architecture & design
 │   └── decisions.md            # Design decisions & rationale
 ├── history/                     # Sprint summaries
-│   ├── SPRINT_3_6_SUMMARY.md   # Custom Validation Rules (latest)
+│   ├── SPRINT_3_7_SUMMARY.md   # Multi-Driver Caching (latest)
+│   ├── SPRINT_3_6_SUMMARY.md   # Custom Validation Rules
 │   ├── SPRINT_3_5_SUMMARY.md   # i18n & CLI
 │   ├── SPRINT_3_4_SUMMARY.md   # HTTP Kernel
 │   ├── SPRINT_3_3_SUMMARY.md   # Authentication
@@ -309,6 +316,6 @@ Found a typo? Have a suggestion? Documentation improvements are welcome!
 
 ---
 
-**Last Updated:** Sprint 3.6 (January 31, 2026)
-**Total Documentation:** 20 files
-**Lines of Documentation:** ~17,000 lines
+**Last Updated:** Sprint 3.7 (February 1, 2026)
+**Total Documentation:** 21 files
+**Lines of Documentation:** ~19,000 lines
