@@ -41,7 +41,19 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 3.8 - Async Jobs & Task Scheduler** (Latest!)
+**Sprint 5.1 - The Bug Bash** (Latest! 🎉)
+- 📜 [Summary](history/SPRINT_5_1_SUMMARY.md)
+- Focus: Achieve 100% test pass rate after Sprint 5.0 monorepo refactor
+- Fixed: 20 tests across 4 modules (Auth, Welcome Controller, CLI, Jobs)
+- Achievement: **440 passed, 0 failed** (100% pass rate) ✅
+
+**Sprint 5.0 - Monorepo Refactor**
+- 📜 [Summary](history/SPRINT_5_0_SUMMARY.md)
+- Focus: Separate framework code from application code (vendor vs app)
+- Fixed: SQLAlchemy metadata conflicts, import paths, lazy loading
+- Achievement: 420/440 tests passing (95.5%), monorepo structure
+
+**Sprint 3.8 - Async Jobs & Task Scheduler**
 - 📜 [Summary](history/SPRINT_3_8_SUMMARY.md)
 - Focus: Task scheduling with cron expressions and intervals using SAQ + Redis
 - Added: 9 files (schedule system, providers, CLI), 21 tests (100% coverage)

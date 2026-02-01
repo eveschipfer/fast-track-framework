@@ -16,7 +16,15 @@ Security Best Practices:
     - Use bcrypt with at least 12 rounds (default in passlib)
     - Never log or expose password hashes
     - Always use constant-time comparison (passlib does this)
+    - Pre-hash with SHA256 to handle bcrypt's 72-byte limit
+
+Implementation Detail:
+    Bcrypt has a hard 72-byte password limit. To handle longer passwords,
+    we pre-hash with SHA256 before bcrypt. This is the industry-standard
+    solution used by Django and other frameworks.
 """
+
+import hashlib
 
 from passlib.context import CryptContext
 
@@ -30,9 +38,41 @@ _pwd_context = CryptContext(
 )
 
 
+def _prehash_password(password: str) -> str:
+    """
+    Pre-hash password with SHA256 before bcrypt.
+
+    Bcrypt has a hard 72-byte password limit. To handle longer passwords,
+    we pre-hash with SHA256, which produces a consistent 64-character hex
+    string (well under the 72-byte limit).
+
+    This is the industry-standard solution used by Django, Werkzeug, and
+    other security-focused frameworks.
+
+    Args:
+        password: The plain-text password (any length)
+
+    Returns:
+        str: SHA256 hash as 64-character hex string
+
+    Example:
+        >>> _prehash_password("my_password")
+        '89e01536ac207279409d4de1e5253e01f4a1769e696db0d6062ca9b8f56767c8'
+        >>> len(_prehash_password("my_password"))
+        64
+
+    Security Notes:
+        - SHA256 is a one-way hash (irreversible)
+        - Produces consistent-length output (64 chars)
+        - Fast to compute (but still one-way)
+        - The bcrypt layer provides the slow, adaptive hashing
+    """
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+
 def hash_password(plain_password: str) -> str:
     """
-    Hash a plain-text password using bcrypt.
+    Hash a plain-text password using SHA256 + bcrypt.
 
     This function generates a secure hash of the password that can be safely
     stored in the database. The hash includes:
@@ -41,8 +81,12 @@ def hash_password(plain_password: str) -> str:
     - Salt (random, unique per password)
     - Hash digest
 
+    Implementation:
+        1. Pre-hash password with SHA256 (handles bcrypt 72-byte limit)
+        2. Hash the SHA256 digest with bcrypt (slow, adaptive hashing)
+
     Args:
-        plain_password: The plain-text password to hash
+        plain_password: The plain-text password to hash (any length)
 
     Returns:
         str: The bcrypt hash in the format:
@@ -63,8 +107,11 @@ def hash_password(plain_password: str) -> str:
         - Never log or expose the hash
         - The same password will produce different hashes (due to random salt)
         - Hashing is intentionally slow (~100ms) to prevent brute force
+        - SHA256 pre-hashing allows passwords longer than 72 bytes
     """
-    return _pwd_context.hash(plain_password)
+    # Pre-hash with SHA256 to handle bcrypt's 72-byte limit
+    prehashed = _prehash_password(plain_password)
+    return _pwd_context.hash(prehashed)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -74,8 +121,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     This function performs constant-time comparison to prevent timing attacks.
     It automatically handles different bcrypt variants and work factors.
 
+    Implementation:
+        1. Pre-hash password with SHA256 (same as during hashing)
+        2. Verify the SHA256 digest against the bcrypt hash
+        3. Return True if match, False otherwise
+
     Args:
-        plain_password: The plain-text password to verify
+        plain_password: The plain-text password to verify (any length)
         hashed_password: The bcrypt hash from the database
 
     Returns:
@@ -92,6 +144,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         - Uses constant-time comparison (prevents timing attacks)
         - Never short-circuit on mismatch (prevents timing analysis)
         - Automatically rehashes if the work factor has increased
+        - SHA256 pre-hashing allows passwords longer than 72 bytes
 
     Implementation Detail:
         passlib.verify() does this internally:
@@ -100,7 +153,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         3. Compare hashes in constant time
         4. Return True only if exact match
     """
-    return _pwd_context.verify(plain_password, hashed_password)
+    # Pre-hash with SHA256 to handle bcrypt's 72-byte limit
+    prehashed = _prehash_password(plain_password)
+    return _pwd_context.verify(prehashed, hashed_password)
 
 
 def needs_rehash(hashed_password: str) -> bool:

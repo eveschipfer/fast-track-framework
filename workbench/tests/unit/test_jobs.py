@@ -187,7 +187,7 @@ async def test_runner_executes_job_successfully(container: Container) -> None:
     ctx = {"queue": None, "job": None}
     await runner(
         ctx,
-        job_class="tests.unit.test_jobs.SimpleJob",
+        job_class="workbench.tests.unit.test_jobs.SimpleJob",
         payload={"user_id": 456, "email": "user@test.com"},
     )
 
@@ -214,7 +214,7 @@ async def test_runner_with_dependency_injection(container: Container) -> None:
     ctx = {"queue": None, "job": None}
     await runner(
         ctx,
-        job_class="tests.unit.test_jobs.JobWithDependency",
+        job_class="workbench.tests.unit.test_jobs.JobWithDependency",
         payload={"data": "test data"},
     )
 
@@ -252,7 +252,7 @@ async def test_runner_raises_attribute_error_for_invalid_class(
     with pytest.raises(AttributeError, match="Class.*not found"):
         await runner(
             ctx,
-            job_class="tests.unit.test_jobs.NonExistentJob",
+            job_class="workbench.tests.unit.test_jobs.NonExistentJob",
             payload={},
         )
 
@@ -267,7 +267,7 @@ async def test_runner_propagates_job_exceptions(container: Container) -> None:
     with pytest.raises(ValueError, match="Intentional failure"):
         await runner(
             ctx,
-            job_class="tests.unit.test_jobs.FailingJob",
+            job_class="workbench.tests.unit.test_jobs.FailingJob",
             payload={},
         )
 
@@ -286,7 +286,7 @@ async def test_runner_sets_multiple_payload_attributes(container: Container) -> 
     ctx = {"queue": None, "job": None}
     await runner(
         ctx,
-        job_class="tests.unit.test_jobs.SimpleJob",
+        job_class="workbench.tests.unit.test_jobs.SimpleJob",
         payload={
             "user_id": 999,
             "email": "multi@test.com",
@@ -307,7 +307,7 @@ async def test_runner_with_empty_payload(container: Container) -> None:
     ctx = {"queue": None, "job": None}
     await runner(
         ctx,
-        job_class="tests.unit.test_jobs.SimpleJob",
+        job_class="workbench.tests.unit.test_jobs.SimpleJob",
         payload={},
     )
 

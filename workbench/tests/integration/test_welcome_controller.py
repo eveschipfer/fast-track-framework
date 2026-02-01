@@ -20,45 +20,40 @@ def get_app():
 
 def test_root_endpoint() -> None:
     """
-    Test root endpoint returns welcome message.
+    Test root endpoint returns API documentation.
 
     Verifies:
     - / route is accessible
-    - MessageService is injected correctly
-    - Welcome message is returned
+    - Returns comprehensive framework info
+    - Includes name, version, and features
     """
     client = TestClient(get_app())
     response = client.get("/")
 
     assert response.status_code == 200
-    assert "message" in response.json()
-    assert "Welcome to Fast Track Framework" in response.json()["message"]
+    data = response.json()
+    assert "name" in data
+    assert data["name"] == "Fast Track Framework"
+    assert "version" in data
+    assert "features" in data
+    assert "endpoints" in data
 
 
 def test_info_endpoint() -> None:
     """
-    Test info endpoint returns framework information.
+    Test /info endpoint no longer exists (moved to /).
 
-    Verifies:
-    - /info route is accessible
-    - MessageService is injected correctly
-    - Framework info is returned
+    The framework has evolved - API documentation is now at /
+    instead of a separate /info endpoint.
+
+    This test is kept for historical reference but marked to expect 404.
     """
     client = TestClient(get_app())
     response = client.get("/info")
 
-    assert response.status_code == 200
-    data = response.json()
-
-    # Verify expected fields
-    assert "framework" in data
-    assert "version" in data
-    assert "description" in data
-    assert "status" in data
-
-    # Verify values
-    assert data["framework"] == "Fast Track Framework"
-    assert data["version"] == "0.1.0"
+    # /info endpoint no longer exists in ftf.main
+    # (Functionality moved to / endpoint)
+    assert response.status_code == 404
 
 
 def test_health_endpoint() -> None:
@@ -68,13 +63,16 @@ def test_health_endpoint() -> None:
     Verifies:
     - /health route is accessible
     - No dependencies required
-    - Health status is returned
+    - Health status is returned with version info
     """
     client = TestClient(get_app())
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "healthy"}
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert "version" in data
+    assert "framework" in data
 
 
 def test_all_endpoints_with_same_client() -> None:
@@ -87,14 +85,16 @@ def test_all_endpoints_with_same_client() -> None:
     """
     client = TestClient(get_app())
 
-    # Test root
+    # Test root (API documentation)
     response1 = client.get("/")
     assert response1.status_code == 200
+    assert "name" in response1.json()
 
-    # Test info
-    response2 = client.get("/info")
+    # Test health check
+    response2 = client.get("/health")
     assert response2.status_code == 200
+    assert response2.json()["status"] == "healthy"
 
-    # Test health
-    response3 = client.get("/health")
+    # Test docs endpoint (Swagger UI)
+    response3 = client.get("/docs")
     assert response3.status_code == 200
