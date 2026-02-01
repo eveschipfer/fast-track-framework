@@ -142,3 +142,16 @@ Thumbs.db
 # Project specific
 *.db
 *.sqlite
+
+# Storage (runtime data)
+storage/*
+!storage/.gitkeep
+!storage/framework/
+storage/framework/*
+!storage/framework/.gitkeep
+!storage/framework/cache/
+storage/framework/cache/*
+!storage/framework/cache/.gitkeep
+!storage/app/
+storage/app/*
+!storage/app/.gitkeep

@@ -470,12 +470,12 @@ class Mailable(ABC):
             Path to views directory
 
         Note:
-            Default is src/ftf/resources/views/
+            Default is framework/ftf/resources/views/
             Override this in subclasses to use a different directory.
         """
         # Get project root (4 levels up from this file)
-        # /src/ftf/mail/mailable.py -> /
+        # /framework/ftf/mail/mailable.py -> /
         current_file = Path(__file__)
         project_root = current_file.parent.parent.parent.parent
 
-        return project_root / "src" / "ftf" / "resources" / "views"
+        return project_root / "framework" / "ftf" / "resources" / "views"
