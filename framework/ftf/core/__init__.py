@@ -8,6 +8,8 @@ Public API:
     Container: Main IoC container for dependency injection
     Registration: Dependency registration metadata
     Scope: Type alias for lifetime scopes
+    ServiceProvider: Base class for service providers
+    DeferredServiceProvider: Service provider with lazy loading
     get_scoped_cache: Get current request's scoped cache
     set_scoped_cache: Set scoped cache for current request
     clear_scoped_cache: Clear scoped cache (end of request)
@@ -33,12 +35,16 @@ from .exceptions import (
     DependencyResolutionError,
     UnregisteredDependencyError,
 )
+from .service_provider import DeferredServiceProvider, ServiceProvider
 
 __all__ = [
     # Container
     "Container",
     "Registration",
     "Scope",
+    # Service Providers
+    "ServiceProvider",
+    "DeferredServiceProvider",
     # Scoped cache management
     "get_scoped_cache",
     "set_scoped_cache",

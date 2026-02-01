@@ -41,7 +41,14 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 5.1 - The Bug Bash** (Latest! 🎉)
+**Sprint 5.2 - Service Provider Architecture** (Latest! 🔧)
+- 📜 [Summary](history/SPRINT_5_2_SUMMARY.md)
+- Focus: Laravel-inspired service provider pattern for clean application bootstrapping
+- Added: 9 files (ServiceProvider base, AppServiceProvider, RouteServiceProvider, routes/api.py)
+- Features: Two-phase boot (register→boot), route organization, factory pattern, provider auto-boot
+- Achievement: Clean separation of concerns, extensible architecture ✅
+
+**Sprint 5.1 - The Bug Bash** 🎉
 - 📜 [Summary](history/SPRINT_5_1_SUMMARY.md)
 - Focus: Achieve 100% test pass rate after Sprint 5.0 monorepo refactor
 - Fixed: 20 tests across 4 modules (Auth, Welcome Controller, CLI, Jobs)

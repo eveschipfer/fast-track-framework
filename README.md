@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Tests](https://img.shields.io/badge/tests-440%20passed-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-5.1%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-5.2%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Monorepo](https://img.shields.io/badge/structure-monorepo-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
@@ -53,6 +53,7 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🎨 API Resources** | Transformation layer, conditional fields, relationship control, when/when_loaded | ✅ Sprint 4.2 |
 | **🏗️ Monorepo Structure** | Framework/vendor separation, improved modularity | ✅ Sprint 5.0 |
 | **🐛 Bug Bash** | 100% test pass rate (440/440), bcrypt fix, import path updates | ✅ Sprint 5.1 |
+| **🔧 Service Providers** | Laravel-inspired two-phase boot, route registration, clean architecture | ✅ Sprint 5.2 |
 | **🧪 440 Tests** | 100% passing, 0 failed, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
@@ -121,7 +122,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 5.1 Summary**](docs/history/SPRINT_5_1_SUMMARY.md) — The Bug Bash (100% test pass rate) ✨ **NEW!**
+- 📜 [**Sprint 5.2 Summary**](docs/history/SPRINT_5_2_SUMMARY.md) — Service Provider Architecture ✨ **NEW!**
+- 📜 [**Sprint 5.1 Summary**](docs/history/SPRINT_5_1_SUMMARY.md) — The Bug Bash (100% test pass rate)
 - 📜 [**Sprint 5.0 Summary**](docs/history/SPRINT_5_0_SUMMARY.md) — Monorepo Refactor (Framework/App separation)
 - 📜 [**Sprint 4.2 Summary**](docs/history/SPRINT_4_2_SUMMARY.md) — API Resources & Data Transformation
 - 📜 [**Sprint 4.1 Summary**](docs/history/SPRINT_4_1_SUMMARY.md) — Storage System (Local/S3/Memory drivers)
@@ -148,36 +150,74 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 5.1?
+## 🆕 What's New in Sprint 5.2?
+
+### **Service Provider Architecture** — Laravel-Inspired Application Bootstrapping 🔧
+
+Introduced the Service Provider Pattern to centralize application configuration and route registration, bringing Laravel-like architecture to Fast Track Framework.
+
+**What Was Implemented:**
+
+1. **ServiceProvider Base Class** — Two-phase initialization pattern
+   - `register(container)`: Register services in the IoC container
+   - `boot(container)`: Bootstrap services after all providers registered
+   - Predictable initialization order: all registration → all bootstrapping
+
+2. **Provider Support in FastTrackFramework** — Built-in provider system
+   - `register_provider(provider_class)`: Register a service provider
+   - `boot_providers()`: Boot all providers automatically during startup
+   - Self-registration: App instance available in container
+
+3. **Workbench Refactor** — Clean separation of concerns
+   - `workbench/routes/api.py`: API route definitions (like Laravel's `routes/api.php`)
+   - `app/providers/AppServiceProvider`: Application-level service registration
+   - `app/providers/RouteServiceProvider`: Route registration via provider
+   - `main.py`: Clean factory pattern with `create_app()`
+
+4. **Route Organization** — Routes in dedicated files
+   - `/api/ping`: Test endpoint
+   - `/api/users`: Sample resource endpoint
+   - Routes registered via provider, not directly in `main.py`
+
+**Key Benefits:**
+- ✅ **Separation of Concerns**: Services, routes, and config decoupled
+- ✅ **Laravel Parity**: Familiar pattern for Laravel developers
+- ✅ **Extensibility**: Easy to add new providers (Database, Cache, Queue, etc.)
+- ✅ **Testability**: Providers can be tested in isolation
+- ✅ **Clean Entry Point**: `main.py` uses factory pattern
+
+**Example:**
+```python
+# workbench/main.py
+def create_app() -> FastTrackFramework:
+    app = FastTrackFramework()
+    app.register_provider(AppServiceProvider)
+    app.register_provider(RouteServiceProvider)
+    return app
+
+# workbench/app/providers/route_service_provider.py
+class RouteServiceProvider(ServiceProvider):
+    def boot(self, container: Container) -> None:
+        app = container.resolve(FastTrackFramework)
+        from workbench.routes.api import api_router
+        app.include_router(api_router, prefix="/api", tags=["API"])
+```
+
+**Learn more:** [Sprint 5.2 Summary](docs/history/SPRINT_5_2_SUMMARY.md)
+
+---
+
+## 🔙 Previous: Sprint 5.1
 
 ### **The Bug Bash** — 100% Test Pass Rate Achieved! 🎉
 
-After the monorepo refactor in Sprint 5.0, we systematically fixed all remaining test failures to achieve a perfect green bar. From 420 passing (95.5%) to 440 passing (100%) with zero failures.
-
-**What Was Fixed:**
-
-1. **Auth Module (7 tests)** — Bcrypt 5.0 compatibility issue
-   - Downgraded bcrypt to 4.3.0 for passlib compatibility
-   - Added SHA256 pre-hashing (industry best practice)
-   - All 22 auth tests now passing
-
-2. **Welcome Controller (4 tests)** — Updated for evolved API
-   - Tests aligned with production API documentation endpoint
-   - Removed deprecated `/info` endpoint expectations
-
-3. **CLI Templates (5 tests)** — Fixed import paths after monorepo
-   - Updated code generation: `from ftf.models` → `from app.models`
-   - All `make:*` commands generating correct imports
-
-4. **Job Queue (4 tests)** — Dynamic import paths updated
-   - Fixed module paths: `tests.unit.` → `workbench.tests.unit.`
-   - Job runner correctly importing test classes
+Fixed all remaining test failures after Sprint 5.0 monorepo refactor. Achieved 440/440 tests passing (100%) with zero failures.
 
 **Key Achievements:**
 - ✅ **440 tests passing, 0 failed** (100% pass rate)
-- ✅ **Enhanced security** with SHA256 + bcrypt pattern
+- ✅ **Bcrypt compatibility** fixed with SHA256 pre-hashing
+- ✅ **Import paths** updated for monorepo structure
 - ✅ **Production-ready** framework with stable foundation
-- ✅ **Comprehensive documentation** of all fixes and learnings
 
 **Learn more:** [Sprint 5.1 Summary](docs/history/SPRINT_5_1_SUMMARY.md)
 

@@ -22,7 +22,7 @@ Trade-offs:
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -30,6 +30,9 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from ftf.core import Container, clear_scoped_cache_async, set_scoped_cache
+
+if TYPE_CHECKING:
+    from ftf.core.service_provider import ServiceProvider
 
 
 class FastTrackFramework(FastAPI):
@@ -70,11 +73,22 @@ class FastTrackFramework(FastAPI):
         # This ensures container is available during route registration
         self.container = Container()
 
+        # Initialize provider tracking lists (Sprint 5.2)
+        self._providers: list["ServiceProvider"] = []
+        self._booted: bool = False
+
         # Register the container itself (for self-injection patterns)
         # This allows routes to inject the Container if needed
         self.container.register(Container, implementation=Container, scope="singleton")
         # Make the container instance available via singleton
         self.container._singletons[Container] = self.container
+
+        # Register FastTrackFramework itself in the container
+        # This allows providers to resolve the app instance
+        self.container.register(
+            FastTrackFramework, implementation=FastTrackFramework, scope="singleton"
+        )
+        self.container._singletons[FastTrackFramework] = self
 
         # Inject custom lifespan if not provided
         if "lifespan" not in kwargs:
@@ -96,7 +110,7 @@ class FastTrackFramework(FastAPI):
         Application lifespan handler for startup/shutdown events.
 
         This manages the container lifecycle:
-        - Startup: Log application start, initialize resources
+        - Startup: Log application start, initialize resources, boot providers
         - Shutdown: Cleanup resources, close connections
 
         Args:
@@ -108,6 +122,11 @@ class FastTrackFramework(FastAPI):
         # Startup Phase
         print("🚀 Fast Track Framework starting up...")  # noqa: T201
         print(f"📦 Container initialized with {len(self.container._registry)} services")  # noqa: T201
+
+        # Boot all registered service providers (Sprint 5.2)
+        if self._providers and not self._booted:
+            print(f"🔧 Booting {len(self._providers)} service provider(s)...")  # noqa: T201
+            self.boot_providers()
 
         # Yield control to the application
         # Everything between startup and shutdown happens here
@@ -149,6 +168,62 @@ class FastTrackFramework(FastAPI):
             self.container._singletons[interface] = instance
         else:
             self.container.register(interface, implementation, scope)  # type: ignore
+
+    def register_provider(self, provider_class: type["ServiceProvider"]) -> None:
+        """
+        Register a service provider with the application.
+
+        Service providers follow a two-phase initialization:
+        1. Register phase: All providers' register() methods are called
+        2. Boot phase: All providers' boot() methods are called
+
+        This ensures all services are registered before bootstrapping begins.
+
+        Args:
+            provider_class: The service provider class to register
+
+        Example:
+            >>> from app.providers import AppServiceProvider, RouteServiceProvider
+            >>> app = FastTrackFramework()
+            >>> app.register_provider(AppServiceProvider)
+            >>> app.register_provider(RouteServiceProvider)
+            >>> app.boot_providers()  # Called automatically during startup
+        """
+        # Instantiate the provider
+        provider = provider_class()
+
+        # Store the provider instance
+        self._providers.append(provider)
+
+        # Immediately call register() to bind services
+        provider.register(self.container)
+
+    def boot_providers(self) -> None:
+        """
+        Boot all registered service providers.
+
+        This calls the boot() method on all registered providers.
+        Should be called after all providers are registered, typically
+        during application startup.
+
+        The boot phase happens AFTER all register() methods have completed,
+        ensuring all services are available for bootstrapping logic.
+
+        Example:
+            >>> app = FastTrackFramework()
+            >>> app.register_provider(DatabaseServiceProvider)
+            >>> app.register_provider(RouteServiceProvider)
+            >>> app.boot_providers()  # Bootstraps all providers
+        """
+        if self._booted:
+            return  # Already booted, skip
+
+        # Call boot() on all providers
+        for provider in self._providers:
+            provider.boot(self.container)
+
+        # Mark as booted
+        self._booted = True
 
 
 def scoped_middleware(app: FastTrackFramework, call_next: Any) -> Any:  # noqa: ARG001
