@@ -1,0 +1,9 @@
+*.db
+*.db-shm
+*.db-wal
+storage/logs/*.log
+storage/framework/cache/*
+!storage/framework/cache/.gitkeep
+.env
+__pycache__/
+*.pyc
