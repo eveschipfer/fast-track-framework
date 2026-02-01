@@ -121,7 +121,11 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 4.0 Summary**](docs/history/SPRINT_4_0_SUMMARY.md) — Mailer System with Multi-Driver Support (NEW!)
+- 📜 [**Sprint 5.1 Summary**](docs/history/SPRINT_5_1_SUMMARY.md) — The Bug Bash (100% test pass rate) ✨ **NEW!**
+- 📜 [**Sprint 5.0 Summary**](docs/history/SPRINT_5_0_SUMMARY.md) — Monorepo Refactor (Framework/App separation)
+- 📜 [**Sprint 4.2 Summary**](docs/history/SPRINT_4_2_SUMMARY.md) — API Resources & Data Transformation
+- 📜 [**Sprint 4.1 Summary**](docs/history/SPRINT_4_1_SUMMARY.md) — Storage System (Local/S3/Memory drivers)
+- 📜 [**Sprint 4.0 Summary**](docs/history/SPRINT_4_0_SUMMARY.md) — Mailer System with Multi-Driver Support
 - 📜 [**Sprint 3.8 Summary**](docs/history/SPRINT_3_8_SUMMARY.md) — Async Jobs & Task Scheduler
 - 📜 [**Sprint 3.7 Summary**](docs/history/SPRINT_3_7_SUMMARY.md) — Multi-Driver Caching & Rate Limiting
 - 📜 [**Sprint 3.6 Summary**](docs/history/SPRINT_3_6_SUMMARY.md) — Custom Validation Rules CLI
@@ -144,11 +148,75 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 4.0?
+## 🆕 What's New in Sprint 5.1?
+
+### **The Bug Bash** — 100% Test Pass Rate Achieved! 🎉
+
+After the monorepo refactor in Sprint 5.0, we systematically fixed all remaining test failures to achieve a perfect green bar. From 420 passing (95.5%) to 440 passing (100%) with zero failures.
+
+**What Was Fixed:**
+
+1. **Auth Module (7 tests)** — Bcrypt 5.0 compatibility issue
+   - Downgraded bcrypt to 4.3.0 for passlib compatibility
+   - Added SHA256 pre-hashing (industry best practice)
+   - All 22 auth tests now passing
+
+2. **Welcome Controller (4 tests)** — Updated for evolved API
+   - Tests aligned with production API documentation endpoint
+   - Removed deprecated `/info` endpoint expectations
+
+3. **CLI Templates (5 tests)** — Fixed import paths after monorepo
+   - Updated code generation: `from ftf.models` → `from app.models`
+   - All `make:*` commands generating correct imports
+
+4. **Job Queue (4 tests)** — Dynamic import paths updated
+   - Fixed module paths: `tests.unit.` → `workbench.tests.unit.`
+   - Job runner correctly importing test classes
+
+**Key Achievements:**
+- ✅ **440 tests passing, 0 failed** (100% pass rate)
+- ✅ **Enhanced security** with SHA256 + bcrypt pattern
+- ✅ **Production-ready** framework with stable foundation
+- ✅ **Comprehensive documentation** of all fixes and learnings
+
+**Learn more:** [Sprint 5.1 Summary](docs/history/SPRINT_5_1_SUMMARY.md)
+
+---
+
+## 🔙 Previous: Sprint 5.0
+
+### **Monorepo Refactor** — Framework/Application Separation
+
+Major architectural improvement separating framework code (vendor) from application code:
+
+**New Structure:**
+```
+larafast/
+├── framework/          # Framework code (read-only, vendor)
+│   ├── fast_query/    # Standalone ORM
+│   └── ftf/           # Framework features
+└── workbench/         # Application code (user-editable)
+    ├── app/           # User models, controllers, resources
+    └── tests/         # Application tests
+```
+
+**Benefits:**
+- ✨ **Clear separation** — Framework vs application code
+- 🔒 **Protected framework** — Prevents accidental modifications
+- 📦 **Better modularity** — Easier to package and distribute
+- 🧪 **Isolated testing** — Framework and app tests separate
+
+From 277 tests (63%) to 420 tests (95.5%) passing after refactor fixes.
+
+**Learn more:** [Sprint 5.0 Summary](docs/history/SPRINT_5_0_SUMMARY.md)
+
+---
+
+## 🔙 Previous: Sprint 4.0
 
 ### **Mailer System** — Laravel-Inspired Email with Multi-Driver Support
 
-Implemented comprehensive email system with template rendering, multiple drivers, and queue integration. Send beautiful emails with just a few lines of code:
+Comprehensive email system with template rendering, multiple drivers, and queue integration:
 
 ```python
 from ftf.mail import Mail, Mailable
@@ -429,36 +497,49 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **3.2** | Job Queue & Workers | SAQ, class-based jobs, Bridge Pattern, dashboard |
 | **3.3** | Authentication & JWT | JWT tokens, bcrypt, AuthGuard, CurrentUser |
 | **3.4** | HTTP Kernel | Global exceptions, CORS, GZip, middleware |
-| **3.5** | i18n & CLI | JSON translations, multi-language, make:cmd/lang |
-| **3.6** | Custom Validation | Pydantic v2 rules, make:rule, i18n errors |
-| **3.7** ✨ | **Multi-Driver Cache** | **File/Redis/Array, rate limiting, CLI** |
+| **3.5** | i18n & CLI Extensibility | JSON translations, multi-language, make:cmd/lang |
+| **3.6** | Custom Validation Rules | Pydantic v2 rules, make:rule, i18n errors |
+| **3.7** | Multi-Driver Caching | File/Redis/Array, rate limiting, CLI |
+| **3.8** | Task Scheduler | Cron expressions, @Schedule decorators, SAQ integration |
+| **4.0** | Mailer System | Multi-driver emails, Jinja2 templates, queue integration |
+| **4.1** | Storage System | Local/S3/Memory drivers, async file I/O |
+| **4.2** | API Resources | Data transformation, conditional fields, when/when_loaded |
+| **5.0** | Monorepo Refactor | Framework/App separation, improved modularity |
+| **5.1** 🎉 | **Bug Bash** | **100% test pass rate (440/440), bcrypt fix, production-ready** |
 
-**Status:** 381 tests passing | ~67% coverage | Sprint 3.8 complete ✅
+**Status:** 440 tests passing (100%) | ~58% coverage | Sprint 5.1 complete ✅
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests
-poetry run pytest tests/ -v --cov
+# Run all tests (from project root)
+poetry run pytest workbench/tests/ -v --cov
 
 # Test fast_query standalone
-poetry run pytest tests/unit/test_repository.py -v
-poetry run pytest tests/unit/test_query_builder.py -v
+poetry run pytest workbench/tests/unit/test_repository.py -v
+poetry run pytest workbench/tests/unit/test_query_builder.py -v
 
 # Verify zero framework dependencies
-cd larafast && PYTHONPATH=src poetry run python -c "import fast_query; print('✅ Works!')"
+cd larafast && PYTHONPATH=framework poetry run python -c "import fast_query; print('✅ Works!')"
 ```
 
-**Test Results:**
-- 360 tests passing (100% pass rate)
-  - Unit tests: 235 (91 container + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs + 15 auth + 25 http_kernel + 26 i18n)
-  - Integration tests: 13
-  - Contract tests: 20 (SQL generation)
-  - Semantic regression tests: 9 (O(1) complexity)
-- ~66% overall coverage
-- Zero framework coupling verified ✅
+**Test Results (Sprint 5.1):**
+- **440 tests passing (100% pass rate)** 🎉
+  - Unit tests: 360+ (container, factory, validation, CLI, events, jobs, auth, http_kernel, i18n, cache, schedule)
+  - Integration tests: 13 (database, relationships, welcome controller)
+  - Contract tests: 20 (SQL generation validation)
+  - Semantic regression tests: 9 (O(1) query complexity)
+  - CLI tests: 15 (scaffolding commands)
+  - Validation tests: 16 (form requests)
+- **~58% overall coverage** (100% on critical paths)
+- **Zero framework coupling verified** ✅
+
+**Quality Milestones:**
+- ✅ Sprint 5.0: 420/440 passing (95.5%) after monorepo refactor
+- ✅ Sprint 5.1: 440/440 passing (100%) after bug bash
+- ✅ Zero test failures since Sprint 5.1
 
 **Learn more:** [Testing Guide](docs/guides/testing.md)
 
@@ -466,42 +547,82 @@ cd larafast && PYTHONPATH=src poetry run python -c "import fast_query; print('�
 
 ## 🏗️ Architecture
 
+### Monorepo Structure (Sprint 5.0)
+
+The project uses a **monorepo architecture** separating framework code (vendor) from application code:
+
 ```
-src/
-├── fast_query/              # Standalone ORM Package
-│   ├── engine.py            # AsyncEngine singleton
-│   ├── session.py           # AsyncSession factory
-│   ├── repository.py        # Generic CRUD with smart delete
-│   ├── query_builder.py     # Fluent query builder
-│   ├── mixins.py            # TimestampMixin, SoftDeletesMixin
-│   ├── factories.py         # 🆕 Factory system (Sprint 2.8)
-│   ├── seeding.py           # 🆕 Seeder system (Sprint 2.8)
-│   └── exceptions.py        # RecordNotFound, FastQueryError
+larafast/
+├── framework/                    # 🏗️ Framework Code (Read-Only)
+│   ├── fast_query/              # Standalone ORM Package
+│   │   ├── engine.py            # AsyncEngine singleton
+│   │   ├── session.py           # AsyncSession factory
+│   │   ├── repository.py        # Generic CRUD with smart delete
+│   │   ├── query_builder.py     # Fluent query builder
+│   │   ├── mixins.py            # TimestampMixin, SoftDeletesMixin
+│   │   ├── factories.py         # Factory system (Sprint 2.8)
+│   │   ├── seeding.py           # Seeder system (Sprint 2.8)
+│   │   └── exceptions.py        # RecordNotFound, FastQueryError
+│   │
+│   └── ftf/                     # Framework Features
+│       ├── core/                # IoC Container (Sprint 1.2)
+│       ├── http/                # FastAPI integration (Sprint 2.1)
+│       │   ├── exceptions.py    # Global exception handling (Sprint 3.4)
+│       │   └── middleware/      # CORS, GZip, TrustedHost (Sprint 3.4)
+│       ├── validation/          # Form Requests & Validation (Sprint 2.9)
+│       ├── events/              # Event Bus & Observers (Sprint 3.1)
+│       ├── jobs/                # Job Queue & Workers (Sprint 3.2)
+│       ├── auth/                # Authentication & JWT (Sprint 3.3)
+│       ├── i18n/                # Internationalization (Sprint 3.5)
+│       ├── cache/               # Multi-driver caching (Sprint 3.7)
+│       ├── schedule/            # Task scheduler (Sprint 3.8)
+│       ├── mail/                # Mailer system (Sprint 4.0)
+│       ├── storage/             # File storage (Sprint 4.1)
+│       ├── resources/           # API resources (Sprint 4.2)
+│       ├── cli/                 # CLI Tooling (Sprint 3.0)
+│       └── main.py              # Example application
 │
-└── ftf/
-    ├── core/                # IoC Container (Sprint 1.2)
-    ├── http/                # FastAPI integration (Sprint 2.1)
-    │   ├── exceptions.py    # 🆕 Global exception handling (Sprint 3.4)
-    │   └── middleware/      # 🆕 CORS, GZip, TrustedHost (Sprint 3.4)
-    ├── validation/          # Form Requests & Validation (Sprint 2.9)
-    ├── events/              # Event Bus & Observers (Sprint 3.1)
-    ├── jobs/                # Job Queue & Workers (Sprint 3.2)
-    ├── auth/                # Authentication & JWT (Sprint 3.3)
-    ├── i18n/                # 🆕 Internationalization (Sprint 3.5)
-    ├── cli/                 # CLI Tooling (Sprint 3.0)
-    ├── models/              # Database models
-    ├── resources/           # 🆕 Framework resources (Sprint 3.5)
-    │   └── lang/            # Framework translations (en, pt_BR)
-    └── main.py              # Application entry point
+└── workbench/                   # 📝 Application Code (User-Editable)
+    ├── app/                     # Your Application
+    │   ├── models/              # User-defined models
+    │   ├── http/                # Controllers, middleware
+    │   └── resources/           # Custom API resources
+    │
+    └── tests/                   # Application Tests
+        ├── unit/                # Unit tests
+        ├── integration/         # Integration tests
+        ├── cli/                 # CLI tests
+        └── validation/          # Validation tests
 ```
 
-**Design Principles:**
-1. **Explicit over Implicit** — Following Zen of Python
-2. **Async-Native** — No sync fallbacks, pure asyncio
-3. **Type Safety First** — Strict MyPy, zero `Any` types
-4. **Framework-Agnostic** — ORM works everywhere
+**Key Principles:**
 
-**Learn more:** [Architecture Decisions](docs/architecture/decisions.md)
+1. **Framework/App Separation**
+   - `framework/` — Core features, read-only, vendor code
+   - `workbench/` — Your code, models, tests, customizations
+
+2. **Import Patterns**
+   ```python
+   # Framework imports (read-only)
+   from ftf.http import FastTrackFramework, Inject
+   from fast_query import BaseRepository, TimestampMixin
+
+   # Application imports (your code)
+   from app.models import User, Post
+   from app.resources import UserResource
+   ```
+
+3. **Code Generation**
+   - CLI commands (`ftf make:*`) generate in `workbench/app/`
+   - Framework templates updated to import from `app.models`
+
+4. **Design Principles**
+   - ✅ **Explicit over Implicit** — Following Zen of Python
+   - ✅ **Async-Native** — No sync fallbacks, pure asyncio
+   - ✅ **Type Safety First** — Strict MyPy, zero `Any` types
+   - ✅ **Framework-Agnostic** — Fast Query works everywhere
+
+**Learn more:** [Architecture Decisions](docs/architecture/decisions.md) | [Sprint 5.0 Summary](docs/history/SPRINT_5_0_SUMMARY.md)
 
 ---
 
