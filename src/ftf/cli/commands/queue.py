@@ -1,19 +1,21 @@
 """
-Queue Worker Commands (Sprint 3.2)
+Queue Worker Commands (Sprint 3.8 - Enhanced)
 
 This module provides commands for managing the background job queue:
-    - queue:work: Start the SAQ worker to process jobs
+    - queue:work: Start the SAQ worker to process jobs and scheduled tasks
     - queue:dashboard: Start the monitoring UI (Laravel Horizon-like)
+    - queue:list: List all registered scheduled tasks
 
 Educational Note:
-    These commands initialize the IoC Container and SAQ worker. The worker
-    must have access to the container so that jobs can be resolved with
-    their dependencies.
+    These commands initialize the IoC Container, SAQ worker, and scheduled
+    tasks. The worker automatically discovers and registers all @Schedule
+    decorated functions when it starts.
 
 Commands:
     $ ftf queue work                    # Start worker (default queue)
     $ ftf queue work --queue high       # Start worker for specific queue
     $ ftf queue dashboard               # Start monitoring UI at http://localhost:8080
+    $ ftf queue list                    # List all scheduled tasks
 """
 
 import asyncio
@@ -22,9 +24,12 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
+from rich.table import Table
 
 from ftf.core import Container
 from ftf.jobs import JobManager, runner, set_container
+from ftf.providers import QueueProvider
+from ftf.schedule import list_scheduled_tasks
 
 # Create command group
 app = typer.Typer()
@@ -37,77 +42,163 @@ def queue_work(
     redis_url: str = typer.Option(
         "redis://localhost:6379", "--redis", help="Redis URL"
     ),
+    concurrency: int = typer.Option(10, "--concurrency", "-c", help="Worker concurrency"),
 ) -> None:
     """
-    Start the queue worker to process background jobs.
+    Start the queue worker to process background jobs and scheduled tasks.
 
     This command:
-    1. Initializes the IoC Container
-    2. Sets up the SAQ worker with the runner function
-    3. Starts processing jobs from the queue
+    1. Verifies Redis connection
+    2. Initializes the IoC Container
+    3. Discovers and registers all @Schedule decorated tasks
+    4. Sets up the SAQ worker with the runner function
+    5. Starts processing jobs and scheduled tasks
 
     The worker will run indefinitely until stopped with Ctrl+C.
 
     Args:
         queue_name: Name of the queue to process (default: "default")
         redis_url: Redis connection URL (default: redis://localhost:6379)
+        concurrency: Number of concurrent jobs to process (default: 10)
 
     Example:
         $ ftf queue work
         🚀 Worker started for queue: default
         📡 Listening for jobs on redis://localhost:6379
+        ⏰ Registered 3 scheduled tasks
 
-        $ ftf queue work --queue high --redis redis://localhost:6380
+        $ ftf queue work --queue high --redis redis://localhost:6380 --concurrency 20
         🚀 Worker started for queue: high
     """
     console.print(f"[green]🚀 Starting worker for queue:[/green] {queue_name}")
     console.print(f"[dim]📡 Redis:[/dim] {redis_url}")
+    console.print(f"[dim]⚙️  Concurrency:[/dim] {concurrency}")
 
-    try:
-        # Initialize IoC Container
+    async def start_worker() -> None:
+        """Async wrapper to start the worker."""
+        # Create Queue Provider
+        provider = QueueProvider(
+            redis_url=redis_url,
+            queue_name=queue_name,
+            concurrency=concurrency,
+        )
+
+        # Check Redis connection first
+        console.print("\n[dim]Checking Redis connection...[/dim]")
+        if not await provider.check_redis_connection():
+            console.print(
+                f"[red]✗ Cannot connect to Redis at {redis_url}[/red]"
+            )
+            console.print("[yellow]Make sure Redis is running:[/yellow]")
+            console.print("  • docker run -d -p 6379:6379 redis:alpine")
+            console.print("  • redis-server")
+            sys.exit(1)
+
+        console.print("[green]✓ Redis connection OK[/green]")
+
+        # Initialize Container
+        console.print("\n[dim]Initializing IoC Container...[/dim]")
         container = Container()
-        set_container(container)
 
-        # Initialize JobManager
-        JobManager.initialize(redis_url)
+        # Initialize the queue system (including scheduled tasks)
+        console.print("[dim]Initializing queue system...[/dim]")
+        await provider.initialize(container)
 
-        # Import the runner function
-        # SAQ needs the function to be importable, so we register it
-        import saq
-        from redis.asyncio import Redis
+        # Show registered scheduled tasks
+        tasks = list_scheduled_tasks()
+        if tasks:
+            console.print(
+                f"[green]✓ Registered {len(tasks)} scheduled task(s)[/green]"
+            )
+            for task in tasks:
+                schedule_str = task["schedule"] if task["type"] == "cron" else f"{task['schedule']}s"
+                console.print(f"  • {task['name']}: {schedule_str}")
+        else:
+            console.print("[dim]  No scheduled tasks registered[/dim]")
 
-        # Create Redis connection
-        redis = Redis.from_url(redis_url, decode_responses=True)
+        # Get worker
+        worker = provider.get_worker()
 
-        # Create SAQ queue with the runner function
-        queue = saq.Queue(redis, name=queue_name)
-
-        # Create worker with settings
-        settings = {
-            "queue": queue,
-            "functions": [runner],  # Register the universal runner
-            "concurrency": 10,  # Process up to 10 jobs concurrently
-        }
-
-        # Create and run worker
-        worker = saq.Worker(**settings)
-
-        console.print(f"[green]✓ Worker ready![/green]")
-        console.print("[dim]Press Ctrl+C to stop[/dim]")
+        console.print(f"\n[green]✓ Worker ready![/green]")
+        console.print("[dim]Press Ctrl+C to stop[/dim]\n")
 
         # Run the worker (blocking)
-        asyncio.run(worker.start())
+        try:
+            await worker.start()
+        finally:
+            # Cleanup
+            await provider.close()
 
+    try:
+        asyncio.run(start_worker())
     except KeyboardInterrupt:
         console.print("\n[yellow]⚠️  Worker stopped by user[/yellow]")
         sys.exit(0)
     except ImportError as e:
         console.print(f"[red]✗ Import error:[/red] {e}")
-        console.print("[yellow]Make sure SAQ is installed:[/yellow] poetry add saq")
+        console.print("[yellow]Make sure dependencies are installed:[/yellow]")
+        console.print("  poetry add saq redis")
         sys.exit(1)
     except Exception as e:
         console.print(f"[red]✗ Error starting worker:[/red] {e}")
+        import traceback
+        console.print(f"[dim]{traceback.format_exc()}[/dim]")
         sys.exit(1)
+
+
+@app.command("list")
+def queue_list() -> None:
+    """
+    List all registered scheduled tasks.
+
+    This command displays all tasks that have been registered via
+    @Schedule.cron() or @Schedule.every() decorators.
+
+    Example:
+        $ ftf queue list
+
+        Scheduled Tasks
+        ┌──────────────────┬──────────────┬──────────┬─────────────────────┐
+        │ Name             │ Schedule     │ Type     │ Description         │
+        ├──────────────────┼──────────────┼──────────┼─────────────────────┤
+        │ hourly_cleanup   │ 0 * * * *    │ cron     │ Clean temp files    │
+        │ daily_report     │ 0 0 * * *    │ cron     │ Generate report     │
+        │ frequent_sync    │ 60s          │ interval │ Sync cache          │
+        └──────────────────┴──────────────┴──────────┴─────────────────────┘
+    """
+    tasks = list_scheduled_tasks()
+
+    if not tasks:
+        console.print("[yellow]No scheduled tasks registered[/yellow]")
+        console.print(
+            "\n[dim]Register tasks using @Schedule.cron() or @Schedule.every()[/dim]"
+        )
+        return
+
+    # Create table
+    table = Table(title="Scheduled Tasks", show_header=True, header_style="bold cyan")
+    table.add_column("Name", style="green")
+    table.add_column("Schedule", style="yellow")
+    table.add_column("Type", style="blue")
+    table.add_column("Description", style="dim")
+
+    for task in tasks:
+        schedule_str = (
+            task["schedule"] if task["type"] == "cron" else f"{task['schedule']}s"
+        )
+        description = task["description"] or ""
+        if description and len(description) > 50:
+            description = description[:47] + "..."
+
+        table.add_row(
+            task["name"],
+            schedule_str,
+            task["type"],
+            description,
+        )
+
+    console.print(table)
+    console.print(f"\n[green]Total:[/green] {len(tasks)} task(s)")
 
 
 @app.command("dashboard")

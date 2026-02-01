@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 3.7 - Multi-Driver Caching & Rate Limiting** (Latest!)
+**Sprint 3.8 - Async Jobs & Task Scheduler** (Latest!)
+- 📜 [Summary](history/SPRINT_3_8_SUMMARY.md)
+- Focus: Task scheduling with cron expressions and intervals using SAQ + Redis
+- Added: 9 files (schedule system, providers, CLI), 21 tests (100% coverage)
+- Features: @Schedule.cron(), @Schedule.every(), QueueProvider, Redis verification, queue:list
+
+**Sprint 3.7 - Multi-Driver Caching & Rate Limiting**
 - 📜 [Summary](history/SPRINT_3_7_SUMMARY.md)
 - Focus: Production-ready caching with multi-driver architecture and rate limiting
 - Added: 9 files (cache drivers, middleware, CLI), 4 commands
@@ -159,9 +165,9 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ## 📊 Test Metrics
 
-**Current Status (Sprint 3.5):**
-- **Total Tests:** 360 (100% critical passing)
-  - Unit Tests: 235 (91 container + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs + 15 auth + 25 http_kernel + 26 i18n)
+**Current Status (Sprint 3.8):**
+- **Total Tests:** 381 (100% critical passing)
+  - Unit Tests: 256 (91 container + 21 factory + 16 validation + 15 CLI + 13 events + 13 jobs + 15 auth + 25 http_kernel + 26 i18n + 21 schedule)
   - Integration Tests: 13
   - Contract Tests: 20
   - Semantic/Benchmark Tests: 9
@@ -180,6 +186,7 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
   - Auth: 92.11% (JWT), 78.12% (Guard)
   - HTTP Kernel: 93.62% (Exceptions), 85.29% (Middleware)
   - i18n: 96.83% (Core), 100% (Helpers)
+  - Schedule: 100% (Core)
 
 ---
 

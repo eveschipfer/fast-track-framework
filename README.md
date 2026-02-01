@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-360%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-3.7%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-381%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-3.8%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -46,7 +46,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🌍 i18n System** | Multi-language support, JSON translations, CLI tools | ✅ Sprint 3.5 |
 | **✅ Custom Validation** | Pydantic v2 rules with ftf make rule command | ✅ Sprint 3.6 |
 | **💾 Multi-Driver Cache** | File/Redis/Array drivers, rate limiting middleware | ✅ Sprint 3.7 |
-| **🧪 360 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **⏰ Task Scheduler** | Cron expressions & intervals with @Schedule decorators | ✅ Sprint 3.8 |
+| **🧪 381 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -114,7 +115,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 3.7 Summary**](docs/history/SPRINT_3_7_SUMMARY.md) — Multi-Driver Caching & Rate Limiting (NEW!)
+- 📜 [**Sprint 3.8 Summary**](docs/history/SPRINT_3_8_SUMMARY.md) — Async Jobs & Task Scheduler (NEW!)
+- 📜 [**Sprint 3.7 Summary**](docs/history/SPRINT_3_7_SUMMARY.md) — Multi-Driver Caching & Rate Limiting
 - 📜 [**Sprint 3.6 Summary**](docs/history/SPRINT_3_6_SUMMARY.md) — Custom Validation Rules CLI
 - 📜 [**Sprint 3.5 Summary**](docs/history/SPRINT_3_5_SUMMARY.md) — i18n System & CLI Extensibility
 - 📜 [**Sprint 3.4 Summary**](docs/history/SPRINT_3_4_SUMMARY.md) — HTTP Kernel & Exception Handler
@@ -135,101 +137,122 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 3.7?
+## 🆕 What's New in Sprint 3.8?
+
+### **Async Jobs & Task Scheduler** — Cron Expressions with @Schedule Decorators
+
+Implemented complete task scheduling system with cron expressions and simple intervals, built on SAQ + Redis. No manual cron configuration needed:
+
+```python
+from ftf.schedule import Schedule
+
+# Cron-based scheduling (every hour at minute 0)
+@Schedule.cron("0 * * * *")
+async def hourly_cleanup(ctx):
+    """Clean up temporary files and expired cache."""
+    # Cleanup logic here
+    print("Running hourly cleanup...")
+
+# Interval-based scheduling (every 60 seconds)
+@Schedule.every(60)
+async def health_check(ctx):
+    """Check system health."""
+    # Health check logic here
+    print("Checking system health...")
+
+# Common cron patterns
+@Schedule.cron("0 0 * * *")      # Daily at midnight
+async def daily_report(ctx): ...
+
+@Schedule.cron("*/5 * * * *")    # Every 5 minutes
+async def sync_data(ctx): ...
+
+@Schedule.cron("0 0 * * 0")      # Weekly on Sunday
+async def weekly_backup(ctx): ...
+```
+
+**Start the Worker:**
+```bash
+# Start worker (auto-discovers all @Schedule tasks)
+$ ftf queue work
+
+🚀 Starting worker for queue: default
+📡 Redis: redis://localhost:6379
+✓ Redis connection OK
+✓ Registered 5 scheduled task(s)
+  • hourly_cleanup: 0 * * * *
+  • health_check: 60s
+  • daily_report: 0 0 * * *
+  • sync_data: */5 * * * *
+  • weekly_backup: 0 0 * * 0
+✓ Worker ready!
+```
+
+**List Scheduled Tasks:**
+```bash
+$ ftf queue list
+
+Scheduled Tasks
+┌──────────────────┬──────────────┬──────────┬─────────────────────┐
+│ Name             │ Schedule     │ Type     │ Description         │
+├──────────────────┼──────────────┼──────────┼─────────────────────┤
+│ hourly_cleanup   │ 0 * * * *    │ cron     │ Clean temp files    │
+│ health_check     │ 60s          │ interval │ Check health        │
+│ daily_report     │ 0 0 * * *    │ cron     │ Generate report     │
+└──────────────────┴──────────────┴──────────┴─────────────────────┘
+
+Total: 3 task(s)
+```
+
+**Background Jobs (from Sprint 3.2):**
+```python
+from ftf.jobs import Job
+
+class ProcessOrderJob(Job):
+    def __init__(self, order_service: OrderService):
+        self.order_service = order_service  # Auto-injected
+        self.order_id: int = 0  # Set from payload
+
+    async def handle(self):
+        await self.order_service.process(self.order_id)
+
+# Dispatch from anywhere
+await ProcessOrderJob.dispatch(order_id=123)
+```
+
+**Key Features:**
+- ✅ **Cron Expressions**: Full 5-field cron syntax support
+- ✅ **Simple Intervals**: Run tasks every N seconds
+- ✅ **Auto-Discovery**: Worker finds all @Schedule tasks
+- ✅ **Redis Verification**: Checks connection before starting
+- ✅ **QueueProvider**: Unified Jobs + Schedules initialization
+- ✅ **IoC Integration**: Tasks can access services
+- ✅ **21 Tests**: 100% coverage on schedule module
+- ✅ **No Separate Process**: Unlike Celery beat, no extra daemon
+
+**Learn more:** [Sprint 3.8 Summary](docs/history/SPRINT_3_8_SUMMARY.md) | [Schedule Guide](docs/guides/schedule.md)
+
+---
+
+## 🔙 Previous: Sprint 3.7
 
 ### **Multi-Driver Caching & Rate Limiting** — Laravel-Inspired Cache Facade
 
-Implemented production-ready caching system with multi-driver architecture (File/Redis/Array) and rate limiting middleware, inspired by Laravel's Cache facade:
+Production-ready caching system with multi-driver architecture (File/Redis/Array):
 
 ```python
 from ftf.cache import Cache
 
-# Get cached value
+# Simple cache operations
 user = await Cache.get("user:123")
-
-# Store with TTL (1 hour)
 await Cache.put("user:123", user, ttl=3600)
 
-# Remember pattern (cache on miss)
-user = await Cache.remember(
-    "user:123",
-    3600,
-    lambda: fetch_user(123)
-)
+# Remember pattern
+user = await Cache.remember("user:123", 3600, lambda: fetch_user(123))
 
-# Rate limiting counter
-count = await Cache.increment(f"throttle:{ip}")
-```
-
-**Configuration (.env):**
-```bash
-# Development (no Redis required)
-CACHE_DRIVER=file
-CACHE_FILE_PATH=storage/framework/cache
-
-# Production (high performance)
-CACHE_DRIVER=redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# Testing (in-memory)
-CACHE_DRIVER=array
-```
-
-**Rate Limiting Middleware:**
-```python
-from ftf.http import FastTrackFramework
+# Rate limiting
 from ftf.http.middleware.throttle import ThrottleMiddleware
-
-app = FastTrackFramework()
-
-# 60 requests per minute
-app.add_middleware(
-    ThrottleMiddleware,
-    max_requests=60,
-    window_seconds=60
-)
-```
-
-**Key Features:**
-- ✅ **Multi-Driver**: File (dev), Redis (prod), Array (test)
-- ✅ **Zero Setup**: FileDriver works without Redis
-- ✅ **Pickle Support**: Cache complex Python objects (Pydantic, SQLAlchemy)
-- ✅ **Atomic Operations**: Thread-safe increment for rate limiting
-- ✅ **Rate Limiting**: 429 responses with X-RateLimit headers
-- ✅ **CLI Commands**: test, config, clear, forget
-
-**Example CLI Usage:**
-```bash
-$ ftf cache test
-✓ Cache is working correctly!
-
-$ ftf cache config
-Cache Configuration
-┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Setting   ┃ Value                   ┃
-┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ Driver    │ file                    │
-│ File Path │ storage/framework/cache │
-└───────────┴─────────────────────────┘
-
-$ ftf cache clear
-✓ Cache cleared successfully!
-```
-
-**Learn more:** [Sprint 3.7 Summary](docs/history/SPRINT_3_7_SUMMARY.md)
-
----
-
-## 🔙 Previous: Sprint 3.6
-
-### **Custom Validation Rules CLI** — Pydantic v2 AfterValidator Pattern
-
-Generate custom validation rules following Pydantic v2 patterns:
-
-```bash
-$ ftf make rule CpfIsValid
-✓ Validation Rule created: src/rules/cpf_is_valid.py
+app.add_middleware(ThrottleMiddleware, max_requests=60, window_seconds=60)
 
 💡 Usage Example:
 
@@ -410,7 +433,7 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **3.6** | Custom Validation | Pydantic v2 rules, make:rule, i18n errors |
 | **3.7** ✨ | **Multi-Driver Cache** | **File/Redis/Array, rate limiting, CLI** |
 
-**Status:** 360 tests passing | ~66% coverage | Sprint 3.7 complete ✅
+**Status:** 381 tests passing | ~67% coverage | Sprint 3.8 complete ✅
 
 ---
 
