@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-398%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-4.0%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-425%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-4.1%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -48,7 +48,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **💾 Multi-Driver Cache** | File/Redis/Array drivers, rate limiting middleware | ✅ Sprint 3.7 |
 | **⏰ Task Scheduler** | Cron expressions & intervals with @Schedule decorators | ✅ Sprint 3.8 |
 | **📧 Mailer System** | Multi-driver emails (Log/Array/SMTP), Jinja2 templates, queue integration | ✅ Sprint 4.0 |
-| **🧪 398 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **📁 Storage System** | Multi-driver file storage (Local/Memory/S3), async I/O, unified API | ✅ Sprint 4.1 |
+| **🧪 425 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---

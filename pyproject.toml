@@ -38,6 +38,7 @@ python-dotenv = "^1.0.0"  # Environment variable management (Sprint 3.3)
 # pydantic = "^2.9.0"
 jinja2 = "^3.1.6"
 aiosmtplib = "^5.1.0"
+aioboto3 = {version = "^15.5.0", optional = true}
 
 [tool.poetry.scripts]
 ftf = "ftf.cli.main:app"  # CLI entry point (Sprint 3.0)
