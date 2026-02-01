@@ -34,6 +34,7 @@ from ftf.cli.templates import (
     get_model_template,
     get_repository_template,
     get_request_template,
+    get_resource_template,
     get_rule_template,
     get_seeder_template,
 )
@@ -262,6 +263,69 @@ def make_request(
         console.print(f"[green]✓ Request created:[/green] {file_path}")
         console.print(
             "[yellow]⚠️  Remember: rules() is for validation only![/yellow]"
+        )
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+
+@app.command("resource")
+def make_resource(
+    name: str,
+    model: str = typer.Option(None, "--model", "-m", help="Model name"),
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate an API Resource for transforming models to JSON.
+
+    This command generates a resource class that transforms database models
+    into JSON responses, decoupling your database schema from API format.
+
+    Args:
+        name: Name of the resource (e.g., "UserResource", "PostResource")
+        model: Name of the model (auto-detected from resource name if not specified)
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make:resource UserResource
+        ✓ Resource created: src/ftf/resources/user_resource.py
+
+        $ ftf make:resource PostResource --model Post
+        ✓ Resource created: src/ftf/resources/post_resource.py
+
+        $ ftf make:resource UserResource --force
+        ✓ Resource created: src/ftf/resources/user_resource.py (overwritten)
+    """
+    # Auto-detect model name if not specified
+    # UserResource -> User, PostResource -> Post
+    if model is None:
+        # Remove "Resource" suffix if present
+        model = name.replace("Resource", "")
+        if not model:
+            console.print("[red]✗ Cannot auto-detect model name[/red]")
+            console.print(
+                "[dim]Use --model to specify: ftf make:resource MyResource --model MyModel[/dim]"
+            )
+            raise typer.Exit(code=1)
+
+    # Convert to snake_case for filename
+    filename = to_snake_case(name)
+
+    # Determine file path (src/ftf/resources/)
+    file_path = Path("src/ftf/resources") / f"{filename}.py"
+
+    # Generate content
+    content = get_resource_template(name, model)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Resource created:[/green] {file_path}")
+        console.print(
+            f"[dim]Transform {model} models to JSON responses[/dim]"
+        )
+        console.print(
+            f"[dim]Usage: {name}.make({model.lower()}).resolve()[/dim]"
         )
     else:
         console.print(f"[red]✗ File already exists:[/red] {file_path}")
