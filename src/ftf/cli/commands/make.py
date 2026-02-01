@@ -29,6 +29,7 @@ from ftf.cli.templates import (
     get_factory_template,
     get_job_template,
     get_listener_template,
+    get_mailable_template,
     get_middleware_template,
     get_model_template,
     get_repository_template,
@@ -537,6 +538,78 @@ def make_middleware(
         console.print(
             "[dim]Or use BaseHTTPMiddleware for async dispatch method[/dim]"
         )
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+
+@app.command("mail")
+def make_mail(
+    name: str,
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a Mailable class for sending emails.
+
+    Mailables are responsible for building email content using templates
+    or plain text/HTML. They use the Builder Pattern for fluent composition.
+
+    Args:
+        name: Name of the mailable (e.g., "WelcomeEmail", "InvoiceEmail")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make mail WelcomeEmail
+        ✓ Mailable created: src/mail/welcome_email.py
+
+        $ ftf make mail InvoiceEmail --force
+        ✓ Mailable created: src/mail/invoice_email.py (overwritten)
+
+    Educational Note:
+        Mailables combine several design patterns:
+        - Builder Pattern: Fluent API for email composition
+        - Template Method: Abstract build() method for subclasses
+        - Strategy Pattern: Different ways to set content (view/text/html)
+
+        Usage in code:
+            ```python
+            from mail.welcome_email import WelcomeEmail
+            from ftf.mail import Mail
+
+            # Send immediately
+            await Mail.send(WelcomeEmail(user))
+
+            # Fluent API
+            await Mail.to(user.email).send(WelcomeEmail(user))
+
+            # Queue for background
+            await Mail.to(user.email).queue(WelcomeEmail(user))
+            ```
+    """
+    # Convert to snake_case for filename
+    filename = to_snake_case(name)
+
+    # Determine file path (src/mail/)
+    file_path = Path("src/mail") / f"{filename}.py"
+
+    # Generate content
+    content = get_mailable_template(name)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Mailable created:[/green] {file_path}")
+        console.print()
+        console.print("[bold cyan]💡 Usage Example:[/bold cyan]")
+        console.print()
+        console.print(f"[dim]from mail.{filename} import {name}[/dim]")
+        console.print("[dim]from ftf.mail import Mail[/dim]")
+        console.print()
+        console.print("[dim]# Send immediately[/dim]")
+        console.print(f"[dim]await Mail.send({name}(...))[/dim]")
+        console.print()
+        console.print("[dim]# Queue for background[/dim]")
+        console.print(f'[dim]await Mail.to("user@example.com").queue({name}(...))[/dim]')
     else:
         console.print(f"[red]✗ File already exists:[/red] {file_path}")
         console.print("[dim]Use --force to overwrite[/dim]")

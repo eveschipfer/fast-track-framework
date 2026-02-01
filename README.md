@@ -5,8 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-381%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-3.8%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Tests](https://img.shields.io/badge/tests-398%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-4.0%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -47,7 +47,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **✅ Custom Validation** | Pydantic v2 rules with ftf make rule command | ✅ Sprint 3.6 |
 | **💾 Multi-Driver Cache** | File/Redis/Array drivers, rate limiting middleware | ✅ Sprint 3.7 |
 | **⏰ Task Scheduler** | Cron expressions & intervals with @Schedule decorators | ✅ Sprint 3.8 |
-| **🧪 381 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
+| **📧 Mailer System** | Multi-driver emails (Log/Array/SMTP), Jinja2 templates, queue integration | ✅ Sprint 4.0 |
+| **🧪 398 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -115,7 +116,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 3.8 Summary**](docs/history/SPRINT_3_8_SUMMARY.md) — Async Jobs & Task Scheduler (NEW!)
+- 📜 [**Sprint 4.0 Summary**](docs/history/SPRINT_4_0_SUMMARY.md) — Mailer System with Multi-Driver Support (NEW!)
+- 📜 [**Sprint 3.8 Summary**](docs/history/SPRINT_3_8_SUMMARY.md) — Async Jobs & Task Scheduler
 - 📜 [**Sprint 3.7 Summary**](docs/history/SPRINT_3_7_SUMMARY.md) — Multi-Driver Caching & Rate Limiting
 - 📜 [**Sprint 3.6 Summary**](docs/history/SPRINT_3_6_SUMMARY.md) — Custom Validation Rules CLI
 - 📜 [**Sprint 3.5 Summary**](docs/history/SPRINT_3_5_SUMMARY.md) — i18n System & CLI Extensibility
@@ -137,66 +139,59 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 3.8?
+## 🆕 What's New in Sprint 4.0?
 
-### **Async Jobs & Task Scheduler** — Cron Expressions with @Schedule Decorators
+### **Mailer System** — Laravel-Inspired Email with Multi-Driver Support
 
-Implemented complete task scheduling system with cron expressions and simple intervals, built on SAQ + Redis. No manual cron configuration needed:
+Implemented comprehensive email system with template rendering, multiple drivers, and queue integration. Send beautiful emails with just a few lines of code:
 
 ```python
-from ftf.schedule import Schedule
+from ftf.mail import Mail, Mailable
 
-# Cron-based scheduling (every hour at minute 0)
-@Schedule.cron("0 * * * *")
-async def hourly_cleanup(ctx):
-    """Clean up temporary files and expired cache."""
-    # Cleanup logic here
-    print("Running hourly cleanup...")
+# Define your email
+class WelcomeEmail(Mailable):
+    def __init__(self, user: User):
+        super().__init__()
+        self.user = user
 
-# Interval-based scheduling (every 60 seconds)
-@Schedule.every(60)
-async def health_check(ctx):
-    """Check system health."""
-    # Health check logic here
-    print("Checking system health...")
+    async def build(self) -> None:
+        self.subject("Welcome to Fast Track!")
+        self.from_("noreply@app.com", "Fast Track")
+        self.view("mail.welcome", {"user": self.user})
 
-# Common cron patterns
-@Schedule.cron("0 0 * * *")      # Daily at midnight
-async def daily_report(ctx): ...
+# Send immediately
+await Mail.send(WelcomeEmail(user))
 
-@Schedule.cron("*/5 * * * *")    # Every 5 minutes
-async def sync_data(ctx): ...
+# Fluent API with recipients
+await Mail.to("user@example.com", "John").send(WelcomeEmail(user))
 
-@Schedule.cron("0 0 * * 0")      # Weekly on Sunday
-async def weekly_backup(ctx): ...
+# Queue for background processing
+await Mail.to("user@example.com").queue(WelcomeEmail(user))
 ```
 
-**Start the Worker:**
+**Multi-Driver Support:**
 ```bash
-# Start worker (auto-discovers all @Schedule tasks)
-$ ftf queue work
+# Development (logs to console)
+MAIL_DRIVER=log
 
-🚀 Starting worker for queue: default
-📡 Redis: redis://localhost:6379
-✓ Redis connection OK
-✓ Registered 5 scheduled task(s)
-  • hourly_cleanup: 0 * * * *
-  • health_check: 60s
-  • daily_report: 0 0 * * *
-  • sync_data: */5 * * * *
-  • weekly_backup: 0 0 * * 0
-✓ Worker ready!
+# Testing (stores in memory)
+MAIL_DRIVER=array
+
+# Production (sends via SMTP)
+MAIL_DRIVER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=tls
 ```
 
-**List Scheduled Tasks:**
+**CLI Scaffolding:**
 ```bash
-$ ftf queue list
+$ ftf make mail WelcomeEmail
+✓ Mailable created: src/mail/welcome_email.py
 
-Scheduled Tasks
-┌──────────────────┬──────────────┬──────────┬─────────────────────┐
-│ Name             │ Schedule     │ Type     │ Description         │
-├──────────────────┼──────────────┼──────────┼─────────────────────┤
-│ hourly_cleanup   │ 0 * * * *    │ cron     │ Clean temp files    │
+# Generated with complete documentation and examples
 │ health_check     │ 60s          │ interval │ Check health        │
 │ daily_report     │ 0 0 * * *    │ cron     │ Generate report     │
 └──────────────────┴──────────────┴──────────┴─────────────────────┘

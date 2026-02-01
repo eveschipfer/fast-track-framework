@@ -36,6 +36,8 @@ passlib = {extras = ["bcrypt"], version = "^1.7.4"}  # Password hashing (Sprint 
 python-dotenv = "^1.0.0"  # Environment variable management (Sprint 3.3)
 # Future dependencies (uncomment when needed):
 # pydantic = "^2.9.0"
+jinja2 = "^3.1.6"
+aiosmtplib = "^5.1.0"
 
 [tool.poetry.scripts]
 ftf = "ftf.cli.main:app"  # CLI entry point (Sprint 3.0)
