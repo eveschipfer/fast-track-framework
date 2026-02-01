@@ -33,6 +33,7 @@ from ftf.cli.templates import (
     get_model_template,
     get_repository_template,
     get_request_template,
+    get_rule_template,
     get_seeder_template,
 )
 
@@ -61,6 +62,31 @@ def to_snake_case(name: str) -> str:
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     # Insert underscore before uppercase letters preceded by lowercase
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+
+def to_pascal_case(name: str) -> str:
+    """
+    Convert snake_case or any string to PascalCase.
+
+    Args:
+        name: Input string (e.g., "cpf_is_valid", "CpfIsValid")
+
+    Returns:
+        PascalCase string (e.g., "CpfIsValid")
+
+    Example:
+        >>> to_pascal_case("cpf_is_valid")
+        'CpfIsValid'
+        >>> to_pascal_case("CpfIsValid")
+        'CpfIsValid'
+    """
+    # If already in PascalCase (no underscores/hyphens, starts with capital), return as-is
+    if "_" not in name and "-" not in name and name and name[0].isupper():
+        return name
+
+    # Split by underscores/hyphens and capitalize each word (preserve uppercase letters)
+    words = name.replace("-", "_").split("_")
+    return "".join(word[0].upper() + word[1:] if word else "" for word in words)
 
 
 def pluralize(name: str) -> str:
@@ -749,6 +775,88 @@ def make_lang(
         console.print()
         console.print("[dim]Set default locale:[/dim]")
         console.print(f"[dim]export DEFAULT_LOCALE='{locale}'[/dim]")
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+
+@app.command("rule")
+def make_rule(
+    name: str,
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a new Validation Rule class (Pydantic AfterValidator).
+
+    Creates a custom validation rule that can be used with Pydantic v2's
+    AfterValidator pattern. The rule is a callable class that validates
+    field values and can raise ValueError for validation failures.
+
+    Args:
+        name: Name of the validation rule (e.g., "CpfIsValid", "MinAge")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make:rule CpfIsValid
+        ✓ Validation Rule created: src/rules/cpf_is_valid.py
+
+        $ ftf make:rule MinAge --force
+        ✓ Validation Rule created: src/rules/min_age.py (overwritten)
+
+    Educational Note:
+        This follows Pydantic v2's pattern for custom validators:
+
+        1. The validator is a callable class (implements __call__)
+        2. It returns the value if valid (can transform)
+        3. It raises ValueError if validation fails
+        4. It uses ftf.i18n for multi-language error messages
+
+        Comparison with Laravel:
+            Laravel:
+                php artisan make:rule Uppercase
+                // Implements Rule interface with passes() method
+
+            Fast Track:
+                ftf make:rule CpfIsValid
+                // Callable class used with Pydantic AfterValidator
+    """
+    # 1. Prepare naming
+    snake_name = to_snake_case(name)
+    class_name = to_pascal_case(name)
+
+    # 2. Define path (Default: src/rules)
+    directory = Path("src/rules")
+    file_path = directory / f"{snake_name}.py"
+
+    # 3. Check existence
+    if file_path.exists() and not force:
+        console.print(f"[bold red]❌ Rule already exists:[/bold red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+    # 4. Create directory structure
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "__init__.py").touch(exist_ok=True)  # Ensure it's a package
+
+    # 5. Generate content
+    content = get_rule_template(class_name)
+
+    # 6. Write file
+    if create_file(file_path, content, force):
+        console.print(f"[bold green]✓ Validation Rule created:[/bold green] {file_path}")
+        console.print()
+        console.print("[bold cyan]💡 Usage Example:[/bold cyan]")
+        console.print()
+        console.print("[dim]from typing import Annotated[/dim]")
+        console.print("[dim]from pydantic import AfterValidator, BaseModel[/dim]")
+        console.print(f"[dim]from rules.{snake_name} import {class_name}[/dim]")
+        console.print()
+        console.print("[dim]class MyModel(BaseModel):[/dim]")
+        console.print(f"[dim]    field: Annotated[str, AfterValidator({class_name}())][/dim]")
+        console.print()
+        console.print("[bold cyan]📚 Learn More:[/bold cyan]")
+        console.print("[dim]https://docs.pydantic.dev/latest/concepts/validators/#annotated-validators[/dim]")
     else:
         console.print(f"[red]✗ File already exists:[/red] {file_path}")
         console.print("[dim]Use --force to overwrite[/dim]")

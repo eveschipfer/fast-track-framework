@@ -41,7 +41,13 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 3.5 - i18n System & CLI Extensibility** (Latest!)
+**Sprint 3.6 - Custom Validation Rules CLI** (Latest!)
+- 📜 [Summary](history/SPRINT_3_6_SUMMARY.md)
+- Focus: Generate Pydantic v2 validation rules with ftf make rule command
+- Added: ftf make rule command, to_pascal_case function, get_rule_template
+- Features: Pydantic AfterValidator pattern, i18n integration, stateful validators
+
+**Sprint 3.5 - i18n System & CLI Extensibility**
 - 📜 [Summary](history/SPRINT_3_5_SUMMARY.md)
 - Focus: Multi-language support with JSON translations and CLI extensibility
 - Added: 26 tests (100% passing, 96.83% coverage on i18n module)
@@ -184,7 +190,8 @@ docs/
 ├── architecture/                # Architecture & design
 │   └── decisions.md            # Design decisions & rationale
 ├── history/                     # Sprint summaries
-│   ├── SPRINT_3_5_SUMMARY.md   # i18n & CLI (latest)
+│   ├── SPRINT_3_6_SUMMARY.md   # Custom Validation Rules (latest)
+│   ├── SPRINT_3_5_SUMMARY.md   # i18n & CLI
 │   ├── SPRINT_3_4_SUMMARY.md   # HTTP Kernel
 │   ├── SPRINT_3_3_SUMMARY.md   # Authentication
 │   ├── SPRINT_3_2_SUMMARY.md   # Job Queue
@@ -302,6 +309,6 @@ Found a typo? Have a suggestion? Documentation improvements are welcome!
 
 ---
 
-**Last Updated:** Sprint 3.5 (January 31, 2026)
-**Total Documentation:** 19 files
-**Lines of Documentation:** ~16,000 lines
+**Last Updated:** Sprint 3.6 (January 31, 2026)
+**Total Documentation:** 20 files
+**Lines of Documentation:** ~17,000 lines

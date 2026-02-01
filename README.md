@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Tests](https://img.shields.io/badge/tests-360%20passed-success.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-3.5%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-3.6%20complete-success.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
 ---
@@ -44,6 +44,7 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🔐 Authentication** | JWT tokens, bcrypt passwords, route guards | ✅ Sprint 3.3 |
 | **🛡️ HTTP Kernel** | Global exception handling, CORS, GZip, middleware | ✅ Sprint 3.4 |
 | **🌍 i18n System** | Multi-language support, JSON translations, CLI tools | ✅ Sprint 3.5 |
+| **✅ Custom Validation** | Pydantic v2 rules with ftf make rule command | ✅ Sprint 3.6 |
 | **🧪 360 Tests** | 100% passing, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
@@ -112,7 +113,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 3.5 Summary**](docs/history/SPRINT_3_5_SUMMARY.md) — i18n System & CLI Extensibility (NEW!)
+- 📜 [**Sprint 3.6 Summary**](docs/history/SPRINT_3_6_SUMMARY.md) — Custom Validation Rules CLI (NEW!)
+- 📜 [**Sprint 3.5 Summary**](docs/history/SPRINT_3_5_SUMMARY.md) — i18n System & CLI Extensibility
 - 📜 [**Sprint 3.4 Summary**](docs/history/SPRINT_3_4_SUMMARY.md) — HTTP Kernel & Exception Handler
 - 📜 [**Sprint 3.3 Summary**](docs/history/SPRINT_3_3_SUMMARY.md) — Authentication & JWT
 - 📜 [**Sprint 3.2 Summary**](docs/history/SPRINT_3_2_SUMMARY.md) — Job Queue & Workers
@@ -131,11 +133,70 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 3.5?
+## 🆕 What's New in Sprint 3.6?
+
+### **Custom Validation Rules CLI** — Pydantic v2 AfterValidator Pattern
+
+Implemented `ftf make rule` command for generating custom validation rules following Pydantic v2 patterns, inspired by Laravel's `php artisan make:rule`:
+
+```bash
+$ ftf make rule CpfIsValid
+✓ Validation Rule created: src/rules/cpf_is_valid.py
+
+💡 Usage Example:
+
+from typing import Annotated
+from pydantic import AfterValidator, BaseModel
+from rules.cpf_is_valid import CpfIsValid
+
+class MyModel(BaseModel):
+    cpf: Annotated[str, AfterValidator(CpfIsValid())]
+```
+
+**Generated Validation Rule**:
+```python
+from typing import Any
+from ftf.i18n import trans
+
+class CpfIsValid:
+    """Validate Brazilian CPF format."""
+
+    def __init__(self, allow_masked: bool = True) -> None:
+        self.allow_masked = allow_masked
+
+    def __call__(self, value: str) -> str:
+        """Validate and return the value."""
+        if not is_valid_cpf(value):
+            raise ValueError(trans("validation.invalid_cpf"))
+        return value
+```
+
+**Key Features:**
+- ✅ **Pydantic v2 Pattern** — Callable classes with `__call__` method
+- ✅ **Stateful Validators** — Initialize with parameters via `__init__`
+- ✅ **i18n Integration** — Auto-imports ftf.i18n for multi-language errors
+- ✅ **Type-Safe** — Full MyPy support with strict type hints
+- ✅ **Reusable** — Use across multiple models with Annotated
+- ✅ **Smart Naming** — Converts PascalCase/snake_case automatically
+
+**Example CLI Usage:**
+```bash
+$ ftf make rule MinAge
+✓ Validation Rule created: src/rules/min_age.py
+
+$ ftf make rule CpfIsValid --force
+✓ Validation Rule created: src/rules/cpf_is_valid.py (overwritten)
+```
+
+**Learn more:** [Sprint 3.6 Summary](docs/history/SPRINT_3_6_SUMMARY.md)
+
+---
+
+## 🔙 Previous: Sprint 3.5
 
 ### **i18n System & CLI Extensibility** — Global Multi-Language Support
 
-Implemented lightweight internationalization system with JSON-based translations and CLI extensibility, inspired by Laravel's `resources/lang/` and Artisan commands:
+Lightweight internationalization system with JSON-based translations:
 
 ```python
 from ftf.i18n import trans, t, set_locale, has
@@ -257,9 +318,10 @@ This project is built **sprint-by-sprint** as an educational deep-dive:
 | **3.2** | Job Queue & Workers | SAQ, class-based jobs, Bridge Pattern, dashboard |
 | **3.3** | Authentication & JWT | JWT tokens, bcrypt, AuthGuard, CurrentUser |
 | **3.4** | HTTP Kernel | Global exceptions, CORS, GZip, middleware |
-| **3.5** ✨ | **i18n & CLI** | **JSON translations, multi-language, make:cmd/lang** |
+| **3.5** | i18n & CLI | JSON translations, multi-language, make:cmd/lang |
+| **3.6** ✨ | **Custom Validation** | **Pydantic v2 rules, make:rule, i18n errors** |
 
-**Status:** 360 tests passing | ~66% coverage | Sprint 3.5 complete ✅
+**Status:** 360 tests passing | ~66% coverage | Sprint 3.6 complete ✅
 
 ---
 
