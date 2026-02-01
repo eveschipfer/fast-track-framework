@@ -41,7 +41,14 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 5.2 - Service Provider Architecture** (Latest! 🔧)
+**Sprint 5.3 - Configuration System** (Latest! ⚙️)
+- 📜 [Summary](history/SPRINT_5_3_SUMMARY.md)
+- Focus: Centralized configuration management with Laravel-like config system
+- Added: 6 files (ConfigRepository, global config() helper, app.py, database.py configs)
+- Features: Dot notation access, auto-provider registration, environment variables, type-safe
+- Achievement: 440 tests passing (100%), config-driven application, minimal main.py ✅
+
+**Sprint 5.2 - Service Provider Architecture** 🔧
 - 📜 [Summary](history/SPRINT_5_2_SUMMARY.md)
 - Focus: Laravel-inspired service provider pattern for clean application bootstrapping
 - Added: 9 files (ServiceProvider base, AppServiceProvider, RouteServiceProvider, routes/api.py)
@@ -164,6 +171,36 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### All Sprints
 - 📂 [**Complete Sprint History**](history/) — All sprint summaries and reports
+
+---
+
+## 📐 Implementation Guides
+
+**Detailed implementation guides for major sprints:**
+
+These guides provide comprehensive technical details, architecture decisions, and implementation patterns for major framework features. Perfect for understanding the "how" and "why" behind each sprint.
+
+### Recent Implementations
+
+- 📐 [**Sprint 5.3 Implementation**](SPRINT_5_3_IMPLEMENTATION.md) — Configuration System
+  - ConfigRepository singleton with dot notation
+  - Dynamic Python module loading
+  - Auto-provider registration
+  - Environment variable support
+  - 500+ lines of detailed implementation guide
+
+- 📐 [**Sprint 5.2 Implementation**](SPRINT_5_2_IMPLEMENTATION.md) — Service Provider Architecture
+  - ServiceProvider base class design
+  - Two-phase initialization (register → boot)
+  - Provider auto-registration system
+  - Route organization patterns
+  - 500+ lines of detailed implementation guide
+
+**When to use these guides:**
+- 🔍 **Deep Dive**: Understanding implementation details beyond sprint summaries
+- 🏗️ **Architecture**: Learning design patterns and decisions
+- 🧪 **Testing**: Seeing how features were tested and validated
+- 🎓 **Education**: Learning modern Python framework architecture
 
 ---
 
@@ -342,6 +379,6 @@ Found a typo? Have a suggestion? Documentation improvements are welcome!
 
 ---
 
-**Last Updated:** Sprint 3.7 (February 1, 2026)
-**Total Documentation:** 21 files
-**Lines of Documentation:** ~19,000 lines
+**Last Updated:** Sprint 5.3 (February 2026)
+**Total Documentation:** 26 files
+**Lines of Documentation:** ~21,000 lines

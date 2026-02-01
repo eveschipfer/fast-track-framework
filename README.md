@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Tests](https://img.shields.io/badge/tests-440%20passed-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-5.2%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-5.3%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Monorepo](https://img.shields.io/badge/structure-monorepo-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
@@ -54,6 +54,7 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🏗️ Monorepo Structure** | Framework/vendor separation, improved modularity | ✅ Sprint 5.0 |
 | **🐛 Bug Bash** | 100% test pass rate (440/440), bcrypt fix, import path updates | ✅ Sprint 5.1 |
 | **🔧 Service Providers** | Laravel-inspired two-phase boot, route registration, clean architecture | ✅ Sprint 5.2 |
+| **⚙️ Configuration System** | Centralized config, dot notation access, auto-provider registration | ✅ Sprint 5.3 |
 | **🧪 440 Tests** | 100% passing, 0 failed, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
@@ -122,7 +123,8 @@ async def get_user(
 - 🧠 [**Architecture Decisions**](docs/architecture/decisions.md) — Why Repository Pattern? Why type-hints?
 
 ### Sprint History
-- 📜 [**Sprint 5.2 Summary**](docs/history/SPRINT_5_2_SUMMARY.md) — Service Provider Architecture ✨ **NEW!**
+- 📜 [**Sprint 5.3 Summary**](docs/history/SPRINT_5_3_SUMMARY.md) — Configuration System ✨ **NEW!**
+- 📜 [**Sprint 5.2 Summary**](docs/history/SPRINT_5_2_SUMMARY.md) — Service Provider Architecture
 - 📜 [**Sprint 5.1 Summary**](docs/history/SPRINT_5_1_SUMMARY.md) — The Bug Bash (100% test pass rate)
 - 📜 [**Sprint 5.0 Summary**](docs/history/SPRINT_5_0_SUMMARY.md) — Monorepo Refactor (Framework/App separation)
 - 📜 [**Sprint 4.2 Summary**](docs/history/SPRINT_4_2_SUMMARY.md) — API Resources & Data Transformation
@@ -150,58 +152,86 @@ async def get_user(
 
 ---
 
-## 🆕 What's New in Sprint 5.2?
+## 🆕 What's New in Sprint 5.3?
 
-### **Service Provider Architecture** — Laravel-Inspired Application Bootstrapping 🔧
+### **Configuration System** — Centralized Laravel-Style Configuration ⚙️
 
-Introduced the Service Provider Pattern to centralize application configuration and route registration, bringing Laravel-like architecture to Fast Track Framework.
+Implemented a comprehensive configuration system that eliminates manual provider registration and provides Laravel-like config management with dot notation access and environment variable support.
 
 **What Was Implemented:**
 
-1. **ServiceProvider Base Class** — Two-phase initialization pattern
-   - `register(container)`: Register services in the IoC container
-   - `boot(container)`: Bootstrap services after all providers registered
-   - Predictable initialization order: all registration → all bootstrapping
+1. **ConfigRepository Singleton** — Central configuration management
+   - Dynamic Python module loading with `importlib`
+   - Dot notation access: `config("database.connections.mysql.host")`
+   - Graceful defaults: Returns default value if key doesn't exist
+   - Type-safe with full MyPy compliance
 
-2. **Provider Support in FastTrackFramework** — Built-in provider system
-   - `register_provider(provider_class)`: Register a service provider
-   - `boot_providers()`: Boot all providers automatically during startup
-   - Self-registration: App instance available in container
+2. **Auto-Provider Registration** — Framework bootstrapping
+   - Providers automatically loaded from `config("app.providers")`
+   - No more manual `app.register_provider()` calls
+   - Clean `main.py` with minimal setup code
 
-3. **Workbench Refactor** — Clean separation of concerns
-   - `workbench/routes/api.py`: API route definitions (like Laravel's `routes/api.php`)
-   - `app/providers/AppServiceProvider`: Application-level service registration
-   - `app/providers/RouteServiceProvider`: Route registration via provider
-   - `main.py`: Clean factory pattern with `create_app()`
+3. **Configuration Files** — Environment-aware settings
+   - `workbench/config/app.py`: Application settings and provider list
+   - `workbench/config/database.py`: Database connections and migrations
+   - Python files allow `os.getenv()` and conditional logic
+   - Supports nested configuration structures
 
-4. **Route Organization** — Routes in dedicated files
-   - `/api/ping`: Test endpoint
-   - `/api/users`: Sample resource endpoint
-   - Routes registered via provider, not directly in `main.py`
+4. **Global Config Helper** — Easy access anywhere
+   - `config("app.name")`: Simple value access
+   - `config("app.debug", False)`: With default values
+   - Runtime modification for testing: `repo.set("app.debug", True)`
 
 **Key Benefits:**
-- ✅ **Separation of Concerns**: Services, routes, and config decoupled
-- ✅ **Laravel Parity**: Familiar pattern for Laravel developers
-- ✅ **Extensibility**: Easy to add new providers (Database, Cache, Queue, etc.)
-- ✅ **Testability**: Providers can be tested in isolation
-- ✅ **Clean Entry Point**: `main.py` uses factory pattern
+- ✅ **Centralized Configuration**: All settings in `workbench/config/*.py`
+- ✅ **Auto-Provider Registration**: Providers loaded from config
+- ✅ **Laravel Parity**: Familiar `config()` syntax and structure
+- ✅ **Environment Variables**: First-class `os.getenv()` support
+- ✅ **Type-Safe**: Full MyPy strict mode compatibility
+- ✅ **Clean Entry Point**: `main.py` is now just `app = FastTrackFramework()`
 
 **Example:**
 ```python
+# workbench/config/app.py
+import os
+
+config = {
+    "name": os.getenv("APP_NAME", "Fast Track Framework"),
+    "env": os.getenv("APP_ENV", "production"),
+    "providers": [
+        AppServiceProvider,
+        RouteServiceProvider,
+    ]
+}
+
 # workbench/main.py
-def create_app() -> FastTrackFramework:
+def create_app():
     app = FastTrackFramework()
-    app.register_provider(AppServiceProvider)
-    app.register_provider(RouteServiceProvider)
+    # Done! Config loaded, providers auto-registered
     return app
 
-# workbench/app/providers/route_service_provider.py
-class RouteServiceProvider(ServiceProvider):
-    def boot(self, container: Container) -> None:
-        app = container.resolve(FastTrackFramework)
-        from workbench.routes.api import api_router
-        app.include_router(api_router, prefix="/api", tags=["API"])
+# Usage anywhere
+from ftf.config import config
+
+app_name = config("app.name")
+db_host = config("database.connections.mysql.host", "localhost")
 ```
+
+**Learn more:** [Sprint 5.3 Summary](docs/history/SPRINT_5_3_SUMMARY.md)
+
+---
+
+## 🔙 Previous: Sprint 5.2
+
+### **Service Provider Architecture** — Laravel-Inspired Bootstrapping
+
+Introduced Service Provider Pattern for clean application bootstrapping and route registration.
+
+**Key Achievements:**
+- ✅ Two-phase boot (register → boot)
+- ✅ Provider auto-registration system
+- ✅ Route organization in dedicated files
+- ✅ Clean separation of concerns
 
 **Learn more:** [Sprint 5.2 Summary](docs/history/SPRINT_5_2_SUMMARY.md)
 

@@ -2,32 +2,27 @@
 Workbench Application Entry Point
 
 This is the main entry point for the Fast Track Framework workbench application.
-The workbench is a sample application that demonstrates how to use the framework
-with the Service Provider pattern (Sprint 5.2).
+The workbench demonstrates the framework with the Configuration System (Sprint 5.3).
 
-Architecture:
-    - Service Providers handle service registration and bootstrapping
-    - Routes are defined in workbench/routes/ (similar to Laravel's routes/)
-    - Application configuration is centralized in providers
+Architecture Evolution:
+    Sprint 5.2: Manual provider registration in create_app()
+    Sprint 5.3: Automatic provider registration from config/app.py
 
-Service Provider Pattern (Sprint 5.2):
-    1. register() phase: All providers register their services
-    2. boot() phase: All providers bootstrap (configure, mount routes, etc.)
+Configuration System (Sprint 5.3):
+    - All settings centralized in workbench/config/*.py
+    - Providers auto-registered from config/app.providers
+    - Environment-specific configuration via os.getenv()
+    - Dot notation access: config("app.name")
 
-This pattern ensures:
-    - Clear separation of concerns
-    - Predictable initialization order
-    - Easy testing and modularity
-    - Laravel-like developer experience
+The create_app() function is now extremely clean - all configuration
+is loaded automatically from workbench/config/*.py files.
 
 Usage:
     uvicorn workbench.main:app --reload
 """
 
+from ftf.config import config
 from ftf.http import FastTrackFramework
-
-# Import service providers
-from app.providers import AppServiceProvider, RouteServiceProvider
 
 # Import app models (registers them with SQLAlchemy)
 from app.models import Comment, Post, Role, User  # noqa: F401
@@ -38,25 +33,36 @@ def create_app() -> FastTrackFramework:
     Application factory function.
 
     This function creates and configures the FastTrackFramework application
-    instance using the Service Provider pattern.
+    instance. With Sprint 5.3, all configuration is loaded automatically:
+
+    1. Config files loaded from workbench/config/*.py
+    2. Service providers auto-registered from config("app.providers")
+    3. Application bootstraps automatically on first request
 
     Returns:
-        FastTrackFramework: Configured application instance
+        FastTrackFramework: Fully configured application instance
 
     Example:
         >>> app = create_app()
-        >>> # App is fully configured with all providers registered and booted
+        >>> # Config loaded, providers registered, ready to serve!
+
+    Sprint 5.2 (Manual):
+        app = FastTrackFramework()
+        app.register_provider(AppServiceProvider)
+        app.register_provider(RouteServiceProvider)
+
+    Sprint 5.3 (Automatic):
+        app = FastTrackFramework()
+        # Done! Providers loaded from config/app.py
     """
     # Create application instance
+    # Sprint 5.3: Config loaded and providers registered automatically
     app = FastTrackFramework()
 
-    # Register service providers (Phase 1: Registration)
-    # The register() method on each provider is called immediately
-    app.register_provider(AppServiceProvider)
-    app.register_provider(RouteServiceProvider)
-
-    # Providers will be booted automatically during app startup
-    # The boot() method on each provider is called in order
+    # That's it! The framework now:
+    # 1. Loads config from workbench/config/*.py
+    # 2. Registers providers from config("app.providers")
+    # 3. Boots providers on application startup
 
     return app
 
@@ -69,19 +75,23 @@ app = create_app()
 # Optional: Keep health endpoint at root level for infrastructure monitoring
 # These are common endpoints that don't belong in /api
 @app.get("/")
-async def root() -> dict[str, str]:
+async def root() -> dict[str, str | bool]:
     """
     Root endpoint with API information.
 
+    Now includes configuration-driven values to demonstrate
+    the config system working.
+
     Returns:
-        dict: API metadata and welcome message
+        dict: API metadata with config values
     """
     return {
-        "message": "Fast Track Framework - Workbench Application",
-        "version": "5.2.0",
+        "message": f"Welcome to {config('app.name', 'Fast Track Framework')}",
+        "version": config("app.version", "5.3.0"),
+        "environment": config("app.env", "production"),
+        "debug": config("app.debug", False),
         "framework": "ftf",
-        "description": "A Laravel-inspired micro-framework built on FastAPI",
-        "architecture": "Service Provider Pattern (Sprint 5.2)",
+        "architecture": "Service Provider + Configuration System (Sprint 5.3)",
     }
 
 
@@ -94,3 +104,25 @@ async def health() -> dict[str, str]:
         dict: Health status
     """
     return {"status": "healthy"}
+
+
+@app.get("/config")
+async def show_config() -> dict[str, str | int | list[str]]:
+    """
+    Show current configuration (for debugging).
+
+    WARNING: Do not expose this endpoint in production!
+    It may reveal sensitive configuration values.
+
+    Returns:
+        dict: Current configuration values
+    """
+    return {
+        "app_name": config("app.name"),
+        "environment": config("app.env"),
+        "debug": config("app.debug"),
+        "version": config("app.version"),
+        "locale": config("app.locale"),
+        "database_default": config("database.default"),
+        "providers_count": len(config("app.providers", [])),
+    }
