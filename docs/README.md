@@ -41,7 +41,14 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 5.3 - Configuration System** (Latest! ⚙️)
+**Sprint 5.4 - Architectural Hardening & Public API Cleanup** (Latest! 🛡️)
+- 📜 [Summary](history/SPRINT_5_4_SUMMARY.md)
+- Focus: API boundaries, stability guarantees, public/private separation, Hyrum's Law prevention
+- Enhanced: 3 docstrings (fast_query stability, HTTP adapter boundary, Auth educational warning)
+- Audit: Core module, CLI imports, __all__ completeness, driver encapsulation
+- Achievement: 440 tests passing (100%), zero code changes needed, architecture already clean ✅
+
+**Sprint 5.3 - Configuration System** ⚙️
 - 📜 [Summary](history/SPRINT_5_3_SUMMARY.md)
 - Focus: Centralized configuration management with Laravel-like config system
 - Added: 6 files (ConfigRepository, global config() helper, app.py, database.py configs)
@@ -379,6 +386,6 @@ Found a typo? Have a suggestion? Documentation improvements are welcome!
 
 ---
 
-**Last Updated:** Sprint 5.3 (February 2026)
+**Last Updated:** Sprint 5.4 (February 2026)
 **Total Documentation:** 26 files
 **Lines of Documentation:** ~21,000 lines

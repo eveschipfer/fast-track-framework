@@ -3,6 +3,32 @@ Fast Track Framework - Application Kernel
 
 This module provides the main application class that integrates FastAPI with the IoC Container.
 
+ARCHITECTURE BOUNDARY: FastAPI Adapter
+    FastTrackFramework is a STRICT ADAPTER over FastAPI. It adds dependency
+    injection capabilities while preserving full FastAPI functionality.
+
+    Direct FastAPI Usage:
+        - All FastAPI features (routing, middleware, dependencies) work as-is
+        - You CAN import from fastapi directly and use standard FastAPI patterns
+        - Standard FastAPI dependencies (@Depends) work alongside ftf.Inject()
+
+    Framework Conventions (Preferred):
+        - Use ftf.Inject() instead of FastAPI's Depends() for better DI
+        - Use app.register() for service registration
+        - Use Service Providers for organized application bootstrapping
+        - These conventions provide forward compatibility if internal
+          implementation changes
+
+    Forward Compatibility:
+        Framework conventions (Inject, Service Providers, Container) are
+        guaranteed stable across minor versions. Direct FastAPI imports
+        follow FastAPI's own compatibility guarantees.
+
+    When to use FastAPI directly:
+        - Adding standard FastAPI middleware
+        - Using FastAPI's background tasks
+        - Advanced FastAPI features not yet wrapped by ftf
+
 Key Features:
 - Extends FastAPI with automatic dependency injection
 - Manages Container lifecycle (startup/shutdown)

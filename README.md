@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Tests](https://img.shields.io/badge/tests-440%20passed-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-5.3%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-5.4%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Monorepo](https://img.shields.io/badge/structure-monorepo-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
@@ -55,6 +55,7 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🐛 Bug Bash** | 100% test pass rate (440/440), bcrypt fix, import path updates | ✅ Sprint 5.1 |
 | **🔧 Service Providers** | Laravel-inspired two-phase boot, route registration, clean architecture | ✅ Sprint 5.2 |
 | **⚙️ Configuration System** | Centralized config, dot notation access, auto-provider registration | ✅ Sprint 5.3 |
+| **🛡️ Architectural Hardening** | API boundaries, stability guarantees, public/private separation, Hyrum's Law prevention | ✅ Sprint 5.4 |
 | **🧪 440 Tests** | 100% passing, 0 failed, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 

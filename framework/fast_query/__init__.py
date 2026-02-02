@@ -4,6 +4,26 @@ Fast Query - Framework-Agnostic ORM Package
 A standalone, framework-agnostic database/ORM layer built on SQLAlchemy.
 Provides Laravel Eloquent-inspired fluent API with Repository Pattern.
 
+STABILITY LEVEL: STABLE
+    This package has a stable API contract. Breaking changes will only occur
+    in major version releases (e.g., 1.0 -> 2.0). Minor/patch releases will
+    maintain backward compatibility.
+
+    Public API exports (in __all__) are guaranteed stable. Any internal
+    implementation details (not in __all__) may change without notice.
+
+FRAMEWORK RELATIONSHIP:
+    This is a completely standalone ORM package with ZERO dependencies on
+    any web framework (ftf, FastAPI, Flask, Django, etc.).
+
+    The ftf web framework builds on top of fast_query, but fast_query can
+    be used independently in any Python application (CLI tools, scripts,
+    other web frameworks).
+
+    Integration: ftf provides IoC Container integration for automatic
+    dependency injection of repositories and sessions. This is optional -
+    fast_query works perfectly with manual session management via get_session().
+
 Key Features:
     - Framework-agnostic (works with FastAPI, Flask, Django, CLI, etc.)
     - Complete database stack (engine, session, repository, query builder)

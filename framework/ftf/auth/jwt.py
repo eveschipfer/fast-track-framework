@@ -1,6 +1,57 @@
 """
 JWT Token Service (Sprint 3.3)
 
+⚠️ EDUCATIONAL IMPLEMENTATION WARNING ⚠️
+
+    This module is designed as an EDUCATIONAL REFERENCE demonstrating how to
+    integrate JWT authentication with the ftf IoC Container and dependency
+    injection system.
+
+    Production Considerations:
+        1. This implementation uses PyJWT (python-jose alternative) with HS256
+           symmetric signing. For production systems requiring:
+           - RS256/ES256 asymmetric keys
+           - Token rotation and revocation
+           - Multi-tenant key management
+           - OAuth2/OIDC compliance
+           - Hardware security modules (HSM)
+           - Audit logging
+           - FIPS 140-2 compliance
+
+           Consider integrating specialized libraries:
+           - Auth0's python-jose for full OAuth2/OIDC
+           - Authlib for OAuth2 providers
+           - Pydantic Settings for secure config management
+
+        2. Security Hardening:
+           - ALWAYS set JWT_SECRET_KEY via environment variables (never commit)
+           - Use strong secrets (>32 bytes random, e.g., secrets.token_urlsafe(32))
+           - Implement refresh token rotation
+           - Add token blacklisting/revocation
+           - Log all authentication failures
+           - Rate limit auth endpoints
+           - Monitor for suspicious patterns
+
+        3. Integration with ftf:
+           This module demonstrates:
+           - How to integrate auth with the Container
+           - How to create dependency injection-friendly auth guards
+           - How to structure auth services for testability
+
+           You can replace this implementation with specialized libraries
+           while keeping the same integration pattern.
+
+    For Learning:
+        This module teaches core JWT concepts and shows clean integration
+        with FastAPI + ftf patterns. Great for MVPs, prototypes, and
+        understanding authentication flows.
+
+    For Production:
+        Review your security requirements and consider if this implementation
+        meets your compliance needs (GDPR, HIPAA, PCI-DSS, etc.). If not,
+        integrate a specialized library following the same Service Provider
+        pattern shown in this framework.
+
 This module handles JSON Web Token (JWT) creation and verification for stateless
 authentication. JWTs allow the server to verify user identity without maintaining
 session state, making them ideal for REST APIs and microservices.
