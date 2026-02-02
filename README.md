@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Tests](https://img.shields.io/badge/tests-440%20passed-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-5.4%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-5.5%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Monorepo](https://img.shields.io/badge/structure-monorepo-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
@@ -56,7 +56,9 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🔧 Service Providers** | Laravel-inspired two-phase boot, route registration, clean architecture | ✅ Sprint 5.2 |
 | **⚙️ Configuration System** | Centralized config, dot notation access, auto-provider registration | ✅ Sprint 5.3 |
 | **🛡️ Architectural Hardening** | API boundaries, stability guarantees, public/private separation, Hyrum's Law prevention | ✅ Sprint 5.4 |
-| **🧪 440 Tests** | 100% passing, 0 failed, comprehensive coverage | ✅ Complete |
+| **📄 Pagination Engine** | Laravel-style pagination, rich metadata, link generation, ResourceCollection integration | ✅ Sprint 5.5 |
+| **🔐 RBAC Gates System** | Gates, Policies, FastAPI dependencies, secure by default authorization | ✅ Sprint 5.5 |
+| **🧪 516 Tests** | 100% passing, 0 failed, comprehensive coverage | ✅ Complete |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---

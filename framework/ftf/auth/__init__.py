@@ -1,11 +1,19 @@
 """
-Authentication Module (Sprint 3.3)
+Authentication & Authorization Module (Sprint 3.3 + Sprint 5.5)
 
-This module provides comprehensive authentication functionality including:
+This module provides comprehensive authentication and authorization functionality:
+
+Authentication (Sprint 3.3):
 - Password hashing and verification (bcrypt)
 - JWT token creation and verification
 - Route protection via AuthGuard
 - Type-safe CurrentUser dependency
+
+Authorization (Sprint 5.5):
+- RBAC Gates system for global abilities
+- Policy base class for model-specific authorization
+- Authorize() dependency for route protection
+- Integration with JWT authentication
 
 Usage:
     >>> from ftf.auth import hash_password, verify_password
@@ -20,10 +28,28 @@ Usage:
     ...     token = create_access_token({"user_id": user.id})
     ...     return {"access_token": token}
     >>>
-    >>> # Protect routes
+    >>> # Protect routes (JWT Authentication)
     >>> @app.get("/profile")
     >>> async def get_profile(user: CurrentUser):
     ...     return {"id": user.id, "email": user.email}
+    >>>
+    >>> # Authorization with Gates (Sprint 5.5)
+    >>> from ftf.auth import Gate, Policy, Authorize
+    >>>
+    >>> # Define global ability
+    >>> Gate.define("view-dashboard", lambda user: user.is_admin)
+    >>>
+    >>> # Protect route with authorization
+    >>> @app.get("/dashboard", dependencies=[Depends(Authorize("view-dashboard"))])
+    >>> async def dashboard(user: CurrentUser):
+    ...     return {"message": "Admin dashboard"}
+    >>>
+    >>> # Policy-based authorization
+    >>> class PostPolicy(Policy):
+    ...     def update(self, user, post):
+    ...         return user.id == post.author_id
+    >>>
+    >>> Gate.register_policy(Post, PostPolicy())
 
 Educational Note:
     The CurrentUser type alias provides excellent DX:
@@ -44,7 +70,7 @@ from typing import Annotated, Any
 
 from fastapi import Depends
 
-# Import all auth functions
+# Authentication imports (Sprint 3.3)
 from ftf.auth.crypto import hash_password, needs_rehash, verify_password
 from ftf.auth.guard import get_current_user
 from ftf.auth.jwt import (
@@ -52,6 +78,11 @@ from ftf.auth.jwt import (
     decode_token,
     get_token_expiration,
 )
+
+# Authorization imports (Sprint 5.5)
+from ftf.auth.dependencies import Authorize, Requires
+from ftf.auth.gates import Gate, GateManager
+from ftf.auth.policies import Policy
 
 # CurrentUser type alias for route protection
 # Educational Note: We use Any here instead of User to avoid circular imports
@@ -61,15 +92,21 @@ CurrentUser = Annotated[Any, Depends(get_current_user)]
 
 # Public API exports
 __all__ = [
-    # Password hashing
+    # Password hashing (Sprint 3.3)
     "hash_password",
     "verify_password",
     "needs_rehash",
-    # JWT tokens
+    # JWT tokens (Sprint 3.3)
     "create_access_token",
     "decode_token",
     "get_token_expiration",
-    # Auth guard
+    # Auth guard (Sprint 3.3)
     "get_current_user",
     "CurrentUser",
+    # Authorization (Sprint 5.5)
+    "Gate",
+    "GateManager",
+    "Policy",
+    "Authorize",
+    "Requires",
 ]

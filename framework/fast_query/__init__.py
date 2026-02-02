@@ -47,6 +47,9 @@ Public API:
     - BaseRepository: Generic CRUD repository
     - QueryBuilder: Fluent query builder
 
+    # Pagination (Sprint 5.5)
+    - LengthAwarePaginator: Laravel-style pagination container
+
     # Mixins
     - TimestampMixin: Auto-managed created_at/updated_at
     - SoftDeletesMixin: Soft delete with deleted_at
@@ -132,6 +135,9 @@ from .mixins import TimestampMixin, SoftDeletesMixin
 # Exceptions
 from .exceptions import FastQueryError, RecordNotFound
 
+# Pagination (Sprint 5.5)
+from .pagination import LengthAwarePaginator
+
 # Testing & Development (Sprint 2.8)
 from .factories import Factory
 from .seeding import Seeder
@@ -147,6 +153,8 @@ __all__ = [
     "Base",
     "BaseRepository",
     "QueryBuilder",
+    # Pagination
+    "LengthAwarePaginator",
     # Mixins
     "TimestampMixin",
     "SoftDeletesMixin",

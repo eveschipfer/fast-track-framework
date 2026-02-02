@@ -67,6 +67,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base import Base
 from .exceptions import RecordNotFound
+from .pagination import LengthAwarePaginator
 
 if TYPE_CHECKING:
     from .mixins import SoftDeletesMixin
@@ -272,6 +273,88 @@ class BaseRepository(Generic[T]):
         stmt = select(func.count()).select_from(self.model)
         result = await self.session.execute(stmt)
         return result.scalar_one()
+
+    async def paginate(
+        self, page: int = 1, per_page: int = 15
+    ) -> LengthAwarePaginator[T]:
+        """
+        Paginate records with rich metadata.
+
+        This method provides Laravel-style pagination with automatic
+        metadata calculation (total items, current page, last page, etc.)
+        and link generation for API responses.
+
+        Args:
+            page: Page number (1-indexed, default: 1)
+            per_page: Items per page (default: 15)
+
+        Returns:
+            LengthAwarePaginator[T]: Pagination container with items and metadata
+
+        Example:
+            >>> # Simple pagination
+            >>> users = await repo.paginate(page=2, per_page=20)
+            >>> print(users.total)  # Total items across all pages
+            >>> print(len(users.items))  # Items on current page (up to 20)
+            >>> print(users.current_page)  # 2
+            >>> print(users.last_page)  # Total pages
+            >>>
+            >>> # Use in API route
+            >>> @app.get("/users")
+            >>> async def list_users(
+            ...     page: int = 1,
+            ...     repo: UserRepository = Inject(UserRepository)
+            ... ):
+            ...     paginator = await repo.paginate(page=page, per_page=15)
+            ...     return {
+            ...         "data": paginator.items,
+            ...         "meta": {
+            ...             "current_page": paginator.current_page,
+            ...             "last_page": paginator.last_page,
+            ...             "per_page": paginator.per_page,
+            ...             "total": paginator.total
+            ...         }
+            ...     }
+            >>>
+            >>> # With ResourceCollection (automatic metadata)
+            >>> from ftf.resources import ResourceCollection, UserResource
+            >>> users = await repo.paginate(page=1)
+            >>> return ResourceCollection(users, UserResource).resolve()
+            >>> # Returns Laravel-compatible JSON with data, meta, links sections
+
+        Educational Note:
+            This executes TWO queries:
+            1. COUNT query: SELECT COUNT(*) FROM users
+            2. SELECT query: SELECT * FROM users LIMIT 15 OFFSET 0
+
+            For better performance with large datasets, consider:
+            - Indexed columns for WHERE clauses
+            - Cursor-based pagination for infinite scroll
+            - Caching count results
+        """
+        # Normalize page number (minimum 1)
+        page = max(page, 1)
+
+        # Normalize per_page (minimum 1)
+        per_page = max(per_page, 1)
+
+        # Step 1: Execute COUNT query to get total items
+        count_stmt = select(func.count()).select_from(self.model)
+        count_result = await self.session.execute(count_stmt)
+        total = count_result.scalar_one()
+
+        # Step 2: Calculate offset for pagination
+        offset = (page - 1) * per_page
+
+        # Step 3: Execute SELECT query with LIMIT/OFFSET
+        select_stmt = select(self.model).limit(per_page).offset(offset)
+        select_result = await self.session.execute(select_stmt)
+        items = list(select_result.scalars().all())
+
+        # Step 4: Return paginator with metadata
+        return LengthAwarePaginator(
+            items=items, total=total, per_page=per_page, current_page=page
+        )
 
     def query(self) -> "QueryBuilder[T]":
         """

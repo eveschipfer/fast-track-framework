@@ -43,6 +43,35 @@ def configure_sqlalchemy_for_tests():
     yield
 
 
+@pytest.fixture
+async def db_session():
+    """
+    Provide an async database session for tests (Sprint 5.5).
+
+    Creates an in-memory SQLite database for testing pagination
+    and other database features.
+
+    Yields:
+        AsyncSession: Async database session for testing
+    """
+    from fast_query import create_engine
+    from fast_query.session import AsyncSessionFactory
+
+    # Create in-memory database for testing
+    engine = create_engine("sqlite+aiosqlite:///:memory:")
+
+    # Create session factory
+    factory = AsyncSessionFactory()
+    factory._engine = engine
+
+    # Create session
+    async with factory() as session:
+        yield session
+
+    # Cleanup
+    await engine.dispose()
+
+
 # Configure pytest
 def pytest_configure(config):
     """Configure pytest with custom markers."""
