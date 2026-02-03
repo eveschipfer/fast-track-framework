@@ -46,6 +46,7 @@ Trade-offs:
     - Tightly coupled to FastAPI (but that's the point of this framework)
 """
 
+import importlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -203,6 +204,10 @@ class FastTrackFramework(FastAPI):
         This method reads the config.get("app.providers") list and
         automatically registers each provider class.
 
+        Providers can be specified as:
+        - String paths: "ftf.providers.database.DatabaseServiceProvider"
+        - Direct class references: DatabaseServiceProvider (backward compatibility)
+
         This eliminates the need for manual provider registration in main.py:
 
         Before (Sprint 5.2):
@@ -211,6 +216,8 @@ class FastTrackFramework(FastAPI):
 
         After (Sprint 5.3):
             # Automatic! Reads from config/app.py
+
+        Sprint 5.7: Added support for string-based provider paths for cleaner config files
         """
         from ftf.config import config
 
@@ -222,8 +229,65 @@ class FastTrackFramework(FastAPI):
             return
 
         # Register each provider
-        for provider_class in providers:
+        for provider_spec in providers:
+            # Sprint 5.7: Handle string paths (e.g., "ftf.providers.database.DatabaseServiceProvider")
+            if isinstance(provider_spec, str):
+                provider_class = self._import_provider_class(provider_spec)
+            else:
+                # Backward compatibility: Direct class reference
+                provider_class = provider_spec
+
             self.register_provider(provider_class)
+
+    def _import_provider_class(self, provider_path: str) -> type["ServiceProvider"]:
+        """
+        Dynamically import a provider class from a string path.
+
+        Args:
+            provider_path: Dot-notation path to provider class
+                          (e.g., "ftf.providers.database.DatabaseServiceProvider")
+
+        Returns:
+            type[ServiceProvider]: The imported provider class
+
+        Raises:
+            ImportError: If the module cannot be imported
+            AttributeError: If the class doesn't exist in the module
+
+        Example:
+            >>> provider_class = self._import_provider_class("ftf.providers.database.DatabaseServiceProvider")
+            >>> isinstance(provider_class(), ServiceProvider)
+            True
+        """
+        # Split path into module and class name
+        # "ftf.providers.database.DatabaseServiceProvider" -> "ftf.providers.database", "DatabaseServiceProvider"
+        parts = provider_path.rsplit(".", 1)
+
+        if len(parts) != 2:
+            raise ValueError(
+                f"Invalid provider path: '{provider_path}'. "
+                f"Expected format: 'module.path.ClassName'"
+            )
+
+        module_path, class_name = parts
+
+        # Import the module dynamically
+        try:
+            module = importlib.import_module(module_path)
+        except ImportError as e:
+            raise ImportError(
+                f"Could not import provider module '{module_path}': {e}"
+            ) from e
+
+        # Get the class from the module
+        try:
+            provider_class = getattr(module, class_name)
+        except AttributeError as e:
+            raise AttributeError(
+                f"Class '{class_name}' not found in module '{module_path}'"
+            ) from e
+
+        return provider_class
 
     @asynccontextmanager
     async def _lifespan(self, app: FastAPI) -> AsyncIterator[None]:  # noqa: ARG002

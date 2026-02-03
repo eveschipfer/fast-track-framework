@@ -1,14 +1,16 @@
 """
-Database Configuration
+Database Configuration (Sprint 5.7)
 
-This file contains all database connection settings for the application.
-Multiple connections can be defined, and you can switch between them
-at runtime.
+This file defines all database connections for your application.
+The DatabaseServiceProvider reads this config and automatically sets up:
+- AsyncEngine (database connection pool)
+- async_sessionmaker (session factory)
+- AsyncSession (injected into repositories)
 
 Connection Types:
     - sqlite: Lightweight, file-based database (good for development/testing)
-    - mysql: MySQL/MariaDB connections
-    - postgresql: PostgreSQL connections
+    - mysql: MySQL/MariaDB connections with aiomysql driver
+    - postgresql: PostgreSQL connections with asyncpg driver
 
 Usage:
     from ftf.config import config
@@ -19,77 +21,89 @@ Usage:
     # Get specific connection settings
     host = config("database.connections.mysql.host")
     port = config("database.connections.mysql.port")
+
+Environment Variables:
+    DB_CONNECTION - Default database driver (sqlite, mysql, postgresql)
+    DB_HOST - Database host
+    DB_PORT - Database port
+    DB_DATABASE - Database name
+    DB_USERNAME - Database username
+    DB_PASSWORD - Database password
+    DB_POOL_SIZE - Connection pool size (default: 10)
+    DB_MAX_OVERFLOW - Max connections beyond pool_size (default: 20)
+    DB_ECHO - Enable SQL query logging (true/false)
 """
 
 import os
 
-# Database Configuration Dictionary
+# Database Configuration
+# Sprint 5.3: ConfigRepository expects a 'config' variable
+# Sprint 5.7: DatabaseServiceProvider reads this for auto-configuration
 config = {
     # Default Database Connection
     # Options: "sqlite", "mysql", "postgresql"
-    # This connection will be used by default when no connection is specified
     "default": os.getenv("DB_CONNECTION", "sqlite"),
+
     # Database Connections
-    # Define all available database connections here
-    # Each connection can have different settings
+    # Each connection uses async drivers for SQLAlchemy 2.0
     "connections": {
-        # SQLite Connection
-        # File-based database, no server required
-        # Perfect for development and testing
+        # SQLite Connection (Development/Testing)
+        # File-based, no server required
         "sqlite": {
-            "driver": "sqlite",
-            "database": os.getenv("DB_DATABASE", "workbench.db"),
-            # SQLite options
-            "prefix": "",  # Table name prefix
-            "foreign_key_constraints": True,  # Enforce foreign keys
+            "driver": "sqlite+aiosqlite",  # Async SQLite driver
+            "database": os.getenv("DB_DATABASE", "workbench/database/app.db"),
+            # SQLite-specific options
+            "pool_pre_ping": True,  # Verify connections before using
+            "echo": os.getenv("DB_ECHO", "false").lower() == "true",
         },
-        # MySQL Connection
-        # Requires MySQL server running
+
+        # MySQL Connection (Production)
+        # Requires MySQL server and aiomysql driver
         "mysql": {
-            "driver": "mysql",
+            "driver": "mysql+aiomysql",  # Async MySQL driver
             "host": os.getenv("DB_HOST", "localhost"),
             "port": int(os.getenv("DB_PORT", "3306")),
-            "database": os.getenv("DB_DATABASE", "workbench"),
+            "database": os.getenv("DB_DATABASE", "fast_track"),
             "username": os.getenv("DB_USERNAME", "root"),
             "password": os.getenv("DB_PASSWORD", ""),
-            "charset": "utf8mb4",
-            "collation": "utf8mb4_unicode_ci",
-            "prefix": "",
             # Connection pool settings
-            "pool_size": 10,
-            "max_overflow": 20,
-            "pool_timeout": 30,
+            "pool_size": int(os.getenv("DB_POOL_SIZE", "10")),
+            "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "20")),
+            "pool_pre_ping": True,  # Health checks before queries
+            "pool_recycle": 3600,  # Recycle connections after 1 hour
+            "echo": os.getenv("DB_ECHO", "false").lower() == "true",
         },
-        # PostgreSQL Connection
-        # Requires PostgreSQL server running
+
+        # PostgreSQL Connection (Production)
+        # Requires PostgreSQL server and asyncpg driver
         "postgresql": {
-            "driver": "postgresql",
+            "driver": "postgresql+asyncpg",  # Async PostgreSQL driver
             "host": os.getenv("DB_HOST", "localhost"),
             "port": int(os.getenv("DB_PORT", "5432")),
-            "database": os.getenv("DB_DATABASE", "workbench"),
+            "database": os.getenv("DB_DATABASE", "fast_track"),
             "username": os.getenv("DB_USERNAME", "postgres"),
             "password": os.getenv("DB_PASSWORD", ""),
-            "charset": "utf8",
-            "prefix": "",
-            "schema": "public",
             # Connection pool settings
-            "pool_size": 10,
-            "max_overflow": 20,
-            "pool_timeout": 30,
+            "pool_size": int(os.getenv("DB_POOL_SIZE", "10")),
+            "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "20")),
+            "pool_pre_ping": True,
+            "pool_recycle": 3600,
+            "echo": os.getenv("DB_ECHO", "false").lower() == "true",
         },
     },
+
     # Migration Settings
     "migrations": {
-        "table": "migrations",  # Table to track migrations
-        "directory": "migrations",  # Directory containing migration files
+        "table": "migrations",
+        "directory": "migrations",
     },
+
     # Redis Connection (for cache, queue, sessions)
     "redis": {
         "host": os.getenv("REDIS_HOST", "localhost"),
         "port": int(os.getenv("REDIS_PORT", "6379")),
         "password": os.getenv("REDIS_PASSWORD", ""),
         "database": int(os.getenv("REDIS_DB", "0")),
-        # Connection pool
         "pool_size": 10,
         "decode_responses": True,
     },

@@ -41,7 +41,22 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 5.5 - Pagination Engine & RBAC Gates System** (Latest! 📄🔐)
+**Sprint 5.7 - Database Service Provider** (Latest! 🗄️⚙️)
+- 📜 [Summary](history/SPRINT_5_7_SUMMARY.md)
+- Focus: Auto-configure database layer through Convention over Configuration
+- Added: DatabaseServiceProvider (255 lines), string-based provider loading
+- Features: Reads config/database.py, creates AsyncEngine/async_sessionmaker, registers in container
+- Achievement: **Zero database boilerplate in main.py!** Convention over Configuration working ✅
+- Tests: 536 passing (100%), 68.25% coverage on DatabaseServiceProvider
+
+**Sprint 5.6 - Ultimate QueryBuilder (Pagination & Cursors)** 🔍📄
+- 📜 [Summary](history/SPRINT_5_6_SUMMARY.md)
+- Focus: Move pagination to QueryBuilder as terminal methods, add cursor pagination
+- Added: paginate() and cursor_paginate() terminal methods in QueryBuilder
+- Features: Filtered pagination, O(1) cursor-based pagination, query cloning for COUNT
+- Achievement: 536 tests passing (100%), zero regression, production-ready ✅
+
+**Sprint 5.5 - Pagination Engine & RBAC Gates System** 📄🔐
 - 📜 [Summary](history/SPRINT_5_5_SUMMARY.md)
 - Focus: Enterprise-grade pagination and authorization systems
 - Added: 7 files (LengthAwarePaginator, Gate, Policy, Authorize, 2 test suites)
