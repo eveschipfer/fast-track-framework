@@ -382,28 +382,35 @@ async def test_limit_and_offset_combined(
 async def test_paginate_first_page(
     session: AsyncSession, sample_users: list[TestUser]
 ) -> None:
-    """Test paginate() for first page."""
+    """Test paginate() for first page (Sprint 5.6: now terminal method)."""
     repo = TestUserRepository(session)
 
-    users = await repo.query().order_by(TestUser.id).paginate(page=1, per_page=2).get()
+    # Sprint 5.6: paginate() is now a terminal method returning LengthAwarePaginator
+    result = await repo.query().order_by(TestUser.id).paginate(page=1, per_page=2)
 
-    assert len(users) == 2
-    assert users[0].name == "Alice"
-    assert users[1].name == "Bob"
+    assert len(result.items) == 2
+    assert result.items[0].name == "Alice"
+    assert result.items[1].name == "Bob"
+    assert result.total == 5  # Total users
+    assert result.current_page == 1
+    assert result.per_page == 2
 
 
 @pytest.mark.asyncio
 async def test_paginate_second_page_calculates_offset(
     session: AsyncSession, sample_users: list[TestUser]
 ) -> None:
-    """Test paginate() for second page (offset calculation)."""
+    """Test paginate() for second page (Sprint 5.6: now terminal method)."""
     repo = TestUserRepository(session)
 
-    users = await repo.query().order_by(TestUser.id).paginate(page=2, per_page=2).get()
+    # Sprint 5.6: paginate() is now a terminal method returning LengthAwarePaginator
+    result = await repo.query().order_by(TestUser.id).paginate(page=2, per_page=2)
 
-    assert len(users) == 2
-    assert users[0].name == "Charlie"  # 3rd user
-    assert users[1].name == "David"  # 4th user
+    assert len(result.items) == 2
+    assert result.items[0].name == "Charlie"  # 3rd user
+    assert result.items[1].name == "David"  # 4th user
+    assert result.total == 5
+    assert result.current_page == 2
 
 
 # ===========================

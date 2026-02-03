@@ -47,8 +47,9 @@ Public API:
     - BaseRepository: Generic CRUD repository
     - QueryBuilder: Fluent query builder
 
-    # Pagination (Sprint 5.5)
-    - LengthAwarePaginator: Laravel-style pagination container
+    # Pagination (Sprint 5.5 + 5.6)
+    - LengthAwarePaginator: Laravel-style offset pagination
+    - CursorPaginator: High-performance cursor pagination
 
     # Mixins
     - TimestampMixin: Auto-managed created_at/updated_at
@@ -135,8 +136,8 @@ from .mixins import TimestampMixin, SoftDeletesMixin
 # Exceptions
 from .exceptions import FastQueryError, RecordNotFound
 
-# Pagination (Sprint 5.5)
-from .pagination import LengthAwarePaginator
+# Pagination (Sprint 5.5 + 5.6)
+from .pagination import LengthAwarePaginator, CursorPaginator
 
 # Testing & Development (Sprint 2.8)
 from .factories import Factory
@@ -155,6 +156,7 @@ __all__ = [
     "QueryBuilder",
     # Pagination
     "LengthAwarePaginator",
+    "CursorPaginator",
     # Mixins
     "TimestampMixin",
     "SoftDeletesMixin",

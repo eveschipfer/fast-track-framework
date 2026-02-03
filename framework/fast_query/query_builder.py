@@ -62,15 +62,17 @@ TERMINAL METHODS (execute query):
     - count() -> int
     - exists() -> bool
     - pluck(column) -> list[Any]
+    - paginate() -> LengthAwarePaginator[T]  # NEW Sprint 5.6
+    - cursor_paginate() -> CursorPaginator[T]  # NEW Sprint 5.6
 
 BUILDER METHODS (return Self for chaining):
     - where(), or_where(), where_in(), etc.
     - order_by(), latest(), oldest()
-    - limit(), offset(), paginate()
+    - limit(), offset()
     - with_(), with_joined() (eager loading)
 """
 
-from typing import Any, Callable, Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar
 
 from sqlalchemy import Select, and_, between, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -80,6 +82,10 @@ from sqlalchemy.sql import ColumnElement
 
 from .base import Base
 from .exceptions import RecordNotFound
+
+# Forward reference to avoid circular imports
+if TYPE_CHECKING:
+    from .pagination import CursorPaginator, LengthAwarePaginator
 
 T = TypeVar("T", bound=Base)
 
@@ -536,36 +542,261 @@ class QueryBuilder(Generic[T]):
         self._stmt = self._stmt.offset(count)
         return self
 
-    def paginate(self, page: int = 1, per_page: int = 20) -> "QueryBuilder[T]":
+    async def paginate(self, page: int = 1, per_page: int = 15) -> "LengthAwarePaginator[T]":
         """
-        Paginate results.
+        Execute paginated query and return LengthAwarePaginator.
 
-        Convenience method that sets both LIMIT and OFFSET based on page
-        number and items per page.
+        **NEW Sprint 5.6**: This is now a TERMINAL METHOD that executes
+        TWO queries: COUNT (for total) and SELECT (for data). Replaced
+        the old builder-style paginate() that just set LIMIT/OFFSET.
+
+        The COUNT query intelligently clones the current query, removing
+        ORDER BY and LIMIT/OFFSET clauses to ensure accurate count while
+        preserving all WHERE conditions and JOINs.
+
+        This enables pagination on FILTERED queries:
+            await repo.query().where(...).paginate(...)
 
         Args:
             page: Page number (1-indexed, default: 1)
-            per_page: Items per page (default: 20)
+            per_page: Items per page (default: 15)
 
         Returns:
-            QueryBuilder[T]: Self for method chaining
+            LengthAwarePaginator[T]: Pagination container with items and metadata
 
         Example:
-            >>> # First page (items 1-20)
-            >>> query = repo.query().paginate(page=1, per_page=20)
+            >>> # Paginate all users
+            >>> result = await user_repo.query().paginate(page=1, per_page=20)
+            >>> print(result.total)       # Total users across all pages
+            >>> print(result.items)       # Users on current page
+            >>> print(result.last_page)   # Total number of pages
             >>>
-            >>> # Second page (items 21-40)
-            >>> query = repo.query().paginate(page=2, per_page=20)
-            >>>
-            >>> # With filtering
-            >>> query = (
-            ...     repo.query()
+            >>> # Paginate filtered query (Sprint 5.6!)
+            >>> result = await (
+            ...     user_repo.query()
             ...     .where(User.status == "active")
-            ...     .paginate(page=page, per_page=50)
+            ...     .where(User.age >= 18)
+            ...     .paginate(page=2, per_page=50)
             ... )
+            >>> # COUNT and SELECT both include WHERE clauses
+            >>>
+            >>> # With eager loading
+            >>> result = await (
+            ...     user_repo.query()
+            ...     .with_("posts")
+            ...     .paginate(page=1, per_page=10)
+            ... )
+
+        Technical Details:
+            Query 1 (COUNT): Clones _stmt, removes ORDER BY/LIMIT/OFFSET
+            Query 2 (SELECT): Applies LIMIT/OFFSET to original query
+            Both queries share WHERE clauses and JOINs for accuracy
         """
+        from .pagination import LengthAwarePaginator
+
+        # Normalize inputs
+        page = max(page, 1)
+        per_page = max(per_page, 1)
+
+        # Apply global scope for soft deletes (Sprint 2.6)
+        self._apply_global_scope()
+
+        # ========================================
+        # Query 1: COUNT (total across all pages)
+        # ========================================
+        # We need to COUNT the filtered results WITHOUT ORDER BY or LIMIT
+        # SQLAlchemy challenge: Clone the statement and strip ordering/limits
+
+        # Build count query by wrapping current statement in subquery
+        # This preserves WHERE clauses and JOINs while removing ORDER BY/LIMIT
+        count_stmt = select(func.count()).select_from(
+            self._stmt.order_by(None).limit(None).offset(None).subquery()
+        )
+
+        count_result = await self.session.execute(count_stmt)
+        total = int(count_result.scalar_one())
+
+        # ========================================
+        # Query 2: SELECT (items for current page)
+        # ========================================
         offset_count = (page - 1) * per_page
-        return self.offset(offset_count).limit(per_page)
+        select_stmt = self._stmt.limit(per_page).offset(offset_count)
+
+        # Apply eager loading
+        for load_option in self._eager_loads:
+            select_stmt = select_stmt.options(load_option)
+
+        select_result = await self.session.execute(select_stmt)
+        items = list(select_result.scalars().all())
+
+        # Return LengthAwarePaginator with results
+        return LengthAwarePaginator(
+            items=items,
+            total=total,
+            per_page=per_page,
+            current_page=page,
+        )
+
+    async def cursor_paginate(
+        self,
+        per_page: int = 15,
+        cursor: int | str | None = None,
+        cursor_column: str = "id",
+        ascending: bool = True,
+    ) -> "CursorPaginator[T]":
+        """
+        Execute cursor-based pagination for high-performance infinite scroll.
+
+        **NEW Sprint 5.6**: Uses WHERE clauses instead of OFFSET for O(1)
+        performance. Perfect for infinite scroll, real-time feeds, and large
+        datasets where traditional offset pagination becomes slow.
+
+        HOW IT WORKS:
+            - First page: SELECT * FROM table ORDER BY id LIMIT 15
+            - Next page: SELECT * FROM table WHERE id > :cursor ORDER BY id LIMIT 15
+            - Database uses index on cursor_column for O(1) seek (no scanning)
+
+        PERFORMANCE COMPARISON:
+            Offset Pagination:  O(n) - OFFSET 1000000 scans 1M rows
+            Cursor Pagination:  O(1) - WHERE id > X uses index seek
+
+        Args:
+            per_page: Items per page (default: 15)
+            cursor: Last cursor value from previous page (None for first page)
+            cursor_column: Column to use for cursoring (default: "id")
+                Must be sequential and indexed (id, created_at)
+            ascending: Sort direction (True for ASC, False for DESC)
+
+        Returns:
+            CursorPaginator[T]: Pagination container with items and next_cursor
+
+        Example:
+            >>> # First page (no cursor)
+            >>> result = await (
+            ...     post_repo.query()
+            ...     .where(Post.status == "published")
+            ...     .cursor_paginate(per_page=20)
+            ... )
+            >>> print(len(result.items))      # 20 posts
+            >>> print(result.next_cursor)     # 1045 (ID of last post)
+            >>> print(result.has_more_pages)  # True
+            >>>
+            >>> # Next page (use cursor from previous result)
+            >>> result2 = await (
+            ...     post_repo.query()
+            ...     .where(Post.status == "published")
+            ...     .cursor_paginate(
+            ...         per_page=20,
+            ...         cursor=result.next_cursor
+            ...     )
+            ... )
+            >>> # Fetches: WHERE status = 'published' AND id > 1045
+            >>>
+            >>> # Descending order (newest first, common for feeds)
+            >>> result = await (
+            ...     post_repo.query()
+            ...     .cursor_paginate(
+            ...         per_page=50,
+            ...         cursor_column="created_at",
+            ...         ascending=False
+            ...     )
+            ... )
+            >>>
+            >>> # With filtering and relationships
+            >>> result = await (
+            ...     user_repo.query()
+            ...     .where(User.status == "active")
+            ...     .with_("posts")
+            ...     .cursor_paginate(per_page=10)
+            ... )
+
+        Use Cases:
+            ✅ Mobile apps with "Load More" button
+            ✅ Infinite scroll feeds (Twitter, Instagram)
+            ✅ Real-time data streams
+            ✅ Large datasets (millions of rows)
+            ❌ Traditional page numbers (use paginate() instead)
+            ❌ Random access to pages (use paginate() instead)
+
+        Technical Notes:
+            - Fetches per_page + 1 items to determine if more pages exist
+            - Cursor is the value of cursor_column from the last item
+            - Requires indexed column for optimal performance
+            - Automatically applies global scopes (soft deletes)
+        """
+        from .pagination import CursorPaginator
+
+        # Normalize inputs
+        per_page = max(per_page, 1)
+
+        # Apply global scope for soft deletes (Sprint 2.6)
+        self._apply_global_scope()
+
+        # Get the cursor column attribute from model
+        if not hasattr(self.model, cursor_column):
+            raise AttributeError(
+                f"Model {self.model.__name__} has no column '{cursor_column}'"
+            )
+
+        cursor_attr = getattr(self.model, cursor_column)
+
+        # ========================================
+        # Build cursor query
+        # ========================================
+        stmt = self._stmt
+
+        # Add WHERE clause for cursor (if provided)
+        if cursor is not None:
+            if ascending:
+                # For ascending: get items AFTER cursor
+                stmt = stmt.where(cursor_attr > cursor)
+            else:
+                # For descending: get items BEFORE cursor
+                stmt = stmt.where(cursor_attr < cursor)
+
+        # Order by cursor column
+        if ascending:
+            stmt = stmt.order_by(cursor_attr.asc())
+        else:
+            stmt = stmt.order_by(cursor_attr.desc())
+
+        # Fetch per_page + 1 to determine if more pages exist
+        # (Similar to Laravel's simplePaginate() strategy)
+        stmt = stmt.limit(per_page + 1)
+
+        # Apply eager loading
+        for load_option in self._eager_loads:
+            stmt = stmt.options(load_option)
+
+        # ========================================
+        # Execute query
+        # ========================================
+        result = await self.session.execute(stmt)
+        all_items = list(result.scalars().all())
+
+        # ========================================
+        # Determine next cursor
+        # ========================================
+        has_more = len(all_items) > per_page
+
+        if has_more:
+            # Remove the extra item (we only fetched it to check if more exist)
+            items = all_items[:per_page]
+            # Next cursor is the value of cursor_column from the last item
+            last_item = items[-1]
+            next_cursor = getattr(last_item, cursor_column)
+        else:
+            # No more pages
+            items = all_items
+            next_cursor = None
+
+        # Return CursorPaginator with results
+        return CursorPaginator(
+            items=items,
+            next_cursor=next_cursor,
+            per_page=per_page,
+            cursor_column=cursor_column,
+        )
 
     # ===========================
     # RELATIONSHIP LOADING

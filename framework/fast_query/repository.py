@@ -280,6 +280,13 @@ class BaseRepository(Generic[T]):
         """
         Paginate records with rich metadata.
 
+        **REFACTORED Sprint 5.6**: This is now a thin wrapper around
+        QueryBuilder.paginate() to keep the codebase DRY. All pagination
+        logic has been moved to QueryBuilder, enabling pagination on
+        filtered queries:
+
+            await repo.query().where(...).paginate(...)
+
         This method provides Laravel-style pagination with automatic
         metadata calculation (total items, current page, last page, etc.)
         and link generation for API responses.
@@ -292,12 +299,19 @@ class BaseRepository(Generic[T]):
             LengthAwarePaginator[T]: Pagination container with items and metadata
 
         Example:
-            >>> # Simple pagination
+            >>> # Simple pagination (all records)
             >>> users = await repo.paginate(page=2, per_page=20)
             >>> print(users.total)  # Total items across all pages
             >>> print(len(users.items))  # Items on current page (up to 20)
             >>> print(users.current_page)  # 2
             >>> print(users.last_page)  # Total pages
+            >>>
+            >>> # For filtered pagination, use query builder instead:
+            >>> users = await (
+            ...     repo.query()
+            ...     .where(User.status == "active")
+            ...     .paginate(page=1, per_page=20)
+            ... )
             >>>
             >>> # Use in API route
             >>> @app.get("/users")
@@ -329,32 +343,16 @@ class BaseRepository(Generic[T]):
 
             For better performance with large datasets, consider:
             - Indexed columns for WHERE clauses
-            - Cursor-based pagination for infinite scroll
+            - Cursor-based pagination (repo.query().cursor_paginate())
             - Caching count results
+
+        See Also:
+            QueryBuilder.paginate() - For filtered pagination
+            QueryBuilder.cursor_paginate() - For high-performance infinite scroll
         """
-        # Normalize page number (minimum 1)
-        page = max(page, 1)
-
-        # Normalize per_page (minimum 1)
-        per_page = max(per_page, 1)
-
-        # Step 1: Execute COUNT query to get total items
-        count_stmt = select(func.count()).select_from(self.model)
-        count_result = await self.session.execute(count_stmt)
-        total = count_result.scalar_one()
-
-        # Step 2: Calculate offset for pagination
-        offset = (page - 1) * per_page
-
-        # Step 3: Execute SELECT query with LIMIT/OFFSET
-        select_stmt = select(self.model).limit(per_page).offset(offset)
-        select_result = await self.session.execute(select_stmt)
-        items = list(select_result.scalars().all())
-
-        # Step 4: Return paginator with metadata
-        return LengthAwarePaginator(
-            items=items, total=total, per_page=per_page, current_page=page
-        )
+        # Delegate to QueryBuilder (Sprint 5.6 refactor)
+        # This keeps the codebase DRY and enables filtered pagination
+        return await self.query().paginate(page=page, per_page=per_page)
 
     def query(self) -> "QueryBuilder[T]":
         """

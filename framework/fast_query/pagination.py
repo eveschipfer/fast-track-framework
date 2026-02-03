@@ -1,38 +1,42 @@
 """
-Fast Query - Pagination Support (Sprint 5.5)
+Fast Query - Pagination Support (Sprint 5.5 + 5.6)
 
 This module provides Laravel-style pagination for the Fast Query ORM.
-Inspired by Laravel's LengthAwarePaginator, it provides rich pagination
-metadata and link generation.
+Inspired by Laravel's LengthAwarePaginator and cursor pagination patterns.
 
-Key Features:
-    - Generic LengthAwarePaginator[T] for type safety
-    - Automatic metadata calculation (current_page, last_page, total, etc.)
-    - Link generation for first, last, next, prev
+Sprint 5.5: Offset-Based Pagination
+    - LengthAwarePaginator[T] with metadata (current_page, last_page, total)
+    - Link generation (first, last, next, prev)
     - Laravel-compatible JSON response format
-    - Integration with ResourceCollection for API responses
+    - Integration with ResourceCollection
+
+Sprint 5.6: Cursor-Based Pagination
+    - CursorPaginator[T] for high-performance infinite scroll
+    - O(1) performance using WHERE instead of OFFSET
+    - next_cursor for stateless pagination
+    - Perfect for large datasets and real-time feeds
 
 Public API:
-    LengthAwarePaginator[T]: Main pagination container
+    LengthAwarePaginator[T]: Offset-based pagination (use for traditional UI)
+    CursorPaginator[T]: Cursor-based pagination (use for infinite scroll)
 
-Example:
-    >>> from fast_query import BaseRepository, LengthAwarePaginator
+Example (Offset):
+    >>> # Traditional pagination with page numbers
+    >>> users = await user_repo.query().paginate(page=2, per_page=20)
+    >>> print(users.total)       # Total items across all pages
+    >>> print(users.last_page)   # Total number of pages
+
+Example (Cursor):
+    >>> # High-performance cursor pagination
+    >>> result = await user_repo.query().cursor_paginate(per_page=50)
+    >>> print(result.items)      # First 50 users
+    >>> print(result.next_cursor) # Cursor for next page
     >>>
-    >>> # Repository pagination
-    >>> users = await user_repo.paginate(page=2, per_page=20)
-    >>> print(users.total)  # Total items across all pages
-    >>> print(users.items)  # Items on current page
-    >>>
-    >>> # Convert to dict for JSON response
-    >>> data = users.to_dict()
-    >>> # {
-    >>> #   "current_page": 2,
-    >>> #   "last_page": 5,
-    >>> #   "per_page": 20,
-    >>> #   "total": 97,
-    >>> #   "from": 21,
-    >>> #   "to": 40
-    >>> # }
+    >>> # Get next page using cursor
+    >>> result2 = await user_repo.query().cursor_paginate(
+    ...     per_page=50,
+    ...     cursor=result.next_cursor
+    ... )
 """
 
 import math
@@ -314,4 +318,143 @@ class LengthAwarePaginator(Generic[T]):
         return (
             f"<LengthAwarePaginator page={self.current_page}/{self.last_page} "
             f"per_page={self.per_page} total={self.total}>"
+        )
+
+
+class CursorPaginator(Generic[T]):
+    """
+    High-performance cursor-based pagination (Sprint 5.6).
+
+    Instead of OFFSET (which has O(n) performance), this uses WHERE clauses
+    on a sequential column (id or created_at) for O(1) performance.
+
+    Perfect for:
+        - Infinite scroll interfaces
+        - Real-time feeds (Twitter, Facebook)
+        - Large datasets where OFFSET is slow
+        - Mobile apps with "Load More" UX
+
+    Trade-offs:
+        ✅ O(1) performance (always fast, even at page 1,000,000)
+        ✅ Consistent results even if data changes (new inserts don't shift pages)
+        ✅ Stateless (cursor is self-contained, no server-side session needed)
+        ❌ Can't jump to arbitrary pages (no "Go to page 5")
+        ❌ No total count (unknown number of results)
+        ❌ Only works with sequential columns (id, created_at)
+
+    Attributes:
+        items: List of items on the current page
+        next_cursor: Cursor value for fetching next page (None if no more)
+        has_more_pages: True if more items exist after this page
+
+    Example:
+        >>> # First page
+        >>> result = await post_repo.query().cursor_paginate(per_page=20)
+        >>> print(len(result.items))  # 20 posts
+        >>> print(result.next_cursor) # 987 (last item's ID)
+        >>>
+        >>> # Next page using cursor
+        >>> result2 = await post_repo.query().cursor_paginate(
+        ...     per_page=20,
+        ...     cursor=result.next_cursor
+        ... )
+        >>> # Fetches 20 posts WHERE id > 987
+
+    Technical Details:
+        - Uses WHERE instead of OFFSET for performance
+        - Requires indexed sequential column (id, created_at)
+        - SQL: SELECT * FROM posts WHERE id > :cursor ORDER BY id LIMIT :per_page
+        - Database can use index for O(1) seek
+    """
+
+    def __init__(
+        self,
+        items: list[T],
+        next_cursor: int | str | None,
+        per_page: int,
+        cursor_column: str = "id",
+    ) -> None:
+        """
+        Initialize a cursor paginator.
+
+        Args:
+            items: Items on the current page
+            next_cursor: Cursor value for next page (None if no more pages)
+            per_page: Items per page
+            cursor_column: Column used for cursoring (default: "id")
+        """
+        self.items = items
+        self.next_cursor = next_cursor
+        self.per_page = per_page
+        self.cursor_column = cursor_column
+
+    @property
+    def has_more_pages(self) -> bool:
+        """
+        Determine if there are more pages after the current page.
+
+        Returns:
+            bool: True if next_cursor is not None
+
+        Example:
+            >>> result = await repo.query().cursor_paginate(per_page=20)
+            >>> if result.has_more_pages:
+            ...     # Load more button should be visible
+            ...     print("More items available")
+        """
+        return self.next_cursor is not None
+
+    @property
+    def count(self) -> int:
+        """
+        Get count of items on current page.
+
+        Returns:
+            int: Number of items in current page
+
+        Example:
+            >>> result = await repo.query().cursor_paginate(per_page=20)
+            >>> print(result.count)  # Number of items returned (0-20)
+        """
+        return len(self.items)
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Convert paginator to dictionary for JSON serialization.
+
+        Returns:
+            dict: Cursor pagination metadata
+
+        Example:
+            >>> result = await repo.query().cursor_paginate(per_page=20)
+            >>> result.to_dict()
+            {
+                "per_page": 20,
+                "next_cursor": 987,
+                "has_more_pages": True,
+                "count": 20
+            }
+        """
+        return {
+            "per_page": self.per_page,
+            "next_cursor": self.next_cursor,
+            "has_more_pages": self.has_more_pages,
+            "count": self.count,
+        }
+
+    def __repr__(self) -> str:
+        """
+        String representation of cursor paginator.
+
+        Returns:
+            str: Debug-friendly representation
+
+        Example:
+            >>> result = CursorPaginator([...], 987, 20, "id")
+            >>> repr(result)
+            '<CursorPaginator count=20 next_cursor=987>'
+        """
+        return (
+            f"<CursorPaginator count={self.count} "
+            f"next_cursor={self.next_cursor}>"
         )
