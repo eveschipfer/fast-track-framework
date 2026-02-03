@@ -1,0 +1,203 @@
+site_name: Fast Track Framework
+site_description: Modern async Python framework orchestrating FastAPI and SQLAlchemy with Laravel-inspired developer experience
+site_author: Everton Schipfer
+site_url: https://fast-track-framework.readthedocs.io
+
+repo_name: eveschipfer/fast-track-framework
+repo_url: https://github.com/eveschipfer/fast-track-framework
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2024-2026 Everton Schipfer
+
+theme:
+  name: material
+  language: en
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  - tags
+
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - meta
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 4
+
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      auto_append:
+        - includes/abbreviations.md
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  version:
+    provider: mike
+    default: latest
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/eveschipfer/fast-track-framework
+      name: Fast Track Framework on GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/fast-track-framework/
+      name: Fast Track Framework on PyPI
+  analytics:
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Help us improve by
+            <a href="https://github.com/eveschipfer/fast-track-framework/issues/new" target="_blank" rel="noopener">opening an issue</a>.
+
+nav:
+  - Home: README.md
+  - Getting Started:
+    - Quick Start: guides/quickstart.md
+    - Installation: guides/quickstart.md#installation
+    - First API: guides/quickstart.md#your-first-api
+  - Core Concepts:
+    - IoC Container: guides/container.md
+    - Database & ORM: guides/database.md
+    - Testing: guides/testing.md
+  - Architecture:
+    - Design Decisions: architecture/decisions.md
+    - Service Providers: history/SPRINT_5_2_SUMMARY.md
+    - Configuration System: history/SPRINT_5_3_SUMMARY.md
+  - Features:
+    - Authentication & JWT: history/SPRINT_3_3_SUMMARY.md
+    - RBAC Gates & Policies: history/SPRINT_5_5_SUMMARY.md
+    - Pagination: history/SPRINT_5_5_SUMMARY.md
+    - Cursor Pagination: history/SPRINT_5_6_SUMMARY.md
+    - Caching & Rate Limiting: history/SPRINT_3_7_SUMMARY.md
+    - Task Scheduler: history/SPRINT_3_8_SUMMARY.md
+    - Mailer System: history/SPRINT_4_0_SUMMARY.md
+    - Storage System: history/SPRINT_4_1_SUMMARY.md
+    - API Resources: history/SPRINT_4_2_SUMMARY.md
+    - Event Bus: history/SPRINT_3_1_SUMMARY.md
+    - Job Queue: history/SPRINT_3_2_SUMMARY.md
+    - Form Requests: history/SPRINT_2_9_SUMMARY.md
+    - HTTP Kernel: history/SPRINT_3_4_SUMMARY.md
+    - i18n System: history/SPRINT_3_5_SUMMARY.md
+  - Quality:
+    - Async Concurrency: quality/ASYNC_CONCURRENCY_VALIDATION.md
+    - Lifecycle Management: quality/LIFECYCLE_MANAGEMENT_VALIDATION.md
+    - Dependency Override: quality/DEPENDENCY_OVERRIDE_VALIDATION.md
+    - Technical Debt Resolution: quality/TECHNICAL_DEBT_RESOLUTION.md
+  - Sprint History:
+    - Overview: history/README.md
+    - Sprint 5.6 - Ultimate QueryBuilder: history/SPRINT_5_6_SUMMARY.md
+    - Sprint 5.5 - Pagination & RBAC: history/SPRINT_5_5_SUMMARY.md
+    - Sprint 5.4 - Architectural Hardening: history/SPRINT_5_4_SUMMARY.md
+    - Sprint 5.3 - Configuration System: history/SPRINT_5_3_SUMMARY.md
+    - Sprint 5.2 - Service Providers: history/SPRINT_5_2_SUMMARY.md
+    - Sprint 5.1 - Bug Bash: history/SPRINT_5_1_SUMMARY.md
+    - Sprint 5.0 - Monorepo Refactor: history/SPRINT_5_0_SUMMARY.md
+    - Sprint 4.2 - API Resources: history/SPRINT_4_2_SUMMARY.md
+    - Sprint 4.1 - Storage System: history/SPRINT_4_1_SUMMARY.md
+    - Sprint 4.0 - Mailer System: history/SPRINT_4_0_SUMMARY.md
+    - Sprint 3.8 - Task Scheduler: history/SPRINT_3_8_SUMMARY.md
+    - Sprint 3.7 - Caching & Rate Limiting: history/SPRINT_3_7_SUMMARY.md
+    - Sprint 3.6 - Custom Validation Rules: history/SPRINT_3_6_SUMMARY.md
+    - Sprint 3.5 - i18n System: history/SPRINT_3_5_SUMMARY.md
+    - Sprint 3.4 - HTTP Kernel: history/SPRINT_3_4_SUMMARY.md
+    - Sprint 3.3 - Authentication & JWT: history/SPRINT_3_3_SUMMARY.md
+    - Sprint 3.2 - Job Queue: history/SPRINT_3_2_SUMMARY.md
+    - Sprint 3.1 - Event Bus: history/SPRINT_3_1_SUMMARY.md
+    - Sprint 3.0 - CLI Tooling: history/SPRINT_3_0_SUMMARY.md
+    - Sprint 2.9 - Form Requests: history/SPRINT_2_9_SUMMARY.md
+    - Sprint 2.8 - Factories & Seeders: history/SPRINT_2_8_SUMMARY.md
+    - Sprint 2.7 - Contract Tests: history/SPRINT_2_7_SUMMARY.md
+    - Sprint 2.6 - Advanced Query Builder: history/SPRINT_2_6_SUMMARY.md
+    - Sprint 2.5 - Fast Query Package: history/sprint-2-5-summary.md
+    - Sprint 2.4 - Relationship Tests: history/SPRINT_2_4_SUMMARY.md
+    - Sprint 2.3 - Query Builder: history/SPRINT_2_3_SUMMARY.md
+    - Sprint 2.2 - Database Foundation: history/SPRINT_2_2_SUMMARY.md
+    - Sprint 2.1 - FastAPI Integration: history/SPRINT_2_1_SUMMARY.md
+  - Contributing: CONTRIBUTING.md
+  - Release Notes: RELEASE_NOTES_v1.md

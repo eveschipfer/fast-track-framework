@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "fast-track-framework"
-version = "5.0.0"
-description = "A Laravel-inspired micro-framework built on FastAPI for educational purposes"
+version = "1.0.0a1"
+description = "Modern async Python framework orchestrating FastAPI and SQLAlchemy with Laravel-inspired developer experience"
 authors = ["Everton Schipfer <eveschipfer@gmail.com>"]
 readme = "README.md"
 packages = [
@@ -12,7 +12,9 @@ packages = [
 ]
 license = "MIT"
 homepage = "https://github.com/eveschipfer/fast-track-framework"
-keywords = ["fastapi", "laravel", "framework", "dependency-injection", "async"]
+repository = "https://github.com/eveschipfer/fast-track-framework"
+documentation = "https://fast-track-framework.readthedocs.io"
+keywords = ["fastapi", "sqlalchemy", "laravel", "async", "dependency-injection", "orm", "framework"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -20,6 +22,8 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Framework :: FastAPI",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Database",
 ]
 
 [tool.poetry.dependencies]
@@ -72,9 +76,9 @@ ruff = "^0.8.0"
 # Pre-commit hooks
 pre-commit = "^4.0.0"
 
-# Documentation (optional)
-# mkdocs = "^1.6.0"
-# mkdocs-material = "^9.5.0"
+# Documentation
+mkdocs = "^1.6.0"
+mkdocs-material = "^9.5.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -108,7 +112,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
-source = ["framework/ftf", "workbench/app"]
+source = ["framework/ftf", "framework/fast_query", "workbench/app"]
 omit = [
     "*/tests/*",
     "*/exercises/*",
@@ -131,7 +135,7 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-python_version = "3.14"
+python_version = "3.13"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
