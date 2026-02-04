@@ -49,7 +49,6 @@ Trade-offs:
 import importlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from fastapi import FastAPI
@@ -124,12 +123,9 @@ class FastTrackFramework(FastAPI):
         )
         self.container._singletons[FastTrackFramework] = self
 
-        # Sprint 5.3: Load configuration from files
-        if config_path is None:
-            # Default to workbench/config
-            config_path = self._detect_config_path()
-
-        self._load_configuration(config_path)
+        # Sprint 7: Configuration is now loaded by Pydantic Settings
+        # Settings are automatically loaded from environment variables at import time
+        # The ConfigRepository proxy provides backward compatibility for config() helper
 
         # Sprint 5.3: Auto-register providers from config
         self._register_configured_providers()
@@ -147,55 +143,6 @@ class FastTrackFramework(FastAPI):
         from ftf.http.exceptions import ExceptionHandler
 
         ExceptionHandler.register_all(self)
-
-    def _detect_config_path(self) -> str:
-        """
-        Auto-detect the config directory path.
-
-        Looks for workbench/config/ relative to the current working directory.
-
-        Returns:
-            str: Path to config directory
-
-        Raises:
-            FileNotFoundError: If config directory cannot be found
-        """
-        # Try workbench/config (standard location)
-        workbench_config = Path("workbench/config")
-        if workbench_config.exists():
-            return str(workbench_config)
-
-        # Try config in current directory (alternative)
-        config_dir = Path("config")
-        if config_dir.exists():
-            return str(config_dir)
-
-        # Config directory not found - will be created or cause error in load
-        return "workbench/config"
-
-    def _load_configuration(self, config_path: str) -> None:
-        """
-        Load all configuration files from the config directory.
-
-        This method loads all .py files from the config directory into
-        the ConfigRepository singleton.
-
-        Args:
-            config_path: Path to the config directory
-
-        Note:
-            If the config directory doesn't exist, this method silently
-            continues to allow the app to work without config files.
-        """
-        config_repo = get_config_repository()
-
-        try:
-            config_repo.load_from_directory(config_path)
-            print(f"📝 Loaded configuration from: {config_path}")  # noqa: T201
-        except FileNotFoundError:
-            # Config directory doesn't exist - continue without config
-            print(f"⚠️  Config directory not found: {config_path}")  # noqa: T201
-            print("   Continuing without configuration files...")  # noqa: T201
 
     def _register_configured_providers(self) -> None:
         """

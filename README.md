@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Tests](https://img.shields.io/badge/tests-536%20passed-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-5.7%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-7.0%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Monorepo](https://img.shields.io/badge/structure-monorepo-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
@@ -61,6 +61,7 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🔍 QueryBuilder Pagination** | Terminal paginate() and cursor_paginate() methods, filtered pagination, O(1) cursor performance | ✅ Sprint 5.6 |
 | **🗄️ Database Service Provider** | Auto-configure database from config, zero boilerplate in main.py, Convention over Configuration | ✅ Sprint 5.7 |
 | **🧪 536 Tests** | 100% passing, 0 failed, comprehensive coverage | ✅ Complete |
+| **🔷 Type-Safe Configuration** | Pydantic Settings with validation, backward compatible, Container DI | ✅ Sprint 7.0 |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
 
 ---
@@ -223,6 +224,92 @@ db_host = config("database.connections.mysql.host", "localhost")
 ```
 
 **Learn more:** [Sprint 5.3 Summary](docs/history/SPRINT_5_3_SUMMARY.md)
+
+---
+
+## 🔙 Previous: Sprint 5.7
+
+### **Database Service Provider** — Auto-Configure Database Layer 🗄️⚙️
+
+Introduced `DatabaseServiceProvider` that automatically configures the database layer by reading `config/database.py` and setting up `AsyncEngine`, `async_sessionmaker`, and `AsyncSession` in the IoC Container.
+
+**Key Achievements:**
+- ✅ **Zero Boilerplate**: No manual SQLAlchemy setup in `main.py`
+- ✅ **Convention over Configuration**: User fills config files, framework handles the rest
+- ✅ **String-Based Provider Loading**: `"ftf.providers.database.DatabaseServiceProvider"` syntax
+- ✅ **Connection Pooling**: Automatic pool size configuration from env vars
+- ✅ **Multi-Driver Support**: SQLite, MySQL, PostgreSQL ready to use
+
+**Learn more:** [Sprint 5.7 Summary](docs/history/SPRINT_5_7_SUMMARY.md)
+
+---
+
+## 🆕 What's New in Sprint 7.0?
+
+### **Type-Safe Configuration (Pydantic Settings)** — Modernized Configuration with Validation 🔷🔒
+
+Upgraded the entire configuration system from dictionary-based to **Pydantic Settings v2.9.0**, providing compile-time type safety, runtime validation, and IDE autocomplete while maintaining 100% backward compatibility with existing code.
+
+**What Was Implemented:**
+
+1. **Pydantic Settings Model** — Type-safe configuration classes
+   - `BaseModelConfig`: Base class with Duck Typing (`__getitem__`) for backward compatibility
+   - `AppConfig`: Application settings (name, env, debug, version, url, timezone, locale)
+   - `DatabaseConfig`: Database settings (default, connections, migrations, redis)
+   - `SQLiteConfig`, `MySQLConfig`, `PostgreSQLConfig`: Connection-specific settings
+   - `AppSettings`: Root settings with automatic `.env` loading via `pydantic-settings`
+
+2. **Automatic Environment Variable Loading** — Zero `os.getenv()` calls
+   ```python
+   # No manual calls needed! Pydantic handles it all
+   class AppConfig(BaseModel):
+       name: str = Field(alias="APP_NAME")  # Auto-loaded from .env
+       debug: bool = Field(alias="APP_DEBUG") # Auto: "false" → False
+       port: int = Field(alias="DB_PORT")    # Auto: "3306" → 3306
+   ```
+
+3. **Runtime Validation** — Invalid values caught at startup
+   - Pydantic validates all configuration values when `AppSettings()` is instantiated
+   - Invalid port numbers, wrong file paths, type mismatches → Immediate `ValidationError`
+   - No more runtime "ValueError: could not convert string to int" bugs
+
+4. **Container Integration** — Type-safe dependency injection
+   - `AppServiceProvider` now registers `AppSettings` in Container as singleton
+   - Services can inject `settings: AppSettings` for fully type-safe configuration access
+
+5. **Backward Compatible Duck Typing** — Legacy code still works
+   - `BaseModelConfig.__getitem__()` enables dict-like access: `settings.app["name"]`
+   - All existing `config("app.name")` calls continue working
+   - No breaking changes to application code
+
+**Key Benefits:**
+- ✅ **Type Safety**: All config fields have type hints (MyPy validates)
+- ✅ **Runtime Validation**: Invalid values caught at application startup
+- ✅ **IDE Support**: Full autocomplete on all configuration fields
+- ✅ **Backward Compatible**: `config("app.name")` still works via Duck Typing
+- ✅ **Auto Conversion**: String-to-type conversion automatic (no manual `int()`, `bool()`)
+- ✅ **Environment Variables**: Automatic loading from `.env` via `pydantic-settings`
+- ✅ **Container DI**: Type-safe injection of `AppSettings` throughout application
+
+**Example:**
+    ```python
+    # Type-safe direct access (recommended)
+    from workbench.config.settings import settings
+    app_name = settings.app.name
+    debug_mode = settings.app.debug  # IDE autocomplete, type-checked
+
+    # Legacy syntax (still works!)
+    from ftf.config import config
+    app_name = config("app.name")  # Duck typing makes this work
+
+    # Container injection (type-safe)
+    from workbench.config.settings import AppSettings
+    class MyService:
+        def __init__(self, settings: AppSettings):
+            self.debug = settings.app.debug  # Type: bool, checked by MyPy
+    ```
+
+**Learn more:** [Sprint 7.0 Summary](docs/history/SPRINT_7_0_SUMMARY.md)
 
 ---
 

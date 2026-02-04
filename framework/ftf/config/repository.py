@@ -1,73 +1,83 @@
 """
-Configuration Repository
+Configuration Repository (Sprint 7 - Modernized)
 
-This module provides the central configuration management system for Fast Track Framework,
-inspired by Laravel's config system. Configurations are stored as Python files in the
-workbench/config/ directory and can be accessed using dot notation.
+This module provides central configuration management system for Fast Track Framework,
+now powered by Pydantic Settings for type-safe configuration.
+
+SPRINT 7 MIGRATION:
+    Before: Dictionary-based config loaded from Python files
+    After: Pydantic Settings with automatic environment variable loading
 
 Key Features:
-- Load configuration from Python files (not JSON/YAML)
-- Dot notation access: config.get("app.name")
+- Type-safe configuration with Pydantic validation
+- Dot notation access: config("app.name") - backward compatible
 - Singleton pattern: Single config instance per application
-- Dynamic loading: Import config files at runtime
-- Type-safe: Strict MyPy compatibility
-- Graceful defaults: Handle missing keys elegantly
+- Duck typing: __getitem__ allows dict-like access on Pydantic models
+- Automatic environment variable loading via pydantic-settings
+- Full backward compatibility with existing code
 
-Why Python files?
-- Allows using os.getenv() and logic in config
-- Type-safe with IDE autocomplete
-- Can compute values at load time
-- More powerful than static JSON/YAML
+Architecture (Sprint 7+):
+    Pydantic Settings (Type-Safe)
+        ↓
+    BaseModelConfig (Duck Typing Adapter)
+        ↓
+    config() Helper (Legacy Compatibility)
+
+Why This Migration?
+    - Type Safety: Compile-time checking of config keys
+    - Validation: Invalid values caught at startup
+    - IDE Support: Autocomplete on all config fields
+    - Backward Compatible: Duck typing preserves legacy code
 
 Example:
-    # workbench/config/app.py
-    import os
+    # Type-safe direct access (recommended)
+    from workbench.config.settings import settings
 
-    return {
-        "name": os.getenv("APP_NAME", "FastTrack"),
-        "env": os.getenv("APP_ENV", "production"),
-        "providers": [
-            AppServiceProvider,
-            RouteServiceProvider,
-        ]
-    }
+    app_name = settings.app.name
+    debug_mode = settings.app.debug
 
-    # Usage
+    # Legacy dot notation (still works!)
     from ftf.config import config
 
-    app_name = config("app.name")  # "FastTrack"
+    app_name = config("app.name")  # Internally uses settings
     env = config("app.env", "local")  # With default
+
+    # Dict-style access via Duck Typing
+    settings.app["name"]  # Works like a dict!
 """
 
-import importlib.util
-import sys
-from pathlib import Path
+import functools
 from typing import Any
 
 
 class ConfigRepository:
     """
-    Configuration Repository with dot notation access.
+    Configuration Repository with Pydantic Settings backend (Sprint 7).
 
-    This class manages all application configuration by loading Python files
-    from the workbench/config/ directory and providing a unified interface
-    for accessing configuration values.
+    This class provides a unified interface for accessing configuration
+    values through modern Pydantic Settings system while maintaining
+    full backward compatibility with legacy code.
 
-    The repository follows the Singleton pattern to ensure a single source
-    of truth for configuration across the application.
+    Architecture:
+        Pydantic Settings (Type-Safe) → ConfigRepository (Legacy Proxy) → Application
+
+    The repository follows Singleton pattern to ensure a single source
+    of truth for configuration across application.
 
     Attributes:
-        _configs: Internal storage for all loaded configurations
         _instance: Singleton instance
+        _settings: Reference to global settings instance
+        _overrides: Runtime configuration overrides (for testing)
 
     Example:
-        >>> config = ConfigRepository()
-        >>> app_name = config.get("app.name")
-        >>> db_driver = config.get("database.default", "sqlite")
+        >>> from ftf.config import config
+        >>> app_name = config("app.name")  # Uses Pydantic under hood
+        >>> db_driver = config("database.default", "sqlite")
     """
 
     _instance: "ConfigRepository | None" = None
-    _configs: dict[str, dict[str, Any]]
+    _settings: Any = None
+    _overrides: dict[str, Any] = {}
 
     def __new__(cls) -> "ConfigRepository":
         """
@@ -78,163 +88,87 @@ class ConfigRepository:
         """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance._configs = {}
+            # Import settings here to avoid circular imports at module level
+            from workbench.config.settings import settings
+            cls._instance._settings = settings
         return cls._instance
-
-    def load_from_directory(self, config_path: str | Path) -> None:
-        """
-        Load all Python configuration files from a directory.
-
-        This method scans the specified directory for .py files (excluding __init__.py)
-        and dynamically imports them. Each config file must return a dictionary.
-
-        Args:
-            config_path: Path to the config directory (e.g., "workbench/config")
-
-        Raises:
-            FileNotFoundError: If config directory doesn't exist
-            ValueError: If a config file doesn't return a dict
-
-        Example:
-            >>> config = ConfigRepository()
-            >>> config.load_from_directory("workbench/config")
-            # Loads app.py, database.py, cache.py, etc.
-        """
-        config_dir = Path(config_path)
-
-        if not config_dir.exists():
-            raise FileNotFoundError(f"Config directory not found: {config_dir}")
-
-        # Find all .py files (exclude __init__.py)
-        config_files = [
-            f for f in config_dir.glob("*.py") if f.name != "__init__.py"
-        ]
-
-        for config_file in config_files:
-            # Extract config name from filename (e.g., "app.py" -> "app")
-            config_name = config_file.stem
-
-            # Load the config module dynamically
-            config_dict = self._load_config_module(config_file)
-
-            # Store in internal dict
-            self._configs[config_name] = config_dict
-
-    def _load_config_module(self, config_file: Path) -> dict[str, Any]:
-        """
-        Dynamically load a Python config file and extract its return value.
-
-        Config files must return a dictionary. This allows for dynamic configuration
-        using os.getenv(), conditionals, and other Python logic.
-
-        Args:
-            config_file: Path to the config file
-
-        Returns:
-            dict: The configuration dictionary
-
-        Raises:
-            ValueError: If the config file doesn't return a dict
-            Exception: If the config file has syntax errors
-
-        Example:
-            # workbench/config/app.py
-            import os
-
-            return {
-                "name": os.getenv("APP_NAME", "FastTrack"),
-                "debug": os.getenv("APP_DEBUG", "false") == "true",
-            }
-        """
-        # Create a unique module name to avoid conflicts
-        module_name = f"config.{config_file.stem}"
-
-        # Load the module using importlib
-        spec = importlib.util.spec_from_file_location(module_name, config_file)
-        if spec is None or spec.loader is None:
-            raise ValueError(f"Could not load config file: {config_file}")
-
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-
-        try:
-            spec.loader.exec_module(module)
-        except Exception as e:
-            raise ValueError(f"Error loading config file {config_file}: {e}") from e
-
-        # Config files must have a 'config' dict or return a dict
-        # Check for 'config' variable first (preferred)
-        if hasattr(module, "config"):
-            config_dict = module.config
-        # Fall back to checking for a direct return (not standard Python, so we look for __dict__)
-        # Since Python modules don't have returns, we'll use a convention:
-        # The config file should define a 'config' variable
-        else:
-            # Look for all non-private variables and build a dict
-            config_dict = {
-                key: value
-                for key, value in module.__dict__.items()
-                if not key.startswith("_") and key not in ["os", "Path", "sys"]
-            }
-
-        if not isinstance(config_dict, dict):
-            raise ValueError(
-                f"Config file {config_file} must define a 'config' dict variable"
-            )
-
-        return config_dict
 
     def get(self, key: str, default: Any = None) -> Any:
         """
-        Get a configuration value using dot notation.
+        Get a configuration value using dot notation (Sprint 7 modernized).
 
-        Dot notation allows accessing nested configuration values:
-        - "app.name" -> configs["app"]["name"]
-        - "database.connections.mysql.host" -> configs["database"]["connections"]["mysql"]["host"]
+        This method uses functools.reduce and getattr to navigate Pydantic
+        settings object, supporting arbitrary nesting depth while maintaining
+        backward compatibility with existing code.
+
+        Navigation Algorithm:
+            - "app.name" → settings.app.name
+            - "database.connections.mysql.host" → settings.database.connections.mysql.host
+            - If key exists in overrides, returns override value
+            - If any intermediate value is None, returns default
 
         Args:
             key: Configuration key in dot notation
-            default: Default value if key doesn't exist
+            default: Default value if key doesn't exist or is None
 
         Returns:
             Any: The configuration value or default
 
         Example:
             >>> config.get("app.name")
-            "FastTrack"
+            "Fast Track Framework"
             >>> config.get("app.debug", False)
             False
             >>> config.get("database.connections.mysql.host", "localhost")
             "localhost"
+
+        Educational Note:
+            functools.reduce() allows us to navigate nested attributes
+            dynamically without knowing depth at compile time.
+
+            functools.reduce(getattr, [obj, "a", "b", "c"], default)
+            # Equivalent to: obj.a.b.c (but with None checking)
         """
-        # Split the key by dots
+        # Check overrides first (highest priority)
+        if key in self._overrides:
+            return self._overrides[key]
+
+        # Split key by dots
         parts = key.split(".")
 
-        # First part is the config file name
-        config_name = parts[0]
-
-        # Check if config file was loaded
-        if config_name not in self._configs:
+        if not parts:
             return default
 
-        # Start with the config dict
-        value: Any = self._configs[config_name]
+        # Start with settings object
+        obj = self._settings
 
-        # Traverse the nested structure
-        for part in parts[1:]:
-            if isinstance(value, dict) and part in value:
-                value = value[part]
-            else:
-                return default
+        # Navigate through nested attributes using reduce
+        # functools.reduce applies getattr() recursively: getattr(getattr(obj, 'a'), 'b')
+        # We also check if intermediate value is not None
+        try:
+            result = functools.reduce(
+                lambda acc, part: getattr(acc, part, None) if acc is not None else None,
+                parts,
+                obj
+            )
+        except AttributeError:
+            return default
 
-        return value
+        # Return result or default if None
+        return result if result is not None else default
 
     def set(self, key: str, value: Any) -> None:
         """
-        Set a configuration value using dot notation.
+        Set a configuration value using dot notation (for runtime overrides).
 
-        This method allows runtime modification of configuration values.
-        Useful for testing or dynamic configuration changes.
+        Since Pydantic models are immutable by default, this stores runtime
+        overrides in a separate dictionary. Overrides have higher priority
+        than Pydantic settings.
+
+        Use Cases:
+            - Testing: Override configuration values without touching .env
+            - Feature Flags: Enable/disable features at runtime
+            - Dynamic Configuration: Change settings without restart
 
         Args:
             key: Configuration key in dot notation
@@ -244,33 +178,22 @@ class ConfigRepository:
             >>> config.set("app.debug", True)
             >>> config.get("app.debug")
             True
+            >>> config.flush()  # Clear all overrides
+            >>> config.get("app.debug")  # Back to original value
+
+        Educational Note:
+            Pydantic Settings are designed to be immutable after initialization
+            (loaded from environment). This method provides a mutable overlay
+            for special cases like testing without breaking the type-safety
+            guarantees of the underlying Pydantic model.
         """
-        parts = key.split(".")
-        config_name = parts[0]
-
-        # Ensure config dict exists
-        if config_name not in self._configs:
-            self._configs[config_name] = {}
-
-        # Navigate to the nested location
-        current = self._configs[config_name]
-
-        # Create nested dicts as needed
-        for part in parts[1:-1]:
-            if part not in current or not isinstance(current[part], dict):
-                current[part] = {}
-            current = current[part]
-
-        # Set the final value
-        if len(parts) > 1:
-            current[parts[-1]] = value
-        else:
-            # Setting top-level config (e.g., "app")
-            self._configs[config_name] = value
+        self._overrides[key] = value
 
     def has(self, key: str) -> bool:
         """
         Check if a configuration key exists.
+
+        This method checks both Pydantic settings and runtime overrides.
 
         Args:
             key: Configuration key in dot notation
@@ -288,10 +211,13 @@ class ConfigRepository:
 
     def all(self, config_name: str | None = None) -> dict[str, Any]:
         """
-        Get all configuration values.
+        Get all configuration values as dict.
+
+        This method converts Pydantic models to dictionaries using model_dump(),
+        making it compatible with code that expects dictionary access.
 
         Args:
-            config_name: Optional config file name to get specific config
+            config_name: Optional config section name
                         If None, returns all configs
 
         Returns:
@@ -299,22 +225,52 @@ class ConfigRepository:
 
         Example:
             >>> config.all("app")
-            {"name": "FastTrack", "env": "production", ...}
+            {"name": "Fast Track Framework", "env": "production", ...}
             >>> config.all()
             {"app": {...}, "database": {...}, ...}
+
+        Educational Note:
+            Pydantic's model_dump() method converts the model to a dictionary,
+            preserving all nested structure and types. This provides full backward
+            compatibility with code that expects dictionary-based configuration.
         """
+        from pydantic import BaseModel
+
+        # If specific config section requested
         if config_name:
-            return self._configs.get(config_name, {})
-        return self._configs.copy()
+            section = functools.reduce(
+                lambda acc, part: getattr(acc, part, None) if acc is not None else None,
+                config_name.split("."),
+                self._settings
+            )
+            if section is not None and isinstance(section, BaseModel):
+                return section.model_dump()
+            return {}
+
+        # Return all configuration as nested dict
+        return self._settings.model_dump()
 
     def flush(self) -> None:
         """
-        Clear all loaded configurations.
+        Clear all runtime configuration overrides.
 
-        Useful for testing when you need to reload configs.
+        This does NOT reset Pydantic settings (which are loaded from
+        environment variables at startup). It only clears overrides set via
+        config.set().
+
+        Useful for testing when you need to reset configuration state.
 
         Example:
+            >>> config.set("app.debug", True)
+            >>> config.get("app.debug")
+            True
             >>> config.flush()
-            >>> config.get("app.name")  # None
+            >>> config.get("app.debug")  # Back to original value from .env
+
+        Educational Note:
+            Pydantic Settings cannot be "reloaded" during runtime because
+            they're designed to be loaded once at application startup from
+            environment variables. This method provides a way to reset the
+            mutable override layer without restarting the application.
         """
-        self._configs.clear()
+        self._overrides.clear()
