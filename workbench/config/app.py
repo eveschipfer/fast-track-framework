@@ -63,11 +63,13 @@ config = {
         # Route registration and configuration
         "app.providers.route_service_provider.RouteServiceProvider",
 
+        # Authentication guards (Sprint 10)
+        "workbench.app.providers.auth_service_provider.AuthServiceProvider",
+
         # Future providers:
         # "ftf.providers.cache.CacheServiceProvider",      # Cache driver configuration
         # "ftf.providers.mail.MailServiceProvider",        # Email service setup
         # "ftf.providers.queue.QueueServiceProvider",      # Job queue workers
-        # "ftf.providers.auth.AuthServiceProvider",        # Authentication guards
     ],
 
     # Locale Configuration

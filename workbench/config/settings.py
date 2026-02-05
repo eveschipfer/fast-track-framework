@@ -320,6 +320,41 @@ class DatabaseConfig(BaseModelConfig):
         populate_by_name = True
 
 
+class AuthConfig(BaseModel):
+    """
+    Authentication settings.
+
+    This model contains authentication configuration including
+    JWT secret keys, guard settings, and token expiration.
+
+    Attributes:
+        jwt_secret: Secret key for JWT signing
+        guards: Default guard to use
+        token_expiration: Token expiration time in minutes
+        refresh_expiration: Refresh token expiration in days
+
+    Environment Variables:
+        AUTH_JWT_SECRET: Secret key for JWT signing (required in production)
+        AUTH_GUARDS: Default guard (default: api)
+        AUTH_TOKEN_EXPIRATION: Token expiration in minutes (default: 30)
+        AUTH_REFRESH_EXPIRATION: Refresh token expiration in days (default: 7)
+
+    Example:
+        >>> auth_config = AuthConfig(
+        ...     jwt_secret="your-secret-key",
+        ...     guards="api",
+        ... )
+    """
+
+    jwt_secret: str = Field(
+        default="INSECURE_DEFAULT_SECRET_KEY_CHANGE_IN_PRODUCTION_DO_NOT_USE_THIS",
+        alias="AUTH_JWT_SECRET",
+    )
+    guards: str = Field(default="api", alias="AUTH_GUARDS")
+    token_expiration: int = Field(default=30, alias="AUTH_TOKEN_EXPIRATION")
+    refresh_expiration: int = Field(default=7, alias="AUTH_REFRESH_EXPIRATION")
+
+
 class AppConfig(BaseModelConfig):
     """
     Application core settings.
@@ -378,6 +413,7 @@ class AppSettings(BaseSettings):
 
     Attributes:
         app: Application configuration (name, env, debug, etc.)
+        auth: Authentication configuration (JWT, guards, tokens)
         database: Database configuration (connections, pools, etc.)
 
     Usage:
@@ -482,10 +518,12 @@ class AppSettings(BaseSettings):
             connections=connections,
         )
 
+        auth_config = AuthConfig()
+
         app_config = AppConfig()
 
         # Merge with provided kwargs
-        all_data = {"app": app_config, "database": database_config}
+        all_data = {"app": app_config, "auth": auth_config, "database": database_config}
         all_data.update(kwargs)
 
         super().__init__(**all_data)

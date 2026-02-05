@@ -1,12 +1,13 @@
 """
-Authentication & Authorization Module (Sprint 3.3 + Sprint 5.5)
+Authentication & Authorization Module (Sprint 3.3 + Sprint 5.5 + Sprint 10)
 
 This module provides comprehensive authentication and authorization functionality:
 
-Authentication (Sprint 3.3):
+Authentication (Sprint 3.3 + Sprint 10):
 - Password hashing and verification (bcrypt)
 - JWT token creation and verification
 - Route protection via AuthGuard
+- Guard Pattern: Modular authentication with AuthManager
 - Type-safe CurrentUser dependency
 
 Authorization (Sprint 5.5):
@@ -19,6 +20,7 @@ Usage:
     >>> from ftf.auth import hash_password, verify_password
     >>> from ftf.auth import create_access_token, decode_token
     >>> from ftf.auth import CurrentUser, get_current_user
+    >>> from ftf.auth import AuthManager
     >>>
     >>> # Hash password on registration
     >>> hashed = hash_password("user_password")
@@ -28,10 +30,23 @@ Usage:
     ...     token = create_access_token({"user_id": user.id})
     ...     return {"access_token": token}
     >>>
-    >>> # Protect routes (JWT Authentication)
+    >>> # Protect routes (JWT Authentication - OLD, DEPRECATED)
     >>> @app.get("/profile")
     >>> async def get_profile(user: CurrentUser):
     ...     return {"id": user.id, "email": user.email}
+    >>>
+    >>> # Protect routes (JWT Authentication - NEW, RECOMMENDED)
+    >>> from ftf.auth import AuthManager
+    >>> @app.get("/profile")
+    >>> async def get_profile(user = Depends(AuthManager.user)):
+    ...     return {"id": user.id, "email": user.email}
+    >>>
+    >>> # Check credentials
+    >>> is_valid = await AuthManager.check(credentials)
+    >>>
+    >>> # Authenticate and get token
+    >>> token = await AuthManager.authenticate(credentials)
+    >>> return {"access_token": token}
     >>>
     >>> # Authorization with Gates (Sprint 5.5)
     >>> from ftf.auth import Gate, Policy, Authorize
@@ -57,13 +72,19 @@ Educational Note:
     - Concise: No need to write Depends(get_current_user) every time
     - Familiar: Similar to Laravel's Auth::user()
 
-    This is achieved through Python's Annotated type:
-        CurrentUser = Annotated[User, Depends(get_current_user)]
+This is achieved through Python's Annotated type:
+    CurrentUser = Annotated[User, Depends(get_current_user)]
 
-    When FastAPI sees CurrentUser in a route parameter, it:
+When FastAPI sees CurrentUser in a route parameter, it:
     1. Recognizes it's Annotated with a Depends
     2. Calls get_current_user() to resolve the dependency
     3. Injects the result as the parameter value
+
+Sprint 10 Migration Notes:
+    - AuthManager is the NEW RECOMMENDED way to handle authentication
+    - Old get_current_user() is maintained for backward compatibility
+    - JwtGuard implements Guard Pattern for stateless auth
+    - AuthServiceProvider configures and registers all auth services
 """
 
 from typing import Annotated, Any
@@ -72,7 +93,6 @@ from fastapi import Depends
 
 # Authentication imports (Sprint 3.3)
 from ftf.auth.crypto import hash_password, needs_rehash, verify_password
-from ftf.auth.guard import get_current_user
 from ftf.auth.jwt import (
     create_access_token,
     decode_token,
@@ -83,6 +103,9 @@ from ftf.auth.jwt import (
 from ftf.auth.dependencies import Authorize, Requires
 from ftf.auth.gates import Gate, GateManager
 from ftf.auth.policies import Policy
+
+# NEW: Guard Pattern imports (Sprint 10)
+from ftf.auth import AuthManager, JwtGuard
 
 # CurrentUser type alias for route protection
 # Educational Note: We use Any here instead of User to avoid circular imports
@@ -100,9 +123,12 @@ __all__ = [
     "create_access_token",
     "decode_token",
     "get_token_expiration",
-    # Auth guard (Sprint 3.3)
+    # Auth guard (Sprint 3.3 - OLD, DEPRECATED)
     "get_current_user",
     "CurrentUser",
+    # Guard Pattern (Sprint 10 - NEW, RECOMMENDED)
+    "AuthManager",
+    "JwtGuard",
     # Authorization (Sprint 5.5)
     "Gate",
     "GateManager",
