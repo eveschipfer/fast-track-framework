@@ -12,18 +12,21 @@ They allow you to:
 
 Example:
     class AppServiceProvider(ServiceProvider):
+        # Optional: Define boot priority (lower runs first)
+        priority = 10
+
         def register(self, container: Container) -> None:
             # Register services in the container
             container.register(MyService, scope="singleton")
 
-        def boot(self, container: Container) -> None:
-            # Bootstrap services (runs after all register() methods)
-            # Access container to resolve and configure services
-            pass
+        async def boot(self, db: DatabaseEngine, config: AppSettings) -> None:
+            # Sprint 12: Method Injection!
+            # Dependencies are automatically resolved and injected.
+            await db.connect(config.db.url)
 """
 
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from abc import ABC
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ftf.core.container import Container
@@ -37,65 +40,50 @@ class ServiceProvider(ABC):
     1. Register phase: Register bindings in the container
     2. Boot phase: Bootstrap services after all providers have registered
 
-    This pattern ensures that all services are registered before any
-    bootstrapping logic runs, avoiding dependency resolution issues.
+    Attributes:
+        priority: Boot order priority (default: 100). Lower numbers boot first.
     """
+
+    # Priority for boot order (Lower = runs first)
+    priority: int = 100
 
     def register(self, container: "Container") -> None:
         """
         Register services in the IoC container.
 
-        This method runs during the registration phase, before boot().
-        Use this to bind interfaces to implementations or register
-        singleton services.
-
-        Args:
-            container: The IoC container instance
-
-        Example:
-            def register(self, container: Container) -> None:
-                container.register(DatabaseEngine, scope="singleton")
-                container.register(UserRepository, scope="transient")
+        This runs BEFORE the boot phase. Only bind services here.
+        Do NOT resolve services or perform IO operations in this method.
         """
-        pass  # Default implementation does nothing
+        pass
 
-    def boot(self, container: "Container") -> None:
+    def boot(self) -> Any:
         """
         Bootstrap services after all providers have registered.
 
-        This method runs during the boot phase, after all register()
-        methods have completed. Use this to perform initialization
-        logic that depends on registered services.
+        Sprint 12: Supports Method Injection!
 
-        Args:
-            container: The IoC container instance
+        You should override this method with your own signature. The framework
+        will inspect your arguments and inject the dependencies automatically.
+
+        Can be synchronous or asynchronous (async def).
 
         Example:
-            def boot(self, container: Container) -> None:
-                db = container.resolve(DatabaseEngine)
-                db.configure_pool(max_connections=10)
+            async def boot(self, db: AsyncEngine, mailer: Mailer) -> None:
+                ...
         """
-        pass  # Default implementation does nothing
+        pass
 
 
 class DeferredServiceProvider(ServiceProvider):
     """
     A service provider that can defer registration until needed.
 
-    Deferred providers are not registered immediately when the application
-    boots. Instead, they are registered only when one of their provided
-    services is requested from the container.
-
-    This improves boot performance by avoiding unnecessary registrations.
-
-    Attributes:
-        provides: List of service types this provider can provide
+    NOTE: Requires support from the Application Kernel to function correctly.
     """
 
     provides: list[type] = []
 
     def __init__(self) -> None:
-        """Initialize the deferred service provider."""
         if not self.provides:
             raise ValueError(
                 f"{self.__class__.__name__} must define 'provides' attribute"

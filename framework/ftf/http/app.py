@@ -258,7 +258,7 @@ class FastTrackFramework(FastAPI):
         # Boot all registered service providers (Sprint 5.2)
         if self._providers and not self._booted:
             print(f"🔧 Booting {len(self._providers)} service provider(s)...")  # noqa: T201
-            self.boot_providers()
+            await self.boot_providers()
 
         # Yield control to the application
         # Everything between startup and shutdown happens here
@@ -330,29 +330,84 @@ class FastTrackFramework(FastAPI):
         # Immediately call register() to bind services
         provider.register(self.container)
 
-    def boot_providers(self) -> None:
+    async def boot_providers(self) -> None:
         """
         Boot all registered service providers.
 
-        This calls the boot() method on all registered providers.
-        Should be called after all providers are registered, typically
-        during application startup.
+        Sprint 12: Supports priority-based boot order and Method Injection.
+
+        This method:
+        1. Sorts providers by priority attribute (lower numbers boot first)
+        2. Inspects each provider's boot() method signature
+        3. Resolves type-hinted dependencies automatically
+        4. Calls boot() with injected dependencies (async or sync)
 
         The boot phase happens AFTER all register() methods have completed,
         ensuring all services are available for bootstrapping logic.
 
         Example:
             >>> app = FastTrackFramework()
-            >>> app.register_provider(DatabaseServiceProvider)
-            >>> app.register_provider(RouteServiceProvider)
-            >>> app.boot_providers()  # Bootstraps all providers
+            >>> app.register_provider(DatabaseServiceProvider)  # priority=10
+            >>> app.register_provider(RouteServiceProvider)  # priority=100 (default)
+            >>> await app.boot_providers()  # Database boots first!
         """
         if self._booted:
             return  # Already booted, skip
 
-        # Call boot() on all providers
-        for provider in self._providers:
-            provider.boot(self.container)
+        import inspect
+
+        # Step A: Sort providers by priority (lower numbers boot first)
+        sorted_providers = sorted(self._providers, key=lambda p: p.priority)
+
+        # Step B-D: Boot each provider with Method Injection
+        for provider in sorted_providers:
+            # Step B: Inspect boot() method signature
+            sig = inspect.signature(provider.boot)
+
+            # Build dependency dict
+            dependencies: dict[str, Any] = {}
+
+            for param_name, param in sig.parameters.items():
+                # Skip 'self' parameter
+                if param_name == "self":
+                    continue
+
+                # Skip untyped parameters or **kwargs
+                if param.annotation == inspect.Parameter.empty:
+                    continue
+                if param.kind == inspect.Parameter.VAR_KEYWORD:
+                    continue
+
+                # Step C: Resolve dependencies
+                try:
+                    # If parameter type is Container, pass container
+                    if param.annotation is Container:
+                        dependencies[param_name] = self.container
+                    else:
+                        # Otherwise, resolve from container
+                        dependencies[param_name] = self.container.resolve(
+                            param.annotation
+                        )
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to resolve dependency '{param_name}' "
+                        f"(type: {param.annotation}) for provider "
+                        f"'{provider.__class__.__name__}'. "
+                        f"Ensure service is registered. Error: {e}"
+                    ) from e
+
+            # Step D: Call boot() with dependencies
+            try:
+                result = provider.boot(**dependencies)
+
+                # Handle async boot() methods
+                if inspect.iscoroutine(result):
+                    await result
+            except Exception as e:
+                raise RuntimeError(
+                    f"Failed to boot provider '{provider.__class__.__name__}'. "
+                    f"Error: {e}"
+                ) from e
 
         # Mark as booted
         self._booted = True

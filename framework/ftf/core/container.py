@@ -392,6 +392,7 @@ class Container:
             # get_type_hints resolves string annotations to actual types
             # Example: 'UserRepository' → <class 'UserRepository'>
             type_hints = get_type_hints(init_method)
+            signature = inspect.signature(init_method)
         except NameError as e:
             # Forward reference to undefined class
             raise DependencyResolutionError(
@@ -404,9 +405,18 @@ class Container:
         # ------------------------------------------------------------------
         dependencies = {}
 
-        for param_name, param_type in type_hints.items():
+        for param_name, param in signature.parameters.items():
             # Skip special keys
             if param_name in ("self", "return"):
+                continue
+
+            if param_name not in type_hints:
+                continue
+
+            param_type = type_hints[param_name]
+            is_registered = self.is_registered(param_type) or param_type in self._overrides
+
+            if param.default != inspect.Parameter.empty and not is_registered:
                 continue
 
             # Recursively resolve each parameter

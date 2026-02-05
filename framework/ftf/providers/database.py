@@ -1,7 +1,7 @@
 """
-Database Service Provider (Sprint 5.7)
+Database Service Provider (Sprint 5.7 + Sprint 12)
 
-Auto-configures the database layer by reading config/database.py and
+Auto-configures database layer by reading config/database.py and
 automatically setting up AsyncEngine, async_sessionmaker, and AsyncSession.
 
 This eliminates the need for manual SQLAlchemy setup in main.py.
@@ -21,6 +21,17 @@ Educational Note:
         # After (Sprint 5.7):
         # Just add DatabaseServiceProvider to config/app.py providers list
         # Everything else is automatic!
+
+    Sprint 12: Now uses Method Injection in boot():
+        # Old pattern (Service Locator - Sprint 11 and earlier):
+        def boot(self, container: Container) -> None:
+            engine = container.resolve(AsyncEngine)
+            settings = container.resolve(AppSettings)
+
+        # New pattern (Method Injection - Sprint 12):
+        async def boot(self, db: AsyncEngine, settings: AppSettings) -> None:
+            # db and settings are auto-injected!
+            print(f"Database: {db.url}")
 
 Usage:
     # In config/app.py
@@ -42,13 +53,14 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from ftf.config import config
-from ftf.core import Container
 from ftf.core.service_provider import ServiceProvider
 
 
 class DatabaseServiceProvider(ServiceProvider):
     """
     Database Service Provider - Auto-configures SQLAlchemy.
+
+    Sprint 12: Uses Method Injection and priority-based boot order.
 
     Reads config/database.py and automatically sets up:
     - AsyncEngine (connection pool)
@@ -58,11 +70,16 @@ class DatabaseServiceProvider(ServiceProvider):
     This provider respects the separation of concerns:
     - fast_query (ORM) remains framework-agnostic
     - ftf (Framework) provides the glue (this provider)
+
+    Attributes:
+        priority: 10 (High priority - boots before most other providers)
     """
 
-    def register(self, container: Container) -> None:
+    priority: int = 10
+
+    def register(self, container: Any) -> None:
         """
-        Register database services into the IoC container.
+        Register database services into IoC container.
 
         This method:
         1. Reads database config
@@ -98,12 +115,12 @@ class DatabaseServiceProvider(ServiceProvider):
         session_factory = async_sessionmaker(
             engine,
             class_=AsyncSession,
-            expire_on_commit=False,  # Don't expire objects after commit
+            expire_on_commit=False,
         )
 
         # Step 6: Bind to container
         # AsyncEngine as Singleton (one engine for the entire application)
-        # Register the type first, then set the pre-created instance
+        # Register type first, then set pre-created instance
         container.register(AsyncEngine, scope="singleton")
         container._singletons[AsyncEngine] = engine
 
@@ -123,34 +140,44 @@ class DatabaseServiceProvider(ServiceProvider):
             scope="scoped"
         )
 
-    def boot(self, container: Container) -> None:
+    async def boot(self, db: AsyncEngine, settings: Any, **kwargs: Any) -> None:
         """
         Bootstrap database services after registration.
+
+        Sprint 12: Uses Method Injection!
+        Dependencies are auto-resolved and injected:
+        - db: AsyncEngine (auto-resolved from container)
+        - settings: AppSettings (auto-resolved from container)
 
         This method is called after all providers have registered their services.
         We perform a quick connection test to ensure database is accessible.
 
+        Args:
+            db: The AsyncEngine instance (injected automatically)
+            settings: The AppSettings instance (injected automatically)
+            **kwargs: Additional dependencies (not used in this provider)
+
         Note: This is optional but provides immediate feedback if database config is wrong.
         """
-        # Get the engine from container
-        engine = container.resolve(AsyncEngine)
-
         # Log database connection info (without password)
-        connection_name = config("database.default", "sqlite")
-        connection_config = config(f"database.connections.{connection_name}", {})
+        connection_name = settings.database.default
+        connection_config = getattr(settings.database.connections, connection_name, {})
 
-        if connection_config.get("driver") == "sqlite+aiosqlite":
-            db_info = f"SQLite ({connection_config.get('database', 'unknown')})"
-        else:
-            host = connection_config.get("host", "unknown")
+        if isinstance(connection_config, dict):
+            driver = connection_config.get("driver")
             database = connection_config.get("database", "unknown")
+            host = connection_config.get("host", "unknown")
+        else:
+            driver = connection_config.driver
+            database = connection_config.database
+            host = connection_config.host
+
+        if driver == "sqlite+aiosqlite":
+            db_info = f"SQLite ({database})"
+        else:
             db_info = f"{connection_name} ({host}/{database})"
 
         print(f"✓ Database configured: {db_info}")
-
-        # Optional: Perform connection test
-        # (Skip for now to avoid async context issues in sync boot)
-        # In future, we could make boot() async
 
     def _build_database_url(self, connection_name: str, connection_config: dict[str, Any]) -> str:
         """
@@ -162,7 +189,7 @@ class DatabaseServiceProvider(ServiceProvider):
         - PostgreSQL: postgresql+asyncpg://user:pass@host:port/database
 
         Args:
-            connection_name: Name of the connection (sqlite, mysql, postgresql)
+            connection_name: Name of connection (sqlite, mysql, postgresql)
             connection_config: Connection settings from config/database.py
 
         Returns:
