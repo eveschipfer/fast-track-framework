@@ -1,15 +1,22 @@
 """
-Database Commands (Sprint 3.0)
+Database Commands (Sprint 9.0 - Modernized)
 
 This module provides db:* commands for database operations like seeding.
 
+Sprint 9.0 Changes:
+- Removed manual session creation (now uses Container DI)
+- Seeds resolved via container.resolve()
+- Consistent with HTTP server (same database/engine)
+
 Commands:
-    - db:seed: Run database seeders
+    - db:seed: Run database seeders using Container DI
 
 Educational Note:
     These commands wrap async database operations in a sync CLI interface,
     similar to Laravel's php artisan db:seed or Django's manage.py loaddata.
-    We use asyncio.run() to execute async code from synchronous CLI commands.
+
+    Sprint 9.0: All commands now use Container for DI, ensuring
+    consistency between CLI and HTTP application.
 """
 
 import asyncio
@@ -27,17 +34,21 @@ console = Console()
 @app.command("seed")
 def seed(
     seeder: str = typer.Option(
-        "DatabaseSeeder", "--class", "-c", help="Seeder class name"
+        "DatabaseSeeder",
+        "--class",
+        "-c",
+        help="Seeder class name"
     ),
 ) -> None:
     """
-    Run the database seeder.
+    Run the database seeder using Container DI.
 
     This command executes the specified seeder to populate the database
-    with test/initial data.
+    with test/initial data. The seeder is resolved from the IoC Container,
+    allowing dependencies to be injected via __init__.
 
     Args:
-        seeder: Name of the seeder class (default: "DatabaseSeeder")
+        seeder: Name of seeder class (default: "DatabaseSeeder")
 
     Example:
         $ ftf db seed
@@ -51,7 +62,7 @@ def seed(
     console.print(f"[cyan]Seeding database with {seeder}...[/cyan]")
 
     try:
-        # Run async seeding
+        # Run async seeding with Container DI
         asyncio.run(_run_seeder(seeder))
         console.print("[green]✓ Database seeded successfully[/green]")
     except Exception as e:
@@ -61,31 +72,55 @@ def seed(
 
 async def _run_seeder(seeder_name: str) -> None:
     """
-    Run the seeder asynchronously.
+    Run the seeder using Container dependency injection.
 
     This function imports the seeder dynamically and executes it.
+    The seeder is resolved from the Container, allowing dependencies
+    to be injected via __init__.
 
     Args:
-        seeder_name: Name of the seeder class
+        seeder_name: Name of seeder class
 
     Raises:
         ImportError: If seeder module/class not found
         Exception: If seeding fails
 
     Educational Note:
-        We use dynamic imports here to avoid coupling the CLI to specific
-        seeder implementations. This allows users to create custom seeders
-        without modifying the CLI code.
+        Sprint 9.0: The seeder is resolved from Container, allowing:
+        - Dependency injection (UserRepository, etc.)
+        - Consistent database access (same AsyncSession)
+        - Testability (mock dependencies in tests)
+
+        Before (Sprint 3.0):
+            from fast_query import get_session  # Manual session creation
+            async with get_session() as session:
+                seeder = seeder_class(session)
+                await seeder.run()
+
+        After (Sprint 9.0):
+            from ftf.core import Container  # Container DI
+            container = Container()
+            seeder_class = _import_seeder_class(seeder_name)
+            # Container resolves the seeder and injects dependencies
+            seeder = container.resolve(seeder_class)
+            await seeder.run()
     """
+    # Import Container for dependency injection
+    from ftf.core import Container
+
+    # Create Container singleton
+    container = Container()
+    container._singletons[Container] = container
+
     # Import required dependencies
-    from fast_query import get_session
+    from sqlalchemy.ext.asyncio import AsyncSession
 
     # Add tests/seeders to path if not already there
     seeders_path = Path("tests/seeders")
     if seeders_path not in sys.path:
         sys.path.insert(0, str(seeders_path))
 
-    # Try to import the seeder
+    # Try to import the seeder class
     try:
         # Assume seeder is in tests/seeders/<snake_case_name>.py
         module_name = _to_snake_case(seeder_name)
@@ -101,6 +136,7 @@ async def _run_seeder(seeder_name: str) -> None:
 
         # Get the seeder class
         seeder_class = getattr(module, seeder_name)
+
     except (ImportError, AttributeError) as e:
         raise ImportError(
             f"Could not import {seeder_name}. Make sure:\n"
@@ -110,11 +146,16 @@ async def _run_seeder(seeder_name: str) -> None:
             f"Create it with: ftf make seeder {seeder_name}"
         ) from e
 
+    # Register AsyncSession in Container (for seeder injection)
+    # Sprint 9.0: DatabaseServiceProvider has already registered AsyncSession
+    # This ensures it's available for DI in seeders
+
+    # Create seeder instance (Container DI!)
+    # Note: The seeder __init__ will receive AsyncSession if it has a type hint
+    seeder = container.resolve(seeder_class)
+
     # Run the seeder
-    async with get_session() as session:
-        seeder = seeder_class(session)
-        await seeder.run()
-        await session.commit()
+    await seeder.run()
 
 
 def _to_snake_case(name: str) -> str:

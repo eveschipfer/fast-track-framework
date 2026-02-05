@@ -41,15 +41,23 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 7.0 - Type-Safe Configuration** (Latest! 🔷🔒)
-- 📜 [Summary](history/SPRINT_7_0_SUMMARY.md)
-- Focus: Migrate to Pydantic Settings for type safety and validation
-- Added: workbench/config/settings.py (450+ lines), Pydantic v2.9.0 + pydantic-settings v2.5.0
-- Features: BaseModelConfig with Duck Typing (backward compatible), AppSettings with auto env loading, Container DI
-- Achievement: **100% backward compatible while adding full type safety!** Duck typing enables legacy code ✅
-- Tests: 536 passing (100%), 56.99% coverage (increased from 59.91%)
+**Sprint 9.0 - CLI Modernization & Core Integration** (Latest! ⚙️🔌)
+- 📜 [Summary](history/SPRINT_9_0_SUMMARY.md)
+- Focus: CLI operates within Container IoC context, loads AppSettings (Sprint 7), executes Service Providers
+- Added: Container boot (_boot_framework), AppSettings Pydantic integration, Container DI in db:seed
+- Features: Framework client pattern, zero manual sessions, same database/engine as HTTP app
+- Achievement: **CLI is framework client!** Full integration with Container & Providers ✅
+- Tests: N/A (CLI refactoring, existing commands working) ✅
 
-**Sprint 5.7 - Database Service Provider** 🗄️⚙️
+**Sprint 8.0 - Hybrid Async Repository (Power Mode)** 🔷⚡
+- 📜 [Summary](history/SPRINT_8_0_SUMMARY.md)
+- Focus: Expose SQLAlchemy 2.0's native AsyncSession, resolving "Leaky Abstraction"
+- Added: Public `.session` property in BaseRepository, proof test for hybrid pattern
+- Features: Helper methods + full session access (CTEs, Window Functions, Bulk Operations)
+- Achievement: **Power Mode enabled!** Best of both worlds ✅
+- Tests: 3/3 passing (100%) - Prova de conceito ✅
+
+**Sprint 7.0 - Type-Safe Configuration** 🔷🔒
 - 📜 [Summary](history/SPRINT_5_7_SUMMARY.md)
 - Focus: Auto-configure database layer through Convention over Configuration
 - Added: DatabaseServiceProvider (255 lines), string-based provider loading

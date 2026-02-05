@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-green.svg)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
 [![Tests](https://img.shields.io/badge/tests-536%20passed-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-7.0%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
+[![Sprint](https://img.shields.io/badge/sprint-9.0%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Fast Query](https://img.shields.io/badge/fast__query-standalone-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 [![Monorepo](https://img.shields.io/badge/structure-monorepo-blue.svg)](https://github.com/eveschipfer/fast-track-framework)
 
@@ -60,6 +60,8 @@ Fast Track Framework is an **educational deep-dive** into building production-gr
 | **🔐 RBAC Gates System** | Gates, Policies, FastAPI dependencies, secure by default authorization | ✅ Sprint 5.5 |
 | **🔍 QueryBuilder Pagination** | Terminal paginate() and cursor_paginate() methods, filtered pagination, O(1) cursor performance | ✅ Sprint 5.6 |
 | **🗄️ Database Service Provider** | Auto-configure database from config, zero boilerplate in main.py, Convention over Configuration | ✅ Sprint 5.7 |
+| **🔷 Type-Safe Configuration** | Pydantic Settings with validation, backward compatible, Container DI | ✅ Sprint 7.0 |
+| **⚙️ CLI Modernization** | Framework client pattern, Container IoC integration, AppSettings Pydantic, Service Providers boot | ✅ Sprint 9.0 |
 | **🧪 536 Tests** | 100% passing, 0 failed, comprehensive coverage | ✅ Complete |
 | **🔷 Type-Safe Configuration** | Pydantic Settings with validation, backward compatible, Container DI | ✅ Sprint 7.0 |
 | **🛠️ Alembic** | Auto-migrations with async support | ✅ Sprint 2.2 |
