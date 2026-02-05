@@ -1,41 +1,61 @@
 """
-Validation Rules for Form Requests (Sprint 2.9)
+Validation Rules for Form Requests (Sprint 2.9 + Sprint 11)
 
 This module provides async validation rule helpers for common database
 validation patterns like unique checks and foreign key validation.
 
+Sprint 11 Upgrade: Support for BaseRepository
+========================================
+    Rule helpers now support either AsyncSession or BaseRepository
+    for backward compatibility and method injection.
+
+    How it works:
+        1. Accept session: AsyncSession OR repository: BaseRepository
+        2. If AsyncSession: Use session.execute() directly (old style)
+        3. If BaseRepository: Use repository.session.execute() (new style)
+
+    Example (Sprint 11 - Method Injection):
+        >>> class StoreUserRequest(FormRequest):
+        ...     async def rules(self, user_repo: UserRepository) -> None:
+        ...         await Rule.unique(user_repo, "email", self.email)
+        ...
+        >>> class OldStoreUserRequest(FormRequest):
+        ...     async def rules(self, session: AsyncSession) -> None:
+        ...         await Rule.unique(session, User, "email", self.email)
+
 Key Rules:
-    - Rule.unique(): Check if a value is unique in the database
+    - Rule.unique(): Check if a value is unique in database
     - Rule.exists(): Check if a foreign key exists
+    - Additional rules: min_count, max_count (future)
 
 Educational Note:
-    These rules solve a key limitation of Pydantic: it can't perform async
-    database queries during validation. With FormRequest.rules(), we can!
+    These rules solve a key limitation of Pydantic: it can't
+    perform async database queries during validation. With FormRequest.rules(), we can!
 
     This is inspired by Laravel's validation rules, but adapted for async Python:
     - Laravel: 'email' => 'unique:users,email'
-    - Fast Track: await Rule.unique(session, User, "email", self.email)
+    - Fast Track: await Rule.unique(session, User, "email", value)
+    - Fast Track: await Rule.unique(user_repo, "email", value)
 
 Usage:
-    class StoreUserRequest(FormRequest):
-        name: str
-        email: EmailStr
-        role_id: int
-
-        async def rules(self, session: AsyncSession) -> None:
-            # Check email is unique
-            await Rule.unique(session, User, "email", self.email)
-
-            # Check role exists (foreign key validation)
-            await Rule.exists(session, Role, "id", self.role_id)
+    >>> class StoreUserRequest(FormRequest):
+    ...     name: str
+    ...     email: EmailStr
+    ...     role_id: int
+    ...
+    ...     async def rules(self, user_repo: UserRepository) -> None:
+    ...         await Rule.unique(user_repo, "email", self.email)
+    ...
+    ...     async def rules(self, session: AsyncSession) -> None:
+    ...         await Rule.unique(session, User, "email", self.email)
 """
 
-from typing import Any, Type
+from typing import Any, Type, Optional, Union
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fast_query import Base
+from fast_query import Base, BaseRepository
 from ftf.validation.request import ValidationError
 
 
@@ -44,33 +64,28 @@ class Rule:
     Collection of validation rule helpers.
 
     These are static methods that perform common validation patterns
-    against the database. They raise ValidationError if validation fails.
+    againsts database. They raise ValidationError if validation fails.
+
+    Sprint 11: Support for BaseRepository
+    =========================================
+        Rule helpers now accept either AsyncSession or BaseRepository.
+
+        How it works:
+        1. Accept session: AsyncSession | BaseRepository
+        2. If AsyncSession: Use session.execute() directly
+        3. If BaseRepository: Use repository.session.execute()
 
     Example:
-        >>> async def rules(self, session: AsyncSession) -> None:
-        ...     # Unique email
-        ...     await Rule.unique(session, User, "email", self.email)
-        ...
-        ...     # Email unique except for current user (update scenario)
-        ...     await Rule.unique(
-        ...         session, User, "email", self.email, ignore_id=self.user_id
-        ...     )
-        ...
-        ...     # Category must exist
-        ...     await Rule.exists(session, Category, "id", self.category_id)
-
-    Educational Note:
-        These helpers use fast_query to query the database. They're async
-        because database queries are async in SQLAlchemy 2.0+.
-
-        The pattern is similar to Laravel's validation rules, but more explicit:
-        - Laravel: 'email' => 'unique:users,email,id,' . $userId
-        - Fast Track: await Rule.unique(session, User, "email", value, ignore_id)
+        >>> # Method Injection (new)
+        >>> await Rule.unique(user_repo, User, "email", value)
+        >>>
+        >>> # Session Injection (old, backward compatible)
+        >>> await Rule.unique(session, User, "email", value)
     """
 
     @staticmethod
     async def unique(
-        session: AsyncSession,
+        session: Union[AsyncSession, BaseRepository],
         model: Type[Base],
         column: str,
         value: Any,
@@ -78,14 +93,22 @@ class Rule:
         field_name: str | None = None,
     ) -> None:
         """
-        Check if a value is unique in the database.
+        Check if a value is unique in a database.
 
-        Queries the database to ensure the value doesn't already exist in
+        Queries: database to ensure that value doesn't already exist in
         the specified column. Optionally ignores a specific record (useful
         for update operations).
 
+        Sprint 11: Support for BaseRepository
+        =====================================
+            Accepts either AsyncSession OR BaseRepository.
+
+            If AsyncSession: Uses session.execute() directly (old style)
+            If BaseRepository: Uses repository.session.execute() (new style)
+
         Args:
-            session: AsyncSession for database queries
+            session: AsyncSession for database queries (old style)
+                OR BaseRepository for database queries (new style with method injection)
             model: SQLAlchemy model class to query
             column: Column name to check
             value: Value to check for uniqueness
@@ -98,24 +121,28 @@ class Rule:
         Example:
             >>> # Create: Check if email is unique
             >>> await Rule.unique(session, User, "email", "alice@test.com")
-            >>>
-            >>> # Update: Check if email is unique except for current user
-            >>> await Rule.unique(
-            ...     session,
-            ...     User,
-            ...     "email",
-            ...     "alice@test.com",
-            ...     ignore_id=1
-            ... )
 
-        Educational Note:
-            This is the async equivalent of Laravel's 'unique' rule.
-            We query the database directly instead of using a string-based
-            rule syntax, which gives us:
-            - Type safety (MyPy knows what columns exist)
-            - IDE autocomplete
-            - No magic string parsing
+            >>> # Create: Check if email is unique (Method Injection)
+            >>> user_repo = Inject(UserRepository)
+            >>> await Rule.unique(user_repo, User, "email", "alice@test.com")
+
+            >>> # Create: Check if email is unique except for current user (update)
+            >>> await Rule.unique(session, User, "email", "alice@test.com", ignore_id=1)
+
+            >>> # Update: Check if email is unique (Method Injection)
+            >>> await Rule.unique(user_repo, User, "email", "alice@test.com", ignore_id=1)
+
+            >>> # Update: Check if email is unique (Method Injection - Repository with ignore_id)
+            >>> await Rule.unique(Inject(UserRepository, ignore_id=1), User, "email", "alice@test.com", ignore_id=1)
         """
+        # Determine if we have AsyncSession or BaseRepository
+        if isinstance(session, BaseRepository):
+            repository: BaseRepository = session
+            db_session = repository.session
+        else:
+            db_session: AsyncSession = session
+            repository = None
+
         # Build query to check if value exists
         query = select(model).where(getattr(model, column) == value)
 
@@ -123,8 +150,8 @@ class Rule:
         if ignore_id is not None:
             query = query.where(model.id != ignore_id)
 
-        # Execute query
-        result = await session.execute(query)
+        # Execute query using session
+        result = await db_session.execute(query)
         existing = result.scalar_one_or_none()
 
         # If record exists, validation fails
@@ -137,24 +164,25 @@ class Rule:
 
     @staticmethod
     async def exists(
-        session: AsyncSession,
+        session: Union[AsyncSession, BaseRepository],
         model: Type[Base],
         column: str,
         value: Any,
         field_name: str | None = None,
     ) -> None:
         """
-        Check if a value exists in the database (foreign key validation).
+        Check if a value exists in a database (foreign key validation).
 
-        Queries the database to ensure the value exists in the specified
+        Queries the database to ensure that value exists in the specified
         column. This is commonly used to validate foreign keys.
+
+        Sprint 11: Support for BaseRepository
+        =====================================
+            Accepts either AsyncSession OR BaseRepository.
 
         Args:
             session: AsyncSession for database queries
-            model: SQLAlchemy model class to query
-            column: Column name to check
-            value: Value to check for existence
-            field_name: Optional field name for error message (defaults to column)
+                OR BaseRepository for database queries (new style)
 
         Raises:
             ValidationError: If value does not exist
@@ -163,12 +191,13 @@ class Rule:
             >>> # Check if category exists before creating post
             >>> await Rule.exists(session, Category, "id", self.category_id)
             >>>
-            >>> # Check if user exists before assigning post
-            >>> await Rule.exists(session, User, "id", self.user_id)
+            >>> # Check if category exists (Method Injection)
+            >>> category_repo = Inject(CategoryRepository)
+            >>> await Rule.exists(category_repo, Category, "id", self.category_id)
 
         Educational Note:
-            This is the async equivalent of Laravel's 'exists' rule.
-            It's commonly used for foreign key validation to ensure the
+            This is an async equivalent of Laravel's 'exists' rule.
+            It's commonly used for foreign key validation to ensure that
             related record exists before creating/updating.
 
             Why not use database foreign keys?
@@ -176,11 +205,19 @@ class Rule:
             - This gives user-friendly validation errors
             - We can validate before hitting the database
         """
+        # Determine if we have AsyncSession or BaseRepository
+        if isinstance(session, BaseRepository):
+            repository: BaseRepository = session
+            db_session = repository.session
+        else:
+            db_session: AsyncSession = session
+            repository = None
+
         # Build query to check if value exists
         query = select(model).where(getattr(model, column) == value)
 
-        # Execute query
-        result = await session.execute(query)
+        # Execute query using session
+        result = await db_session.execute(query)
         existing = result.scalar_one_or_none()
 
         # If record doesn't exist, validation fails
@@ -192,11 +229,6 @@ class Rule:
                 f"The selected {friendly_field} is invalid.",
                 field=field,
             )
-
-
-# ============================================================================
-# ADDITIONAL VALIDATION RULES (Future Enhancement)
-# ============================================================================
 
 
 class RuleExtensions:
@@ -219,8 +251,8 @@ class RuleExtensions:
         """
         Check if a value appears at least min_count times.
 
-        Example use case: Ensure a tag is used at least 3 times before
-        making it a "featured" tag.
+        Example use case: Ensure a tag is used at least 3 times
+        before making it a "featured" tag.
 
         Example:
             >>> await Rule.min_count(
