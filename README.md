@@ -1,226 +1,187 @@
-# 🚀 Fast Track Framework
+# 🚀 Fast-Track Framework
 
-> **Laravel's Developer Experience + Python's Async Performance** — Production-ready micro-framework built on FastAPI.
+> **Stop fighting entropy. Build scalable backends with architectural governance.**
 
-[![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-green.svg)](https://fastapi.tiangolo.com)
-[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-467%20passed-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
-[![Sprint](https://img.shields.io/badge/sprint-11.0%20complete-brightgreen.svg)](https://github.com/eveschipfer/fast-track-framework)
+FastAPI is excellent at **handling HTTP**.
+Fast-Track exists to **govern systems that need to last**.
 
----
+Fast-Track is an **architectural-grade, IoC-first framework** built on top of FastAPI for teams that have felt the real cost of **Python architectural entropy**.
 
-## 🎯 Vision
-
-Fast Track Framework (FTF) is a **production-ready web framework** built on the philosophy that great developer experience doesn't require sacrificing performance. We combine Laravel's ergonomic conventions with Python's async capabilities.
-
-**Core Philosophy:**
-- ✅ **Developer Experience First** — Convention over configuration, intuitive APIs.
-- ✅ **Type-Safe** — Strict MyPy, zero `Any` types, full IDE autocomplete.
-- ✅ **Async-Native** — Built on `asyncio`, not an afterthought.
-- ✅ **Explicit Dependencies** — No magic, IoC Container with type-hint based DI.
-- ✅ **Educational** — Every architectural decision documented with "why".
-
-> **Status:** v1.0 Core Architecture Complete — Ready for production applications.
+If you've ever lost velocity trying to figure out *where* business logic belongs, *who* depends on *whom*, or *why* one endpoint breaks another… this framework is not an experiment. It's a solution.
 
 ---
 
-## ✨ Features
+## 🧠 The Problem Fast-Track Solves
 
-### 🏗️ Core (v1.0 Ready)
+### The Entropy Problem
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **IoC Container** | Type-hint based DI (singleton/scoped/transient) | ✅ Production |
-| **Service Providers** | Laravel-inspired two-phase boot architecture | ✅ Sprint 5.2 |
-| **Type-Safe Config** | Pydantic Settings with runtime validation | ✅ Sprint 7.0 |
-| **CLI Modernization** | Full IoC integration with provider boot | ✅ Sprint 9.0 |
+FastAPI solves the **how** of HTTP.
+It deliberately does not solve the **where** of business logic.
 
-### 📊 Data Layer
+This “architectural freedom” works fine… until:
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Hybrid Repository** | SQLAlchemy 2.0 syntax + helper methods (`find`, `create`) | ✅ Sprint 8.0 |
-| **Query Builder** | Laravel Eloquent-inspired fluent interface | ✅ Sprint 2.3 |
-| **Factories & Seeders** | Laravel-inspired test data with Faker | ✅ Sprint 2.8 |
-| **Pagination Engine** | Length-aware and cursor pagination | ✅ Sprint 5.5 |
+* rules start leaking into controllers
+* dependencies become implicit
+* tests require half the application running
+* code becomes a **well-typed Big Ball of Mud**
 
-### 🔐 Authentication & Authorization
+Fast-Track imposes **architectural discipline before the mess begins**.
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Guard Pattern (Auth 2.0)** | `AuthManager` facade with pluggable guards | ✅ Sprint 10.0 |
-| **RBAC Gates System** | Gates, Policies, secure-by-default | ✅ Sprint 5.5 |
-| **JWT Tokens** | Built-in `JwtGuard` with token refresh | ✅ Sprint 10.0 |
+It transforms:
 
-### ✅ Validation (v1.0 Ready)
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Validation 2.0** | FormRequests with **Method Injection** (Container integrated) | ✅ Sprint 11.0 |
-| **Custom Rules** | Pydantic v2 validators with CLI scaffolding | ✅ Sprint 3.6 |
-| **i18n Support** | Multi-language error messages | ✅ Sprint 3.5 |
-
-### 🛠️ DevOps & Infrastructure
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Job Queue** | SAQ integration with class-based jobs | ✅ Sprint 3.2 |
-| **Task Scheduler** | `@Schedule.cron()` decorators | ✅ Sprint 3.8 |
-| **Mailer System** | Multi-driver (Log/Array/SMTP) with Jinja2 | ✅ Sprint 4.0 |
-| **Storage System** | Local/S3/Memory drivers with async I/O | ✅ Sprint 4.1 |
+* implicit dependencies → **explicit, auditable contracts**
+* implicit flow → **auditable pipeline**
+* “works” code → **governable code**
 
 ---
 
-## 🚀 Architecture in Action
+## 🛡️ Competitive Advantage
 
-### 1. Controller with Dependency Injection
+| Dimension                         | Fast-Track                                                    | Vanilla FastAPI                                                       |
+| --------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Architecture                      | IoC-first, opinionated by design                              | Left to the developer                                                 |
+| Dependencies                      | Explicit and auditable                                        | Implicit                                                              |
+| Scalability                       | Structural                                                    | Accidental                                                            |
+| Maintainability                   | Predictable                                                   | Increasingly chaotic                                                  |
+| Testability                       | High, by contract                                             | Fragmented                                                            |
+| **Total Cost of Ownership (TCO)** | **Low TCO (Standardized stack, easy onboarding for seniors)** | **High TCO (Fragmented patterns, high cognitive load for new hires)** |
 
-Clean, class-based controllers with automatic dependency injection.
+Fast-Track doesn’t compete with FastAPI.
+It **fills the architectural gap** that appears after the MVP.
+
+---
+
+## 🧠 Mental Model: Governed Pipeline
+
+In Fast-Track, a request **is not just a JSON hitting an endpoint**.
+
+It’s an **object flowing through a governed pipeline**:
+
+```
+HTTP Request
+   ↓
+Guards (Auth / Authorization)
+   ↓
+Providers (IoC Container)
+   ↓
+Request Object (Validation + Intent)
+   ↓
+Use Case (Business Logic)
+   ↓
+Response
+```
+
+Nothing happens by accident.
+Nothing depends on magic imports.
+Nothing runs outside its contract.
+
+This pipeline enables:
+
+* true domain isolation
+* infrastructure-free testing
+* refactors without domino effects
+
+---
+
+## 🔥 Show, Don’t Tell — IoC in Action
 
 ```python
-from ftf.http import Controller, Get, Post, Inject
-from app.repositories import UserRepository
-from app.requests import StoreUserRequest
+class StoreUserRequest(Request):
+    email: EmailStr
+    password: str
 
-class UserController(Controller):
-    def __init__(self, repo: UserRepository = Inject()):
-        self.repo = repo  # Auto-injected by Container
-
-    @Get("/")
-    async def index(self):
-        return await self.repo.all()
-
-    @Post("/")
-    async def store(self, request: StoreUserRequest):
-        # Request is already Validated & Authorized
-        return await self.repo.create(request.model_dump())
+    async def handle(self, user_service: UserService):
+        return await user_service.create_user(self.email, self.password)
 ```
 
-### 2. Validation 2.0 (Method Injection) ⚡
+This is **not syntactic sugar**:
 
-The power of Sprint 11: Inject Repositories directly into your validation rules. No more hardcoded sessions!
+* `Request` defines **intent**
+* `UserService` is resolved via **IoC Container**
+* no dependency is hidden
+* the Use Case is **testable in isolation**
+* controller becomes a transport detail
+
+This isn’t “the Python way”.
+It’s **software engineering applied to Python**.
+
+---
+
+## 💾 Eloquent ORM – Laravel-style, IoC-first
+
+Fast-Track ships with an **ORM inspired by Laravel Eloquent**, designed for **Python async ecosystems**:
+
+* **Fluent Queries:** chainable, readable, intuitive.
+* **Relationships:** `hasOne`, `hasMany`, `belongsTo`, `manyToMany`—all async-ready.
+* **IoC-integrated Models:** inject services, policies, and validators directly into models.
+* **Migration & Schema Management:** fully declarative and versioned.
+* **Observers & Hooks:** lifecycle events (`creating`, `updating`, `deleting`) for domain rules.
+* **Query Scopes & Reusable Filters:** centralize business logic at the model layer, not in controllers.
 
 ```python
-from ftf.validation import FormRequest, Rule
-from app.repositories import UserRepository
-
-class StoreUserRequest(FormRequest):
-    name: str
-    email: str
-
-    # ✨ Method Injection: The Container injects UserRepository automatically
-    async def rules(self, user_repo: UserRepository):
-        # Async database check using the injected repo
-        await Rule.unique(user_repo, "email", self.email)
-
-        if self.email.endswith("@spam.com"):
-            self.stop("Domains from spam.com are not allowed.")
+# Example: Eloquent-style async query
+users = await User.where('status', 'active') \
+                  .with('posts') \
+                  .order_by('created_at', desc=True) \
+                  .get()
 ```
 
-### 3. Authentication 2.0 (Guard Pattern) 🔐
-
-The power of Sprint 10: Modular authentication via Facade.
-
-```python
-from ftf.auth import AuthManager
-
-@Get("/profile")
-async def profile(self):
-    # Uses the default configured guard (JWT, Session, etc)
-    user = await AuthManager.user()
-    return {"id": user.id, "name": user.name}
-```
-
-### 4. Task Scheduling
-
-```python
-from ftf.jobs import Schedule
-
-@Schedule.cron("0 * * * *")
-async def hourly_cleanup():
-    await UserRepository.query().where("status", "inactive").delete()
-```
+This ORM **is not just sugar** — it’s an **architectural-first database layer** that plays nicely with Fast-Track pipelines, guards, and IoC container.
+**The power of Eloquent, engineered for the constraints of high-performance async Python.**
 
 ---
 
-## 🛣️ Road to v1.0
+## 📌 Read This First (Strategic Gatekeeping)
 
-### ✅ Complete (Core v1.0)
-- [x] IoC Container with type-hint DI
-- [x] Service Provider architecture
-- [x] Hybrid Repository (SQLAlchemy 2.0 + helpers)
-- [x] Type-Safe Configuration (Pydantic Settings)
-- [x] Validation 2.0 with Method Injection
-- [x] Authentication 2.0 (Guard Pattern)
-- [x] CLI Modernization
-- [x] Job Queue & Task Scheduler
-- [x] Mailer & Storage systems
+Fast-Track assumes **Architectural Discipline**.
 
-### 🚀 Next Steps (Post-v1.0)
-- [ ] API Resources (Transformation Layer)
-- [ ] WebSockets / Real-time
-- [ ] Horizon Dashboard (Job monitoring)
+You **must** understand:
+
+* IoC / Dependency Injection
+* Separation of Concerns
+* Explicit Boundaries
+* Why “magic” accrues high interest
+
+Reading the documentation **is not optional**.
+The framework is simple — your system probably isn’t.
 
 ---
 
-## 🏃 5-Minute Quick Start
+## ❌ Choose FastAPI Instead If:
 
-### 1. Install
+Choose **vanilla FastAPI** if you:
 
-```bash
-git clone https://github.com/eveschipfer/fast-track-framework.git
-cd fast-track-framework
-poetry install
-poetry shell
-```
+* want maximum speed for scripts or POCs
+* prefer ad-hoc architectural decisions
+* don’t value explicit contracts
+* think “we’ll organize it later”
 
-### 2. Configure
+Fast-Track is binary:
 
-```bash
-cp .env.example .env
-# Update database credentials in .env
-```
-
-### 3. Run
-
-```bash
-poetry run ftf serve
-# Visit http://localhost:8000/docs
-```
+> Either you want governance, or you want fast-and-loose.
 
 ---
 
-## 🧪 Testing Strategy
+## 🧭 Philosophy
 
-We maintain a strict 100% Pass Rate policy.
+* **IoC-first** (not IoC “when convenient”)
+* Explicit > Implicit
+* Architecture as an asset, not overhead
+* Framework as guardrail, not playground
 
-```bash
-# Run all tests (467+ tests)
-poetry run pytest workbench/tests/ -v
-
-# Run with coverage
-poetry run pytest --cov=src
-```
-
-**Quality Metrics:**
-- ✅ 467 Tests Passing (Sprint 11)
-- ✅ 0 Flaky Tests
-- ✅ 100% Critical Path Coverage
+If you come from **Laravel, Symfony, Spring, ASP.NET**,
+Fast-Track will feel… familiar.
+If that bothers you, perfect — the filter worked.
 
 ---
 
-## 📝 License
+## ▶️ Call to Action
 
-MIT License — see LICENSE file for details.
+If you’re building something that **must survive its own success**:
 
----
+* Read the documentation
+* Understand the pipeline
+* Embrace governance
 
-<div align="center">
-
-**Built with ❤️ for production use**
-
-[Quick Start](docs/guides/quickstart.md) • [IoC Container](docs/guides/container.md) • [Contributing](CONTRIBUTING.md)
-
-</div>
+Fast-Track doesn’t accelerate shortcuts.
+It **eliminates future rework**.
