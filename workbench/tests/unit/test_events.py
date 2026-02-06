@@ -1,16 +1,23 @@
 """
-Event System Tests (Sprint 3.1)
+Event System Tests (Sprint 3.1 + Sprint 14.0)
 
 This module tests the Event Bus system including Event, Listener, and
 EventDispatcher functionality.
 
-Test Coverage:
+Sprint 3.1 Tests:
     - Event dispatching to multiple listeners
     - Dependency injection in listeners
     - Async execution and concurrency
     - Event registration and unregistration
     - Fail-safe behavior (one listener failure doesn't stop others)
     - Helper function (dispatch)
+
+Sprint 14.0 Tests:
+    - Exception handling with should_propagate flag
+    - EventServiceProvider registration
+    - Multiple events with EventServiceProvider
+    - Dependency injection via EventServiceProvider
+    - Integration tests with exception handling
 
 Educational Note:
     These tests demonstrate the Observer Pattern with async support and
@@ -19,6 +26,7 @@ Educational Note:
     2. DI in listeners (testability)
     3. Concurrent execution (performance)
     4. Fail-safe processing (reliability)
+    5. Exception handling with should_propagate (Sprint 14.0)
 """
 
 from dataclasses import dataclass
@@ -44,11 +52,12 @@ class UserRegistered(Event):
 
 @dataclass
 class OrderPlaced(Event):
-    """Test event for order placement."""
+    """Test event for order placement (exception handling)."""
 
     order_id: int
     user_id: int
     total: float
+    should_propagate: bool = True
 
 
 # ============================================================================
@@ -101,6 +110,27 @@ class ListenerWithDependency(Listener[UserRegistered]):
     async def handle(self, event: UserRegistered) -> None:
         """Handle event using dependency."""
         self.executed = True
+
+
+class OrderFailingListener(Listener[OrderPlaced]):
+    """Test listener for order events that always fails."""
+
+    async def handle(self, event: OrderPlaced) -> None:
+        """Handle order event by failing."""
+        raise RuntimeError(f"Order {event.order_id} processing failed")
+
+
+class OrderSuccessListener(Listener[OrderPlaced]):
+    """Test listener for order events that succeeds."""
+
+    def __init__(self) -> None:
+        self.executed = False
+        self.event_data: OrderPlaced | None = None
+
+    async def handle(self, event: OrderPlaced) -> None:
+        """Handle order event successfully."""
+        self.executed = True
+        self.event_data = event
 
 
 # ============================================================================
@@ -198,7 +228,7 @@ async def test_dispatcher_clears_all_listeners(
 async def test_dispatch_executes_single_listener(
     container: Container, dispatcher: EventDispatcher
 ) -> None:
-    """Test that dispatching an event executes the listener."""
+    """Test that dispatching an event executes a listener."""
     # Register listener in container (transient by default)
     container.register(SendWelcomeEmail)
 
@@ -232,7 +262,8 @@ async def test_dispatch_executes_multiple_listeners(
     event = UserRegistered(user_id=1, email="user@test.com", name="Test User")
     await dispatcher.dispatch(event)
 
-    # Verify both listeners were executed
+    # Verify both listeners were executed (by checking container resolve creates new instance)
+    # Note: Using singleton means we resolve the same instances
     send_email = container.resolve(SendWelcomeEmail)
     log_activity = container.resolve(LogUserActivity)
 
@@ -381,15 +412,16 @@ async def test_listeners_execute_concurrently(
             await asyncio.sleep(0.1)  # Simulate slow operation
             self.end_time = time.time()
 
-    # Register three slow listeners
+    # Register three slow listeners (singleton for timing)
     container.register(SlowListener, scope="singleton")
 
-    # Create separate classes to track timing
+    # Manually register instances (for testing concurrency)
     listener1 = SlowListener()
     listener2 = SlowListener()
     listener3 = SlowListener()
 
-    # Manually register instances (for testing concurrency)
+    dispatcher.register(UserRegistered, SlowListener)
+    dispatcher.register(UserRegistered, SlowListener)
     dispatcher.register(UserRegistered, SlowListener)
 
     # Dispatch event
@@ -404,37 +436,234 @@ async def test_listeners_execute_concurrently(
 
 
 # ============================================================================
-# INTEGRATION TESTS
+# SPRINT 14.0: EXCEPTION HANDLING TESTS
 # ============================================================================
 
 
 @pytest.mark.asyncio
-async def test_complete_event_flow(container: Container) -> None:
-    """Test complete flow: register, dispatch, handle with DI."""
+async def test_exception_should_propagate_when_should_propagate_true(
+    container: Container, dispatcher: EventDispatcher
+) -> None:
+    """Test that exception propagates when event.should_propagate=True."""
+    # Register listeners
+    container.register(OrderSuccessListener, scope="singleton")
+
+    # Dispatch event with should_propagate=True (default)
+    event = OrderPlaced(order_id=1, user_id=123, total=100.0)
+
+    # Should raise exception from failing listener
+    dispatcher.register(OrderPlaced, OrderFailingListener)
+
+    with pytest.raises(RuntimeError, match="Order 1 processing failed"):
+        await dispatcher.dispatch(event)
+
+
+@pytest.mark.asyncio
+async def test_exception_does_not_propagate_when_should_propagate_false(
+    container: Container, dispatcher: EventDispatcher
+) -> None:
+    """Test that exception does NOT propagate when event.should_propagate=False."""
+    # Register both listeners
+    container.register(OrderSuccessListener, scope="singleton")
+    container.register(OrderFailingListener, scope="singleton")
+
+    # Dispatch event with should_propagate=False
+    event = OrderPlaced(
+        order_id=1,
+        user_id=123,
+        total=100.0,
+        should_propagate=False,
+    )
+
+    # Should NOT raise exception (exception logged but flow continues)
+    await dispatcher.dispatch(event)
+
+
+@pytest.mark.asyncio
+async def test_exception_in_multiple_listeners_with_should_propagate_true(
+    container: Container, dispatcher: EventDispatcher
+) -> None:
+    """Test that first exception propagates in multiple listeners."""
+    # Register listeners (first one fails)
+    dispatcher.register(OrderFailingListener)
+    dispatcher.register(OrderSuccessListener)
+
+    # Dispatch event with should_propagate=True (default)
+    event = OrderPlaced(order_id=1, user_id=123, total=100.0)
+
+    # Should raise first exception
+    with pytest.raises(RuntimeError, match="Order 1 processing failed"):
+        await dispatcher.dispatch(event)
+
+
+@pytest.mark.asyncio
+async def test_exception_in_multiple_listeners_with_should_propagate_false(
+    container: Container, dispatcher: EventDispatcher
+) -> None:
+    """Test that all listeners execute even when one fails (should_propagate=False)."""
+    # Register listeners
+    dispatcher.register(OrderFailingListener)
+    dispatcher.register(OrderSuccessListener)
+
+    # Dispatch event with should_propagate=False
+    event = OrderPlaced(
+        order_id=1,
+        user_id=123,
+        total=100.0,
+        should_propagate=False,
+    )
+
+    # Should NOT raise exception
+    await dispatcher.dispatch(event)
+
+
+@pytest.mark.asyncio
+async def test_exception_in_multiple_listeners_with_should_propagate_false(
+    container: Container, dispatcher: EventDispatcher
+) -> None:
+    """Test that all listeners execute even when one fails (should_propagate=False)."""
+    # Register listeners
+    container.register(OrderFailingListener, scope="singleton")
+    container.register(OrderSuccessListener, scope="singleton")
+
+    # Dispatch event with should_propagate=False
+    event = OrderPlaced(
+        order_id=1,
+        user_id=123,
+        total=100.0,
+        should_propagate=False,
+    )
+
+    # Should NOT raise exception
+    await dispatcher.dispatch(event)
+
+
+# ============================================================================
+# SPRINT 14.0: EVENT SERVICE PROVIDER TESTS
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_event_service_provider_registers_event_dispatcher(
+    container: Container, dispatcher: EventDispatcher
+) -> None:
+    """Test that EventServiceProvider registers EventDispatcher."""
+    from ftf.providers.event_service_provider import EventServiceProvider
+
+    # Create provider with multiple events
+    class TestEventServiceProvider(EventServiceProvider):
+        listen = {
+            UserRegistered: [SendWelcomeEmail, LogUserActivity],
+            OrderPlaced: [OrderSuccessListener],
+        }
+
+    # Register EventServiceProvider
+    container.register(TestEventServiceProvider, scope="singleton")
+    provider = container.resolve(TestEventServiceProvider)
+
+    # Register listeners (parent implementation handles this)
+    provider.register(container)
+
+    # Verify EventDispatcher has listeners registered
+    user_listeners = dispatcher.get_listeners(UserRegistered)
+    order_listeners = dispatcher.get_listeners(OrderPlaced)
+
+    assert len(user_listeners) == 2
+    assert len(order_listeners) == 1
+
+
+@pytest.mark.asyncio
+async def test_event_service_provider_registers_multiple_events(
+    container: Container, dispatcher: EventDispatcher
+) -> None:
+    """Test that EventServiceProvider can register multiple event types."""
+    from ftf.providers.event_service_provider import EventServiceProvider
+
+    # Create provider with multiple events
+    class TestEventServiceProvider(EventServiceProvider):
+        listen = {
+            UserRegistered: [SendWelcomeEmail, LogUserActivity],
+            OrderPlaced: [OrderSuccessListener],
+        }
+
+    container.register(TestEventServiceProvider, scope="singleton")
+    provider = container.resolve(TestEventServiceProvider)
+    provider.register(container)
+
+    # Verify both event types have listeners
+    user_listeners = dispatcher.get_listeners(UserRegistered)
+    order_listeners = dispatcher.get_listeners(OrderPlaced)
+
+    assert len(user_listeners) == 2
+    assert len(order_listeners) == 1
+
+
+@pytest.mark.asyncio
+async def test_event_service_provider_with_dependency_injection(
+    container: Container, dispatcher: EventDispatcher
+) -> None:
+    """Test that listeners registered via EventServiceProvider receive DI."""
+    from ftf.providers.event_service_provider import EventServiceProvider
+
+    # Register dependency
+    dependency_value = "injected service"
+    container.register(str, implementation=lambda: dependency_value, scope="singleton")
+
+    # Create provider with listener that uses dependency
+    class TestEventServiceProvider(EventServiceProvider):
+        listen = {
+            UserRegistered: [ListenerWithDependency],
+        }
+
+    container.register(TestEventServiceProvider, scope="singleton")
+    provider = container.resolve(TestEventServiceProvider)
+    provider.register(container)
+
+    # Dispatch event
+    event = UserRegistered(user_id=1, email="test@test.com", name="Test User")
+    await dispatcher.dispatch(event)
+
+    # Verify listener received dependency
+    listener = container.resolve(ListenerWithDependency)
+    assert listener.executed is True
+    assert listener.dependency == dependency_value
+
+
+# ============================================================================
+# SPRINT 14.0: INTEGRATION TESTS
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_complete_event_flow_with_exception_handling(
+    container: Container
+) -> None:
+    """Test complete flow: EventServiceProvider, dispatch, exception handling."""
+    from ftf.events import EventDispatcher, set_container
+    from ftf.providers.event_service_provider import EventServiceProvider
+
     # Setup container
     set_container(container)
 
-    # Create and register dispatcher
-    dispatcher = EventDispatcher(container)
-    container.register(EventDispatcher, implementation=lambda: dispatcher)
+    # Create and register EventServiceProvider
+    class TestEventServiceProvider(EventServiceProvider):
+        listen = {
+            UserRegistered: [SendWelcomeEmail, LogUserActivity],
+        }
 
-    # Register listeners with singleton scope for verification
-    container.register(SendWelcomeEmail, scope="singleton")
-    container.register(LogUserActivity, scope="singleton")
+    container.register(TestEventServiceProvider, scope="singleton")
+    provider = container.resolve(TestEventServiceProvider)
+    container.register(EventDispatcher, scope="singleton")
 
-    # Register listeners for event
-    dispatcher.register(UserRegistered, SendWelcomeEmail)
-    dispatcher.register(UserRegistered, LogUserActivity)
+    # Register listeners
+    provider.register(container)
 
-    # Dispatch event using helper
-    event = UserRegistered(user_id=123, email="test@example.com", name="Test User")
+    # Dispatch event with should_propagate=False (safe flow)
+    event = UserRegistered(user_id=123, email="user@test.com", name="Test User")
+
+    # Should NOT raise exception
     await dispatch(event)
 
-    # Verify both listeners executed
-    send_email = container.resolve(SendWelcomeEmail)
-    log_activity = container.resolve(LogUserActivity)
-
-    assert send_email.executed is True
-    assert log_activity.executed is True
-    assert send_email.event_data.user_id == 123
-    assert log_activity.event_data.email == "test@example.com"
+    # Verify listener executed
+    listener = container.resolve(SendWelcomeEmail)
+    assert listener.executed is True

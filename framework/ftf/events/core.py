@@ -64,6 +64,9 @@ class Event(ABC):
     something that happened in the system. They should be immutable and
     contain only data (no business logic).
 
+    Attributes:
+        should_propagate: bool - Whether exceptions in listeners should propagate
+
     Educational Note:
         We use ABC to make this a "marker" base class. In production, you'd
         typically use dataclass for events, but inheriting from Event helps
@@ -72,11 +75,14 @@ class Event(ABC):
     Example:
         >>> from dataclasses import dataclass
         >>> @dataclass
-        ... class UserRegistered(Event):
+        >>> ... class UserRegistered(Event):
         ...     user_id: int
         ...     email: str
         ...     name: str
+        ...     should_propagate: bool = True
     """
+
+    should_propagate: bool = True
 
     pass
 
@@ -85,7 +91,7 @@ class Listener(ABC, Generic[E]):
     """
     Base class for event listeners.
 
-    Listeners handle specific events. They are resolved via the IoC Container,
+    Listeners handle specific events. They are resolved via IoC Container,
     so they can receive dependencies via __init__ (dependency injection).
 
     The Generic[E] allows type-safe listener registration:
@@ -111,7 +117,7 @@ class Listener(ABC, Generic[E]):
         Handle the event.
 
         This method is called when the event is dispatched. It should contain
-        the business logic for responding to the event.
+        business logic for responding to the event.
 
         Args:
             event: The event instance containing data
@@ -120,13 +126,17 @@ class Listener(ABC, Generic[E]):
             None
 
         Raises:
-            Exception: Any exception raised will be logged but won't stop
-                      other listeners from executing (fail-safe)
+            Exception: Any exception raised will be handled based on
+                      event.should_propagate flag (default: True)
 
-        Educational Note:
+        Educational Note (Sprint 14.0):
             We use async def to allow I/O operations (database, HTTP, etc.)
             without blocking. Multiple listeners run concurrently via
             asyncio.gather().
+
+            Exception behavior (Sprint 14.0):
+            - If event.should_propagate == False: Exception is logged, flow continues
+            - If event.should_propagate == True: Exception is raised (default)
         """
         pass
 
@@ -216,25 +226,46 @@ class EventDispatcher:
         1. Finds all listeners registered for this event type
         2. Resolves each listener from the IoC Container (enables DI)
         3. Calls handle() on each listener concurrently (asyncio.gather)
-        4. Continues even if a listener fails (fail-safe)
+        4. Handles exceptions based on event.should_propagate flag (Sprint 14.0)
 
         Args:
             event: The event instance to dispatch
 
+        Raises:
+            Exception: If event.should_propagate is True and any listener fails
+
         Educational Note:
+            Sprint 14.0: Added support for event.should_propagate flag.
+            When should_propagate=False, exceptions are logged but don't crash
+            the application. When should_propagate=True (default), exceptions
+            propagate normally, maintaining fail-fast behavior.
+
             We use asyncio.gather() with return_exceptions=True to run all
-            listeners concurrently and continue even if some fail. This is
-            the "fail-safe" pattern - one broken listener doesn't break the
-            entire event flow.
+            listeners concurrently and handle exceptions gracefully.
 
-            Alternative patterns:
-            - Fail-fast: Stop on first error (use gather without return_exceptions)
-            - Queue-based: Use Redis/RabbitMQ for async processing (Sprint 3.2)
-            - Sequential: Use for loop instead of gather (slower)
+        Example (Sprint 14.0 - Exception Handling):
+            >>> # Event with should_propagate=False
+            >>> @dataclass
+            >>> class UserRegistered(Event):
+            ...     user_id: int
+            ...     should_propagate: bool = False
+            >>>
+            >>> # Listener that fails
+            >>> class FailingListener(Listener[UserRegistered]):
+            ...     async def handle(self, event: UserRegistered) -> None:
+            ...         raise ValueError("This listener failed")
+            >>>
+            >>> await dispatcher.dispatch(UserRegistered(user_id=1))
+            >>> # Exception logged, flow continues (no crash)
 
-        Example:
-            >>> await dispatcher.dispatch(UserRegistered(user_id=1, ...))
-            # SendWelcomeEmail and LogUserActivity run concurrently
+            >>> # Event with should_propagate=True (default)
+            >>> @dataclass
+            >>> class OrderPlaced(Event):
+            ...     order_id: int
+            ...     # should_propagate defaults to True
+            >>>
+            >>> await dispatcher.dispatch(OrderPlaced(order_id=1))
+            >>> # Exception propagates, application handles it
         """
         event_type = type(event)
 
@@ -256,16 +287,29 @@ class EventDispatcher:
             tasks.append(task)
 
         # Execute all listeners concurrently
-        # return_exceptions=True ensures one failure doesn't stop others
+        # return_exceptions=True ensures we get all results (including exceptions)
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Log any exceptions (in production, use proper logging)
+        # Sprint 14.0: Handle exceptions based on should_propagate flag
+        exceptions = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 listener_name = listener_types[i].__name__
+                exception = result
+
+                # Log exception (in production, use proper logging)
                 print(
-                    f"Warning: Listener {listener_name} failed: {result}"
-                )  # TODO: Use proper logging
+                    f"⚠️  Event [{event_type.__name__}] "
+                    f"Listener [{listener_name}] failed: {exception}"
+                )
+
+                exceptions.append((listener_name, exception))
+
+        # Sprint 14.0: Propagate exception if event.should_propagate is True
+        if exceptions and event.should_propagate:
+            # Raise first exception to fail fast
+            raise exceptions[0][1]
+        # If should_propagate is False, exceptions were logged but not raised
 
     def get_listeners(self, event_type: type[Event]) -> list[type[Listener[Any]]]:
         """
