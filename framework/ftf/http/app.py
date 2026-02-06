@@ -311,6 +311,9 @@ class FastTrackFramework(FastAPI):
 
         This ensures all services are registered before bootstrapping begins.
 
+        Sprint 13: Supports DeferredServiceProvider for JIT loading.
+        Deferred providers are NOT loaded at startup - they load on-demand.
+
         Args:
             provider_class: The service provider class to register
 
@@ -321,7 +324,17 @@ class FastTrackFramework(FastAPI):
             >>> app.register_provider(RouteServiceProvider)
             >>> app.boot_providers()  # Called automatically during startup
         """
-        # Instantiate the provider
+        from ftf.core.service_provider import DeferredServiceProvider
+
+        # Check if provider is deferred (Sprint 13)
+        if issubclass(provider_class, DeferredServiceProvider):
+            # Deferred: Don't instantiate, just register in deferred_map
+            # Provider will load JIT when one of its services is resolved
+            for service_type in provider_class.provides:
+                self.container.add_deferred(service_type, provider_class)
+            return
+
+        # Eager: Instantiate and register immediately
         provider = provider_class()
 
         # Store the provider instance

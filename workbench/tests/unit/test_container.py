@@ -363,7 +363,7 @@ def test_is_registered(container):
 
 
 def test_optional_dependency():
-    """Test service with Optional type hint."""
+    """Test service with Optional type hint and default value."""
 
     class ServiceWithOptional:
         def __init__(self, db: Optional[MockDatabase] = None):
@@ -371,11 +371,11 @@ def test_optional_dependency():
 
     container = Container()
 
-    # This will fail because Optional[X] resolves to Union[X, None]
-    # which can't be instantiated. This is a known limitation.
-    # Optional deps need explicit handling or default values.
-    with pytest.raises((DependencyResolutionError, TypeError)):
-        container.resolve(ServiceWithOptional)
+    # Optional deps with default values are handled gracefully
+    # The container skips unregistered optional deps with defaults
+    service = container.resolve(ServiceWithOptional)
+
+    assert service.db is None  # Uses default value
 
 
 # ============================================================================

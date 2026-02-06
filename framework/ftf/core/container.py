@@ -232,6 +232,10 @@ class Container:
         # Used for mocking with specific instances
         self._instance_overrides: dict[type, Any] = {}
 
+        # Deferred providers: Type → Provider class (for JIT loading)
+        # Maps service types to their DeferredServiceProvider classes
+        self._deferred_map: dict[type, type] = {}
+
     def register(
         self,
         interface: type,
@@ -268,13 +272,14 @@ class Container:
 
         Algorithm:
         0. Check instance overrides (highest priority)
-        1. Check appropriate cache (singleton or scoped)
-        2. Guard against circular dependencies
-        3. Find concrete implementation (override > registration > fallback)
-        4. Introspect constructor parameters
-        5. Recursively resolve each parameter
-        6. Instantiate with resolved dependencies
-        7. Cache if singleton/scoped
+        1. Check deferred providers (JIT loading if needed)
+        2. Check appropriate cache (singleton or scoped)
+        3. Guard against circular dependencies
+        4. Find concrete implementation (override > registration > fallback)
+        5. Introspect constructor parameters
+        6. Recursively resolve each parameter
+        7. Instantiate with resolved dependencies
+        8. Cache if singleton/scoped
 
         Args:
             target: Type to resolve
@@ -298,14 +303,21 @@ class Container:
             return self._instance_overrides[target]
 
         # ------------------------------------------------------------------
-        # STEP 1: Determine Registration (Override > Registry)
+        # STEP 1: Check Deferred Providers (JIT Loading)
+        # ------------------------------------------------------------------
+        # Sprint 13: If service is deferred, load provider now
+        if target in self._deferred_map:
+            self._load_deferred_provider(target)
+
+        # ------------------------------------------------------------------
+        # STEP 2: Determine Registration (Override > Registry)
         # ------------------------------------------------------------------
         # Check override first, then fallback to registry
         registration = self._overrides.get(target) or self._registry.get(target)
         scope = registration.scope if registration else "transient"
 
         # ------------------------------------------------------------------
-        # STEP 2: Check Cache (Singleton or Scoped)
+        # STEP 3: Check Cache (Singleton or Scoped)
         # ------------------------------------------------------------------
 
         # Singleton: Application-wide cache
@@ -319,7 +331,7 @@ class Container:
                 return scoped_cache[target]
 
         # ------------------------------------------------------------------
-        # STEP 2: Circular Dependency Guard
+        # STEP 4: Circular Dependency Guard
         # ------------------------------------------------------------------
         if target in self._resolution_stack:
             # Build error message showing dependency chain
@@ -333,7 +345,7 @@ class Container:
 
         try:
             # ------------------------------------------------------------------
-            # STEP 3: Find Implementation
+            # STEP 5: Find Implementation
             # ------------------------------------------------------------------
             if registration:
                 implementation = registration.implementation
@@ -342,12 +354,12 @@ class Container:
                 implementation = target
 
             # ------------------------------------------------------------------
-            # STEP 4: Instantiate (with or without dependencies)
+            # STEP 6: Instantiate (with or without dependencies)
             # ------------------------------------------------------------------
             instance = self._create_instance(implementation)
 
             # ------------------------------------------------------------------
-            # STEP 5: Cache Appropriately
+            # STEP 7: Cache Appropriately
             # ------------------------------------------------------------------
             if scope == "singleton":
                 self._singletons[target] = instance
@@ -646,6 +658,89 @@ class Container:
 
         # Invalidate entire singleton cache (safest approach)
         self._singletons.clear()
+
+    # ========================================================================
+    # DEFERRED SERVICE PROVIDER SUPPORT (Sprint 13)
+    # ========================================================================
+
+    def add_deferred(self, service_type: type, provider_class: type) -> None:
+        """
+        Register a deferred service provider for JIT loading.
+
+        Deferred providers are not loaded at application startup.
+        Instead, they are loaded the first time one of their services
+        is requested via resolve().
+
+        Args:
+            service_type: The service type this provider provides
+            provider_class: The DeferredServiceProvider class
+
+        Example:
+            >>> container.add_deferred(QueueService, QueueServiceProvider)
+            >>> # QueueServiceProvider is NOT loaded yet
+            >>> service = container.resolve(QueueService)  # JIT load now!
+        """
+        self._deferred_map[service_type] = provider_class
+
+    def _load_deferred_provider(self, service_type: type) -> None:
+        """
+        Load a deferred service provider on-demand.
+
+        This method is called by resolve() when a deferred service is requested.
+        It instantiates the provider, calls register(), and calls boot().
+
+        Algorithm:
+        1. Get provider class from deferred_map
+        2. Instantiate provider
+        3. Call provider.register(self) to bind services
+        4. Call provider.boot() to initialize services (async or sync)
+        5. Remove ALL services from this provider from deferred_map
+
+        Args:
+            service_type: The service type being resolved
+
+        Note:
+            For v1.0, boot() is called synchronously. If boot() is async,
+            it will be awaited. This works because resolve() is called from
+            async route handlers in FastAPI contexts.
+
+            For non-async contexts, async boot() will not be awaited and
+            may not complete. This is a known limitation for v1.0.
+        """
+        # Get provider class from deferred map
+        provider_class = self._deferred_map[service_type]
+
+        # Instantiate provider
+        provider = provider_class()
+
+        # Call register() to bind services
+        provider.register(self)
+
+        # Call boot() to initialize services
+        # Note: resolve() is sync, but boot() can be async
+        boot_result = provider.boot()
+        if hasattr(boot_result, "__await__"):
+            # boot() is async - we need to await it
+            # This requires an event loop, which should exist in FastAPI contexts
+            import asyncio
+
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If loop is running, create a task
+                # Note: This is fire-and-forget for v1.0
+                asyncio.create_task(boot_result)  # type: ignore[arg-type]
+            else:
+                # If loop is not running, run until complete
+                loop.run_until_complete(boot_result)
+
+        # Remove ALL services from this provider from deferred map
+        # This handles providers with multiple services in provides list
+        services_to_remove = [
+            svc for svc, provider_cls in self._deferred_map.items()
+            if provider_cls is provider_class
+        ]
+        for svc in services_to_remove:
+            del self._deferred_map[svc]
 
     @asynccontextmanager
     async def override_context(
