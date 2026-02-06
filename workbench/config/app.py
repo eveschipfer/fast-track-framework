@@ -53,9 +53,10 @@ config = {
     # Providers are registered and booted in the order listed
     # Use string paths for dynamic loading
     "providers": [
-        # Database auto-configuration (Sprint 5.7)
+        # Database auto-configuration (Sprint 5.7 + Sprint 15.0)
         # Reads config/database.py and sets up AsyncEngine + AsyncSession
-        "ftf.providers.database.DatabaseServiceProvider",
+        # Sprint 15.0: Serverless connection handling (NullPool in AWS Lambda)
+        "ftf.providers.database_service_provider.DatabaseServiceProvider",
 
         # Application-level service registration
         "app.providers.app_service_provider.AppServiceProvider",

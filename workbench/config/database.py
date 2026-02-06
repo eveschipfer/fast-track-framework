@@ -1,5 +1,5 @@
 """
-Database Configuration (Sprint 5.7)
+Database Configuration (Sprint 5.7 + Sprint 15.0)
 
 This file defines all database connections for your application.
 The DatabaseServiceProvider reads this config and automatically sets up:
@@ -11,6 +11,19 @@ Connection Types:
     - sqlite: Lightweight, file-based database (good for development/testing)
     - mysql: MySQL/MariaDB connections with aiomysql driver
     - postgresql: PostgreSQL connections with asyncpg driver
+
+Sprint 15.0: Serverless Connection Handling
+    The DatabaseServiceProvider automatically detects serverless environments and
+    uses NullPool (no connection pooling) to prevent "Too many connections"
+    errors in AWS Lambda and other serverless platforms.
+
+    Detection:
+        1. Automatic: AWS_LAMBDA_FUNCTION_NAME environment variable
+        2. Manual: app.serverless = True in config/app.py
+
+    Behavior:
+        - Serverless: NullPool (no pooling, connections closed after use)
+        - Non-Serverless: QueuePool (standard pooling with pool_size/max_overflow)
 
 Usage:
     from ftf.config import config
@@ -29,8 +42,8 @@ Environment Variables:
     DB_DATABASE - Database name
     DB_USERNAME - Database username
     DB_PASSWORD - Database password
-    DB_POOL_SIZE - Connection pool size (default: 10)
-    DB_MAX_OVERFLOW - Max connections beyond pool_size (default: 20)
+    DB_POOL_SIZE - Connection pool size (default: 10, ignored in serverless)
+    DB_MAX_OVERFLOW - Max connections beyond pool_size (default: 20, ignored in serverless)
     DB_ECHO - Enable SQL query logging (true/false)
 """
 
