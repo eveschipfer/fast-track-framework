@@ -96,6 +96,8 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
     "-v",
+    "-ra",
+    "-q",
     "--strict-markers",
     "--tb=short",
     "--cov=framework/jtc",
@@ -104,8 +106,18 @@ addopts = [
     "--cov-report=html",
 ]
 filterwarnings = [
-    "ignore::DeprecationWarning:pkg_resources",
-    "ignore::DeprecationWarning:google.*"
+    # 1. Ignorar warnings de bibliotecas externas (Noise)
+    "ignore::DeprecationWarning:pkg_resources.*",
+    "ignore::DeprecationWarning:google.*",
+    "ignore::DeprecationWarning:pydantic._internal.*",
+    "ignore::DeprecationWarning:importlib._bootstrap",
+
+    # 2. Ignorar avisos do SQLAlchemy (que ainda estamos migrando)
+    "ignore:.*CreateEnginePlugin.*:sqlalchemy.exc.SAWarning",
+    "ignore:.*Select.where.*:sqlalchemy.exc.SADeprecationWarning",
+
+    # 3. Ignorar avisos de datetime em libs de terceiros
+    "ignore::DeprecationWarning:dateutil.*",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",

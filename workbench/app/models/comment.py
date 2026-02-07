@@ -48,7 +48,7 @@ Example Usage:
 See: docs/relationships.md for nested relationship loading
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Text
@@ -94,7 +94,7 @@ class Comment(Base):
     content: Mapped[str] = mapped_column(Text)
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
     # BelongsTo: Comment belongs to Post (many-to-one)
     post: Mapped["Post"] = relationship(
