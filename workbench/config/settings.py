@@ -34,7 +34,7 @@ import os
 from functools import reduce
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -314,10 +314,7 @@ class DatabaseConfig(BaseModelConfig):
 
     default: str = Field(default="sqlite", alias="DB_CONNECTION")
     connections: DatabaseConnectionsConfig
-
-    class Config:
-        """Pydantic configuration for DatabaseConfig."""
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AuthConfig(BaseModel):
@@ -395,10 +392,7 @@ class AppConfig(BaseModelConfig):
     timezone: str = Field(default="UTC", alias="APP_TIMEZONE")
     locale: str = Field(default="en", alias="APP_LOCALE")
     fallback_locale: str = "en"
-
-    class Config:
-        """Pydantic configuration for AppConfig."""
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AppSettings(BaseSettings):

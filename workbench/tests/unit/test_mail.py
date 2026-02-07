@@ -18,7 +18,7 @@ from ftf.mail.drivers.log_driver import LogDriver
 from ftf.mail.exceptions import MailTemplateException
 
 
-class TestMailable(Mailable):
+class MockMailable(Mailable):
     """Simple test mailable."""
 
     def __init__(self, subject: str = "Test Subject") -> None:
@@ -42,7 +42,7 @@ async def test_array_driver_stores_messages() -> None:
     driver = ArrayDriver()
 
     # Create and send message
-    mailable = TestMailable()
+    mailable = MockMailable()
     message = await mailable.render()
     await driver.send(message)
 
@@ -57,7 +57,7 @@ async def test_array_driver_flush() -> None:
     driver = ArrayDriver()
 
     # Send messages
-    mailable = TestMailable()
+    mailable = MockMailable()
     message = await mailable.render()
     await driver.send(message)
     await driver.send(message)
@@ -77,12 +77,12 @@ async def test_array_driver_get_last() -> None:
     driver = ArrayDriver()
 
     # Send first message
-    mailable1 = TestMailable("First")
+    mailable1 = MockMailable("First")
     message1 = await mailable1.render()
     await driver.send(message1)
 
     # Send second message
-    mailable2 = TestMailable("Second")
+    mailable2 = MockMailable("Second")
     message2 = await mailable2.render()
     await driver.send(message2)
 
@@ -105,7 +105,7 @@ async def test_log_driver_logs_email(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
 
     driver = LogDriver()
-    mailable = TestMailable("Log Test")
+    mailable = MockMailable("Log Test")
     message = await mailable.render()
 
     await driver.send(message)
@@ -123,7 +123,7 @@ async def test_log_driver_logs_email(caplog: pytest.LogCaptureFixture) -> None:
 @pytest.mark.asyncio
 async def test_mailable_subject() -> None:
     """Mailable should set subject correctly."""
-    mailable = TestMailable("Custom Subject")
+    mailable = MockMailable("Custom Subject")
     message = await mailable.render()
 
     assert message["subject"] == "Custom Subject"
@@ -132,7 +132,7 @@ async def test_mailable_subject() -> None:
 @pytest.mark.asyncio
 async def test_mailable_from() -> None:
     """Mailable should set sender correctly."""
-    mailable = TestMailable()
+    mailable = MockMailable()
     message = await mailable.render()
 
     assert message["from_"]["email"] == "test@example.com"
@@ -181,7 +181,7 @@ async def test_mailable_cc_bcc() -> None:
 @pytest.mark.asyncio
 async def test_mailable_text() -> None:
     """Mailable should set plain text body."""
-    mailable = TestMailable()
+    mailable = MockMailable()
     message = await mailable.render()
 
     assert message["text"] == "Test body"
@@ -290,7 +290,7 @@ async def test_mail_send() -> None:
     # Set array driver for testing
     Mail.set_driver(ArrayDriver())
 
-    mailable = TestMailable("Test Send")
+    mailable = MockMailable("Test Send")
     await Mail.send(mailable)
 
     # Verify message was sent
@@ -309,7 +309,7 @@ async def test_mail_to_fluent_api() -> None:
     Mail.set_driver(ArrayDriver())
 
     # Use fluent API
-    await Mail.to("user@example.com", "John Doe").send(TestMailable())
+    await Mail.to("user@example.com", "John Doe").send(MockMailable())
 
     # Verify recipient was added
     assert isinstance(Mail.driver, ArrayDriver)
@@ -331,7 +331,7 @@ async def test_pending_mail_multiple_recipients() -> None:
         .to("user2@test.com", "User 2")
         .cc("manager@test.com", "Manager")
         .bcc("admin@test.com")
-        .send(TestMailable())
+        .send(MockMailable())
     )
 
     # Verify all recipients

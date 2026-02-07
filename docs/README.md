@@ -41,7 +41,15 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 ### Recent Sprints
 
-**Sprint 13.0 - Deferred Service Providers (JIT Loading)** (Latest! ⏱️⚡)
+**Sprint 16.1 - Cleanup, Modernization & Fixes** (Latest! 🧹✨)
+- 📜 [Summary](history/SPRINT_16_1_SUMMARY.md)
+- Focus: Eliminate warnings, modernize to Pydantic V2, fix skipped pagination tests
+- Added: Pydantic V2 `model_config`, renamed test helper classes, fixed pagination tests with in-memory SQLite
+- Features: Clean test output, timezone-aware datetime, pytest warning filters
+- Achievement: **All pagination tests passing!** Pydantic V2 modernized, helper classes renamed ✅
+- Tests: 445 passing (100%), 5 pagination tests unskipped, 43.18% coverage ✅
+
+**Sprint 13.0 - Deferred Service Providers (JIT Loading)** ⏱️⚡
 - 📜 [Summary](history/SPRINT_13_0_SUMMARY.md)
 - Focus: Just-In-Time loading of service providers for serverless optimization
 - Added: Container deferred support, DeferredServiceProvider validation, JIT loading logic

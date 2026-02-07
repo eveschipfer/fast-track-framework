@@ -380,9 +380,9 @@ class QueryBuilder(Generic[T]):
             >>> query = repo.query().where_between(User.age, 18, 65)
             >>>
             >>> # Find posts created in date range
-            >>> from datetime import datetime, timedelta
-            >>> start = datetime.utcnow() - timedelta(days=7)
-            >>> end = datetime.utcnow()
+            >>> from datetime import datetime, timedelta, timezone
+            >>> start = datetime.now(timezone.utc) - timedelta(days=7)
+            >>> end = datetime.now(timezone.utc)
             >>> query = repo.query().where_between(
             ...     Post.created_at, start, end
             ... )

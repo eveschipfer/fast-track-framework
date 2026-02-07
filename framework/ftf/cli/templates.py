@@ -539,7 +539,7 @@ class {class_name}(Event):
     # user_id: int
     # email: str
     # name: str
-    # timestamp: datetime = field(default_factory=datetime.utcnow)
+    # timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     pass
 '''

@@ -23,7 +23,7 @@ from fast_query import Base, BaseRepository, QueryBuilder, create_engine
 
 
 # Test Models
-class TestUser(Base):
+class UserStub(Base):
     """Test user model for query builder tests."""
 
     __tablename__ = "test_users_qb"
@@ -35,11 +35,11 @@ class TestUser(Base):
     status: Mapped[str] = mapped_column(String(20), default="active")
 
 
-class TestUserRepository(BaseRepository[TestUser]):
-    """Repository for TestUser."""
+class UserRepoStub(BaseRepository[UserStub]):
+    """Repository for UserStub."""
 
     def __init__(self, session: AsyncSession):
-        super().__init__(session, TestUser)
+        super().__init__(session, UserStub)
 
 
 # ===========================
@@ -74,14 +74,14 @@ async def session(engine: AsyncEngine) -> AsyncSession:
 
 
 @pytest.fixture
-async def sample_users(session: AsyncSession) -> list[TestUser]:
+async def sample_users(session: AsyncSession) -> list[UserStub]:
     """Create sample users for testing."""
     users = [
-        TestUser(name="Alice", email="alice@test.com", age=25, status="active"),
-        TestUser(name="Bob", email="bob@test.com", age=30, status="active"),
-        TestUser(name="Charlie", email="charlie@test.com", age=17, status="pending"),
-        TestUser(name="David", email="david@test.com", age=45, status="active"),
-        TestUser(name="Eve", email="eve@test.com", age=22, status="inactive"),
+        UserStub(name="Alice", email="alice@test.com", age=25, status="active"),
+        UserStub(name="Bob", email="bob@test.com", age=30, status="active"),
+        UserStub(name="Charlie", email="charlie@test.com", age=17, status="pending"),
+        UserStub(name="David", email="david@test.com", age=45, status="active"),
+        UserStub(name="Eve", email="eve@test.com", age=22, status="inactive"),
     ]
 
     for user in users:
@@ -99,12 +99,12 @@ async def sample_users(session: AsyncSession) -> list[TestUser]:
 
 @pytest.mark.asyncio
 async def test_where_single_condition(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test WHERE with single condition."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().where(TestUser.age >= 25).get()
+    users = await repo.query().where(UserStub.age >= 25).get()
 
     assert len(users) == 3  # Alice (25), Bob (30), David (45)
     assert all(u.age >= 25 for u in users)
@@ -112,13 +112,13 @@ async def test_where_single_condition(
 
 @pytest.mark.asyncio
 async def test_where_multiple_conditions_and(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test WHERE with multiple conditions (AND logic)."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await (
-        repo.query().where(TestUser.age >= 25, TestUser.status == "active").get()
+        repo.query().where(UserStub.age >= 25, UserStub.status == "active").get()
     )
 
     assert len(users) == 3  # Alice (25, active), Bob (30, active), David (45, active)
@@ -127,15 +127,15 @@ async def test_where_multiple_conditions_and(
 
 @pytest.mark.asyncio
 async def test_where_chained_calls(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test chaining multiple where() calls (AND logic)."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await (
         repo.query()
-        .where(TestUser.age >= 25)
-        .where(TestUser.status == "active")
+        .where(UserStub.age >= 25)
+        .where(UserStub.status == "active")
         .get()
     )
 
@@ -145,14 +145,14 @@ async def test_where_chained_calls(
 
 @pytest.mark.asyncio
 async def test_or_where_conditions(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test OR WHERE clause."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await (
         repo.query()
-        .or_where(TestUser.email == "alice@test.com", TestUser.email == "bob@test.com")
+        .or_where(UserStub.email == "alice@test.com", UserStub.email == "bob@test.com")
         .get()
     )
 
@@ -164,16 +164,16 @@ async def test_or_where_conditions(
 
 @pytest.mark.asyncio
 async def test_combining_and_with_or(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test combining AND and OR conditions."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     # WHERE status = 'active' AND (age >= 40 OR age <= 20)
     users = await (
         repo.query()
-        .where(TestUser.status == "active")
-        .or_where(TestUser.age >= 40, TestUser.age <= 20)
+        .where(UserStub.status == "active")
+        .or_where(UserStub.age >= 40, UserStub.age <= 20)
         .get()
     )
 
@@ -185,12 +185,12 @@ async def test_combining_and_with_or(
 
 @pytest.mark.asyncio
 async def test_where_in_with_list(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test WHERE IN clause."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().where_in(TestUser.age, [25, 30, 45]).get()
+    users = await repo.query().where_in(UserStub.age, [25, 30, 45]).get()
 
     assert len(users) == 3  # Alice (25), Bob (30), David (45)
     ages = [u.age for u in users]
@@ -201,12 +201,12 @@ async def test_where_in_with_list(
 
 @pytest.mark.asyncio
 async def test_where_in_with_empty_list(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test WHERE IN with empty list (should return all)."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().where_in(TestUser.age, []).get()
+    users = await repo.query().where_in(UserStub.age, []).get()
 
     # Empty list should not add WHERE clause
     assert len(users) == 5  # All users
@@ -214,13 +214,13 @@ async def test_where_in_with_empty_list(
 
 @pytest.mark.asyncio
 async def test_where_not_in(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test WHERE NOT IN clause."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await (
-        repo.query().where_not_in(TestUser.status, ["inactive", "pending"]).get()
+        repo.query().where_not_in(UserStub.status, ["inactive", "pending"]).get()
     )
 
     assert len(users) == 3  # Alice, Bob, David (all active)
@@ -229,13 +229,13 @@ async def test_where_not_in(
 
 @pytest.mark.asyncio
 async def test_where_like_pattern(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test WHERE LIKE pattern matching."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     # Find users with 'e' in name
-    users = await repo.query().where_like(TestUser.name, "%e%").get()
+    users = await repo.query().where_like(UserStub.name, "%e%").get()
 
     # Alice, Charlie, Eve have 'e' in their names
     assert len(users) == 3
@@ -247,12 +247,12 @@ async def test_where_like_pattern(
 
 @pytest.mark.asyncio
 async def test_where_between_range(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test WHERE BETWEEN clause."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().where_between(TestUser.age, 20, 30).get()
+    users = await repo.query().where_between(UserStub.age, 20, 30).get()
 
     assert len(users) == 3  # Alice (25), Bob (30), Eve (22)
     assert all(20 <= u.age <= 30 for u in users)
@@ -265,12 +265,12 @@ async def test_where_between_range(
 
 @pytest.mark.asyncio
 async def test_order_by_ascending(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test ORDER BY ASC."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().order_by(TestUser.age, "asc").get()
+    users = await repo.query().order_by(UserStub.age, "asc").get()
 
     ages = [u.age for u in users]
     assert ages == [17, 22, 25, 30, 45]  # Sorted ascending
@@ -278,12 +278,12 @@ async def test_order_by_ascending(
 
 @pytest.mark.asyncio
 async def test_order_by_descending(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test ORDER BY DESC."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().order_by(TestUser.age, "desc").get()
+    users = await repo.query().order_by(UserStub.age, "desc").get()
 
     ages = [u.age for u in users]
     assert ages == [45, 30, 25, 22, 17]  # Sorted descending
@@ -291,13 +291,13 @@ async def test_order_by_descending(
 
 @pytest.mark.asyncio
 async def test_multiple_order_by_clauses(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test multiple ORDER BY clauses."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await (
-        repo.query().order_by(TestUser.status, "asc").order_by(TestUser.age, "desc").get()
+        repo.query().order_by(UserStub.status, "asc").order_by(UserStub.age, "desc").get()
     )
 
     # First by status, then by age descending within each status
@@ -308,10 +308,10 @@ async def test_multiple_order_by_clauses(
 
 @pytest.mark.asyncio
 async def test_latest_defaults_to_id(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test latest() method defaults to id when no created_at."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await repo.query().latest().limit(1).get()
 
@@ -322,10 +322,10 @@ async def test_latest_defaults_to_id(
 
 @pytest.mark.asyncio
 async def test_oldest_defaults_to_id(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test oldest() method defaults to id when no created_at."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await repo.query().oldest().limit(1).get()
 
@@ -341,10 +341,10 @@ async def test_oldest_defaults_to_id(
 
 @pytest.mark.asyncio
 async def test_limit_results(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test LIMIT clause."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await repo.query().limit(3).get()
 
@@ -353,12 +353,12 @@ async def test_limit_results(
 
 @pytest.mark.asyncio
 async def test_offset_results(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test OFFSET clause."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().order_by(TestUser.id).offset(2).get()
+    users = await repo.query().order_by(UserStub.id).offset(2).get()
 
     assert len(users) == 3  # 5 total - 2 skipped = 3
     assert users[0].name == "Charlie"  # 3rd user
@@ -366,12 +366,12 @@ async def test_offset_results(
 
 @pytest.mark.asyncio
 async def test_limit_and_offset_combined(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test LIMIT and OFFSET together."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().order_by(TestUser.id).offset(1).limit(2).get()
+    users = await repo.query().order_by(UserStub.id).offset(1).limit(2).get()
 
     assert len(users) == 2
     assert users[0].name == "Bob"  # 2nd user
@@ -380,13 +380,13 @@ async def test_limit_and_offset_combined(
 
 @pytest.mark.asyncio
 async def test_paginate_first_page(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test paginate() for first page (Sprint 5.6: now terminal method)."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     # Sprint 5.6: paginate() is now a terminal method returning LengthAwarePaginator
-    result = await repo.query().order_by(TestUser.id).paginate(page=1, per_page=2)
+    result = await repo.query().order_by(UserStub.id).paginate(page=1, per_page=2)
 
     assert len(result.items) == 2
     assert result.items[0].name == "Alice"
@@ -398,13 +398,13 @@ async def test_paginate_first_page(
 
 @pytest.mark.asyncio
 async def test_paginate_second_page_calculates_offset(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test paginate() for second page (Sprint 5.6: now terminal method)."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     # Sprint 5.6: paginate() is now a terminal method returning LengthAwarePaginator
-    result = await repo.query().order_by(TestUser.id).paginate(page=2, per_page=2)
+    result = await repo.query().order_by(UserStub.id).paginate(page=2, per_page=2)
 
     assert len(result.items) == 2
     assert result.items[0].name == "Charlie"  # 3rd user
@@ -420,26 +420,26 @@ async def test_paginate_second_page_calculates_offset(
 
 @pytest.mark.asyncio
 async def test_get_returns_all_results(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test get() returns all matching results."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await repo.query().get()
 
     assert len(users) == 5
     assert isinstance(users, list)
-    assert all(isinstance(u, TestUser) for u in users)
+    assert all(isinstance(u, UserStub) for u in users)
 
 
 @pytest.mark.asyncio
 async def test_get_with_filters_applied(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test get() with filters."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().where(TestUser.status == "active").get()
+    users = await repo.query().where(UserStub.status == "active").get()
 
     assert len(users) == 3
     assert all(u.status == "active" for u in users)
@@ -447,65 +447,65 @@ async def test_get_with_filters_applied(
 
 @pytest.mark.asyncio
 async def test_first_returns_one_result(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test first() returns single result."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    user = await repo.query().where(TestUser.name == "Alice").first()
+    user = await repo.query().where(UserStub.name == "Alice").first()
 
     assert user is not None
-    assert isinstance(user, TestUser)
+    assert isinstance(user, UserStub)
     assert user.name == "Alice"
 
 
 @pytest.mark.asyncio
 async def test_first_returns_none_when_empty(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test first() returns None when no results."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    user = await repo.query().where(TestUser.name == "NonExistent").first()
+    user = await repo.query().where(UserStub.name == "NonExistent").first()
 
     assert user is None
 
 
 @pytest.mark.asyncio
 async def test_first_or_fail_returns_result(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test first_or_fail() returns result when found."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    user = await repo.query().where(TestUser.name == "Alice").first_or_fail()
+    user = await repo.query().where(UserStub.name == "Alice").first_or_fail()
 
-    assert isinstance(user, TestUser)
+    assert isinstance(user, UserStub)
     assert user.name == "Alice"
 
 
 @pytest.mark.asyncio
 async def test_first_or_fail_raises_404(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test first_or_fail() raises RecordNotFound when not found."""
     from fast_query import RecordNotFound
 
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     with pytest.raises(RecordNotFound) as exc_info:
-        await repo.query().where(TestUser.name == "NonExistent").first_or_fail()
+        await repo.query().where(UserStub.name == "NonExistent").first_or_fail()
 
-    assert exc_info.value.model_name == "TestUser"
-    assert "TestUser not found" in str(exc_info.value)
+    assert exc_info.value.model_name == "UserStub"
+    assert "UserStub not found" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
 async def test_count_all_records(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test count() returns total count."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     total = await repo.query().count()
 
@@ -514,48 +514,48 @@ async def test_count_all_records(
 
 @pytest.mark.asyncio
 async def test_count_with_filters(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test count() with WHERE clause."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    total = await repo.query().where(TestUser.status == "active").count()
+    total = await repo.query().where(UserStub.status == "active").count()
 
     assert total == 3
 
 
 @pytest.mark.asyncio
 async def test_exists_returns_true(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test exists() returns True when records exist."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    exists = await repo.query().where(TestUser.status == "active").exists()
+    exists = await repo.query().where(UserStub.status == "active").exists()
 
     assert exists is True
 
 
 @pytest.mark.asyncio
 async def test_exists_returns_false(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test exists() returns False when no records."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    exists = await repo.query().where(TestUser.status == "deleted").exists()
+    exists = await repo.query().where(UserStub.status == "deleted").exists()
 
     assert exists is False
 
 
 @pytest.mark.asyncio
 async def test_pluck_extracts_column_values(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test pluck() extracts values from single column."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    emails = await repo.query().order_by(TestUser.id).pluck(TestUser.email)
+    emails = await repo.query().order_by(UserStub.id).pluck(UserStub.email)
 
     assert len(emails) == 5
     assert emails[0] == "alice@test.com"
@@ -565,16 +565,16 @@ async def test_pluck_extracts_column_values(
 
 @pytest.mark.asyncio
 async def test_pluck_with_filters(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test pluck() with WHERE clause."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     active_names = await (
         repo.query()
-        .where(TestUser.status == "active")
-        .order_by(TestUser.age)
-        .pluck(TestUser.name)
+        .where(UserStub.status == "active")
+        .order_by(UserStub.age)
+        .pluck(UserStub.name)
     )
 
     assert len(active_names) == 3
@@ -591,12 +591,12 @@ async def test_pluck_with_filters(
 @pytest.mark.asyncio
 async def test_to_sql_generates_query_string(session: AsyncSession) -> None:
     """Test to_sql() generates SQL query string."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     query = (
         repo.query()
-        .where(TestUser.age >= 18)
-        .order_by(TestUser.name)
+        .where(UserStub.age >= 18)
+        .order_by(UserStub.name)
         .limit(10)
     )
 
@@ -619,26 +619,26 @@ async def test_query_builder_preserves_generic_type(
     session: AsyncSession,
 ) -> None:
     """Test QueryBuilder[T] preserves model type."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     query = repo.query()
 
-    # Type checker should infer QueryBuilder[TestUser]
+    # Type checker should infer QueryBuilder[UserStub]
     assert isinstance(query, QueryBuilder)
 
 
 @pytest.mark.asyncio
 async def test_get_returns_correct_model_type(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test get() returns list of correct model type."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await repo.query().get()
 
-    # Should return list[TestUser]
+    # Should return list[UserStub]
     assert isinstance(users, list)
-    assert all(isinstance(u, TestUser) for u in users)
+    assert all(isinstance(u, UserStub) for u in users)
 
 
 @pytest.mark.asyncio
@@ -646,13 +646,13 @@ async def test_chaining_preserves_type(
     session: AsyncSession,
 ) -> None:
     """Test method chaining preserves QueryBuilder type."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    # Chaining should return QueryBuilder[TestUser] at each step
+    # Chaining should return QueryBuilder[UserStub] at each step
     query = (
         repo.query()
-        .where(TestUser.age >= 18)
-        .order_by(TestUser.name)
+        .where(UserStub.age >= 18)
+        .order_by(UserStub.name)
         .limit(10)
     )
 
@@ -666,16 +666,16 @@ async def test_chaining_preserves_type(
 
 @pytest.mark.asyncio
 async def test_complex_query_multiple_filters(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test complex query with multiple filters, ordering, and pagination."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
     users = await (
         repo.query()
-        .where(TestUser.age >= 20)
-        .where_not_in(TestUser.status, ["inactive"])
-        .order_by(TestUser.age, "desc")
+        .where(UserStub.age >= 20)
+        .where_not_in(UserStub.status, ["inactive"])
+        .order_by(UserStub.age, "desc")
         .limit(2)
         .get()
     )
@@ -689,12 +689,12 @@ async def test_complex_query_multiple_filters(
 
 @pytest.mark.asyncio
 async def test_empty_query_returns_empty_list(
-    session: AsyncSession, sample_users: list[TestUser]
+    session: AsyncSession, sample_users: list[UserStub]
 ) -> None:
     """Test query with no matches returns empty list."""
-    repo = TestUserRepository(session)
+    repo = UserRepoStub(session)
 
-    users = await repo.query().where(TestUser.age > 100).get()
+    users = await repo.query().where(UserStub.age > 100).get()
 
     assert users == []
     assert isinstance(users, list)

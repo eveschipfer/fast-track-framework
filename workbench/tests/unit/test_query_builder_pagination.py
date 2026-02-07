@@ -35,7 +35,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 
 # Test model (avoid SQLAlchemy metadata conflicts with real User model)
-class TestUser(Base):
+class PaginationUserStub(Base):
     """Minimal test model for pagination tests."""
     __tablename__ = "test_pagination_users"
 
@@ -44,7 +44,7 @@ class TestUser(Base):
     email: Mapped[str] = mapped_column(String(100))
 
 # Alias for clarity in tests
-User = TestUser
+User = PaginationUserStub
 
 
 class TestQueryBuilderPaginate:

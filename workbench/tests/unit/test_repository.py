@@ -28,7 +28,7 @@ from fast_query import Base, BaseRepository, create_engine
 # ============================================================================
 
 
-class TestRepoUser(Base):
+class RepoUserStub(Base):
     """Test user model for repository tests."""
 
     __tablename__ = "test_repo_users"
@@ -38,15 +38,15 @@ class TestRepoUser(Base):
     email: Mapped[str] = mapped_column(String(100), unique=True)
 
 
-class TestRepoUserRepository(BaseRepository[TestRepoUser]):
+class RepoUserStubRepository(BaseRepository[RepoUserStub]):
     """Test user repository with custom methods."""
 
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, TestRepoUser)
+        super().__init__(session, RepoUserStub)
 
-    async def find_by_email(self, email: str) -> TestRepoUser | None:
+    async def find_by_email(self, email: str) -> RepoUserStub | None:
         """Custom query: find user by email."""
-        stmt = select(TestRepoUser).where(TestRepoUser.email == email)
+        stmt = select(RepoUserStub).where(RepoUserStub.email == email)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -84,9 +84,9 @@ async def session(engine: AsyncEngine) -> AsyncSession:
 
 
 @pytest.fixture
-def user_repo(session: AsyncSession) -> TestRepoUserRepository:
+def user_repo(session: AsyncSession) -> RepoUserStubRepository:
     """User repository fixture."""
-    return TestRepoUserRepository(session)
+    return RepoUserStubRepository(session)
 
 
 # ============================================================================
@@ -95,9 +95,9 @@ def user_repo(session: AsyncSession) -> TestRepoUserRepository:
 
 
 @pytest.mark.asyncio
-async def test_create_user(user_repo: TestRepoUserRepository) -> None:
+async def test_create_user(user_repo: RepoUserStubRepository) -> None:
     """Test creating a new user."""
-    user = TestRepoUser(name="Alice", email="alice@example.com")
+    user = RepoUserStub(name="Alice", email="alice@example.com")
     created = await user_repo.create(user)
 
     assert created.id is not None
@@ -106,10 +106,10 @@ async def test_create_user(user_repo: TestRepoUserRepository) -> None:
 
 
 @pytest.mark.asyncio
-async def test_create_multiple_users(user_repo: TestRepoUserRepository) -> None:
+async def test_create_multiple_users(user_repo: RepoUserStubRepository) -> None:
     """Test creating multiple users."""
-    user1 = await user_repo.create(TestRepoUser(name="Alice", email="alice@example.com"))
-    user2 = await user_repo.create(TestRepoUser(name="Bob", email="bob@example.com"))
+    user1 = await user_repo.create(RepoUserStub(name="Alice", email="alice@example.com"))
+    user2 = await user_repo.create(RepoUserStub(name="Bob", email="bob@example.com"))
 
     assert user1.id != user2.id
     assert user1.id is not None
@@ -122,9 +122,9 @@ async def test_create_multiple_users(user_repo: TestRepoUserRepository) -> None:
 
 
 @pytest.mark.asyncio
-async def test_find_user_by_id(user_repo: TestRepoUserRepository) -> None:
+async def test_find_user_by_id(user_repo: RepoUserStubRepository) -> None:
     """Test finding user by primary key."""
-    user = await user_repo.create(TestRepoUser(name="Bob", email="bob@example.com"))
+    user = await user_repo.create(RepoUserStub(name="Bob", email="bob@example.com"))
     found = await user_repo.find(user.id)
 
     assert found is not None
@@ -135,7 +135,7 @@ async def test_find_user_by_id(user_repo: TestRepoUserRepository) -> None:
 
 @pytest.mark.asyncio
 async def test_find_nonexistent_user_returns_none(
-    user_repo: TestRepoUserRepository,
+    user_repo: RepoUserStubRepository,
 ) -> None:
     """Test that finding nonexistent user returns None."""
     found = await user_repo.find(999)
@@ -143,9 +143,9 @@ async def test_find_nonexistent_user_returns_none(
 
 
 @pytest.mark.asyncio
-async def test_find_or_fail_returns_user(user_repo: TestRepoUserRepository) -> None:
+async def test_find_or_fail_returns_user(user_repo: RepoUserStubRepository) -> None:
     """Test find_or_fail returns user when found."""
-    user = await user_repo.create(TestRepoUser(name="Charlie", email="charlie@example.com"))
+    user = await user_repo.create(RepoUserStub(name="Charlie", email="charlie@example.com"))
     found = await user_repo.find_or_fail(user.id)
 
     assert found.id == user.id
@@ -153,24 +153,24 @@ async def test_find_or_fail_returns_user(user_repo: TestRepoUserRepository) -> N
 
 
 @pytest.mark.asyncio
-async def test_find_or_fail_raises_404(user_repo: TestRepoUserRepository) -> None:
+async def test_find_or_fail_raises_404(user_repo: RepoUserStubRepository) -> None:
     """Test find_or_fail raises RecordNotFound when not found."""
     from fast_query import RecordNotFound
 
     with pytest.raises(RecordNotFound) as exc_info:
         await user_repo.find_or_fail(999)
 
-    assert exc_info.value.model_name == "TestRepoUser"
+    assert exc_info.value.model_name == "RepoUserStub"
     assert exc_info.value.identifier == 999
-    assert "TestRepoUser not found: 999" in str(exc_info.value)
+    assert "RepoUserStub not found: 999" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
-async def test_all_returns_all_users(user_repo: TestRepoUserRepository) -> None:
+async def test_all_returns_all_users(user_repo: RepoUserStubRepository) -> None:
     """Test fetching all users."""
-    await user_repo.create(TestRepoUser(name="Alice", email="alice@example.com"))
-    await user_repo.create(TestRepoUser(name="Bob", email="bob@example.com"))
-    await user_repo.create(TestRepoUser(name="Charlie", email="charlie@example.com"))
+    await user_repo.create(RepoUserStub(name="Alice", email="alice@example.com"))
+    await user_repo.create(RepoUserStub(name="Bob", email="bob@example.com"))
+    await user_repo.create(RepoUserStub(name="Charlie", email="charlie@example.com"))
 
     users = await user_repo.all()
 
@@ -180,11 +180,11 @@ async def test_all_returns_all_users(user_repo: TestRepoUserRepository) -> None:
 
 
 @pytest.mark.asyncio
-async def test_all_with_pagination(user_repo: TestRepoUserRepository) -> None:
+async def test_all_with_pagination(user_repo: RepoUserStubRepository) -> None:
     """Test pagination in all() method."""
     # Create 5 users
     for i in range(5):
-        await user_repo.create(TestRepoUser(name=f"User{i}", email=f"user{i}@example.com"))
+        await user_repo.create(RepoUserStub(name=f"User{i}", email=f"user{i}@example.com"))
 
     # Get first page (2 items)
     page1 = await user_repo.all(limit=2, offset=0)
@@ -213,9 +213,9 @@ async def test_all_with_pagination(user_repo: TestRepoUserRepository) -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_user(user_repo: TestRepoUserRepository) -> None:
+async def test_update_user(user_repo: RepoUserStubRepository) -> None:
     """Test updating a user."""
-    user = await user_repo.create(TestRepoUser(name="Alice", email="alice@example.com"))
+    user = await user_repo.create(RepoUserStub(name="Alice", email="alice@example.com"))
 
     # Modify user
     user.name = "Alice Updated"
@@ -231,9 +231,9 @@ async def test_update_user(user_repo: TestRepoUserRepository) -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_multiple_fields(user_repo: TestRepoUserRepository) -> None:
+async def test_update_multiple_fields(user_repo: RepoUserStubRepository) -> None:
     """Test updating multiple fields."""
-    user = await user_repo.create(TestRepoUser(name="Bob", email="bob@example.com"))
+    user = await user_repo.create(RepoUserStub(name="Bob", email="bob@example.com"))
 
     # Modify multiple fields
     user.name = "Bob Smith"
@@ -250,9 +250,9 @@ async def test_update_multiple_fields(user_repo: TestRepoUserRepository) -> None
 
 
 @pytest.mark.asyncio
-async def test_delete_user(user_repo: TestRepoUserRepository) -> None:
+async def test_delete_user(user_repo: RepoUserStubRepository) -> None:
     """Test deleting a user."""
-    user = await user_repo.create(TestRepoUser(name="Charlie", email="charlie@example.com"))
+    user = await user_repo.create(RepoUserStub(name="Charlie", email="charlie@example.com"))
     user_id = user.id
 
     # Delete user
@@ -265,11 +265,11 @@ async def test_delete_user(user_repo: TestRepoUserRepository) -> None:
 
 @pytest.mark.asyncio
 async def test_delete_does_not_affect_other_users(
-    user_repo: TestRepoUserRepository,
+    user_repo: RepoUserStubRepository,
 ) -> None:
     """Test that deleting one user doesn't affect others."""
-    user1 = await user_repo.create(TestRepoUser(name="Alice", email="alice@example.com"))
-    user2 = await user_repo.create(TestRepoUser(name="Bob", email="bob@example.com"))
+    user1 = await user_repo.create(RepoUserStub(name="Alice", email="alice@example.com"))
+    user2 = await user_repo.create(RepoUserStub(name="Bob", email="bob@example.com"))
 
     # Delete user1
     await user_repo.delete(user1)
@@ -286,28 +286,28 @@ async def test_delete_does_not_affect_other_users(
 
 
 @pytest.mark.asyncio
-async def test_count_empty_table(user_repo: TestRepoUserRepository) -> None:
+async def test_count_empty_table(user_repo: RepoUserStubRepository) -> None:
     """Test counting records in empty table."""
     count = await user_repo.count()
     assert count == 0
 
 
 @pytest.mark.asyncio
-async def test_count_with_records(user_repo: TestRepoUserRepository) -> None:
+async def test_count_with_records(user_repo: RepoUserStubRepository) -> None:
     """Test counting records."""
-    await user_repo.create(TestRepoUser(name="Alice", email="alice@example.com"))
-    await user_repo.create(TestRepoUser(name="Bob", email="bob@example.com"))
-    await user_repo.create(TestRepoUser(name="Charlie", email="charlie@example.com"))
+    await user_repo.create(RepoUserStub(name="Alice", email="alice@example.com"))
+    await user_repo.create(RepoUserStub(name="Bob", email="bob@example.com"))
+    await user_repo.create(RepoUserStub(name="Charlie", email="charlie@example.com"))
 
     count = await user_repo.count()
     assert count == 3
 
 
 @pytest.mark.asyncio
-async def test_count_after_delete(user_repo: TestRepoUserRepository) -> None:
+async def test_count_after_delete(user_repo: RepoUserStubRepository) -> None:
     """Test count decreases after deletion."""
-    user1 = await user_repo.create(TestRepoUser(name="Alice", email="alice@example.com"))
-    await user_repo.create(TestRepoUser(name="Bob", email="bob@example.com"))
+    user1 = await user_repo.create(RepoUserStub(name="Alice", email="alice@example.com"))
+    await user_repo.create(RepoUserStub(name="Bob", email="bob@example.com"))
 
     assert await user_repo.count() == 2
 
@@ -322,9 +322,9 @@ async def test_count_after_delete(user_repo: TestRepoUserRepository) -> None:
 
 
 @pytest.mark.asyncio
-async def test_find_by_email(user_repo: TestRepoUserRepository) -> None:
+async def test_find_by_email(user_repo: RepoUserStubRepository) -> None:
     """Test custom repository method."""
-    await user_repo.create(TestRepoUser(name="Alice", email="alice@example.com"))
+    await user_repo.create(RepoUserStub(name="Alice", email="alice@example.com"))
 
     found = await user_repo.find_by_email("alice@example.com")
 
@@ -333,7 +333,7 @@ async def test_find_by_email(user_repo: TestRepoUserRepository) -> None:
 
 
 @pytest.mark.asyncio
-async def test_find_by_email_not_found(user_repo: TestRepoUserRepository) -> None:
+async def test_find_by_email_not_found(user_repo: RepoUserStubRepository) -> None:
     """Test custom method returns None when not found."""
     found = await user_repo.find_by_email("nonexistent@example.com")
     assert found is None
