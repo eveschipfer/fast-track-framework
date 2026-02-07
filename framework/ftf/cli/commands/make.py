@@ -25,6 +25,7 @@ import typer
 from rich.console import Console
 
 from ftf.cli.templates import (
+    get_controller_template,
     get_event_template,
     get_factory_template,
     get_job_template,
@@ -32,6 +33,7 @@ from ftf.cli.templates import (
     get_mailable_template,
     get_middleware_template,
     get_model_template,
+    get_provider_template,
     get_repository_template,
     get_request_template,
     get_resource_template,
@@ -408,6 +410,80 @@ def make_seeder(
     # Create file
     if create_file(file_path, content, force):
         console.print(f"[green]✓ Seeder created:[/green] {file_path}")
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+@app.command("controller")
+def make_controller(
+    name: str,
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a Controller class.
+
+    Args:
+        name: Name of the controller (e.g., "UserController")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make:controller UserController
+        ✓ Controller created: workbench/http/controllers/user_controller.py
+
+        $ ftf make:controller User
+        ✓ Controller created: workbench/http/controllers/user_controller.py
+    """
+    # Convert to snake_case for filename
+    filename = to_snake_case(name)
+    resource_name = name.replace("Controller", "").lower() + "s"
+
+    # Determine file path (workbench/http/controllers/)
+    file_path = Path("workbench/http/controllers") / f"{filename}.py"
+
+    # Generate content
+    content = get_controller_template(name, resource_name)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Controller created:[/green] {file_path}")
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)
+
+
+@app.command("provider")
+def make_provider(
+    name: str,
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a Service Provider.
+
+    Args:
+        name: Name of the provider (e.g., "PaymentServiceProvider")
+        force: Overwrite if file already exists
+
+    Example:
+        $ ftf make:provider PaymentServiceProvider
+        ✓ Provider created: workbench/app/providers/payment_service_provider.py
+
+        $ ftf make:provider Analytics --force
+        ✓ Provider created: workbench/app/providers/analytics_service_provider.py (overwritten)
+    """
+    # Convert to snake_case for filename
+    filename = to_snake_case(name)
+
+    # Determine file path (workbench/app/providers/)
+    file_path = Path("workbench/app/providers") / f"{filename}.py"
+
+    # Generate content
+    content = get_provider_template(name)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Provider created:[/green] {file_path}")
     else:
         console.print(f"[red]✗ File already exists:[/red] {file_path}")
         console.print("[dim]Use --force to overwrite[/dim]")

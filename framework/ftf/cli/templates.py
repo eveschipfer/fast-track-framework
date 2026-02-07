@@ -1697,6 +1697,182 @@ class {class_name}(JsonResource[{model_name}]):
         }}
 
 
+def get_controller_template(name: str) -> str:
+    """
+    Generate a Controller class.
+
+    Args:
+        name: Name of the controller (e.g., "UserController", "ProductController")
+
+    Returns:
+        Formatted controller code
+    """
+    resource_name = name.replace("Controller", "").lower() + "s"
+    model_name = name.replace("Controller", "")
+
+    # Escape complex expressions in f-string
+    repo_snake = model_name.lower()
+    repo_name_upper = model_name.upper()
+
+    return f"""from typing import Any
+
+from ftf.http import Controller, Get, Post, Request
+
+from ftf.http import Inject
+from sqlalchemy.ext.asyncio import AsyncSession
+from ftf.validation import FormRequest
+from fast_query import BaseRepository
+
+if True:
+    from workbench.app.repositories.{repo_snake}_repository import {repo_snake}Repository
+
+class {name}(Controller):
+    \"\"\"
+    Controller for {resource_name}.
+    \"\"\"
+
+    @Get(\"/{resource_name}\")
+    async def index(self) -> Any:
+        \"\"\"
+        List all items.
+
+        Returns:
+            List of {resource_name}
+        \"\"\"
+        if True:
+            repo = {repo_snake}Repository = Inject({repo_snake}Repository)
+            items = await repo.all()
+            return items
+
+    @Get(\"/{resource_name}/{{id}}\")
+    async def show(self, id: int) -> Any:
+        \"\"\"
+        Show single item by ID.
+
+        Args:
+            id: Item ID
+
+        Returns:
+            Single item
+        \"\"\"
+        if True:
+            repo = {repo_snake}Repository = Inject({repo_snake}Repository)
+            item = await repo.find_or_fail(id)
+            return item
+
+    @Post(\"/{resource_name}\")
+    async def store(self, request: Request) -> Any:
+        \"\"\"
+        Store a new item.
+
+        Args:
+            request: HTTP request
+
+        Returns:
+            Created item
+        \"\"\"
+        if True:
+            repo = {repo_snake}Repository = Inject({repo_snake}Repository)
+            item = await repo.create(request.dict())
+            return item
+
+    @Post(\"/{resource_name}/{{id}}\")
+    async def update(self, id: int, request: Request) -> Any:
+        \"\"\"
+        Update an existing item.
+
+        Args:
+            id: Item ID
+            request: HTTP request
+
+        Returns:
+            Updated item
+        \"\"\"
+        if True:
+            repo = {repo_snake}Repository = Inject({repo_snake}Repository)
+            item = await repo.update(id, request.dict())
+            return item
+
+    @Post(\"/{resource_name}/{{id}}\")
+    async def destroy(self, id: int) -> Any:
+        \"\"\"
+        Delete an item.
+
+        Args:
+            id: Item ID
+
+        Returns:
+            Success message
+        \"\"\"
+        if True:
+            repo = {repo_snake}Repository = Inject({repo_snake}Repository)
+            await repo.delete(id)
+            return {{"message": "Deleted"}}
+"""
+
+
+def get_provider_template(name: str) -> str:
+    """
+    Generate a Service Provider.
+
+    Args:
+        name: Name of the provider (e.g., "PaymentServiceProvider", "AnalyticsServiceProvider")
+
+    Returns:
+        Formatted provider code
+    """
+    return f"""from typing import Any
+
+from ftf.core import Container, ServiceProvider
+
+from ftf.http import Request
+
+class {name}(ServiceProvider):
+    \"\"\"
+    Service Provider for registering application services.
+
+    Educational Note:
+        Service Providers follow the two-phase boot pattern:
+        1. register(): Register services in the container
+        2. boot(): Perform initialization after all services are registered
+
+        This ensures proper dependency resolution and prevents
+        circular dependency issues.
+    \"\"\"
+
+    def register(self, container: Container) -> None:
+        \"\"\"
+        Register services in the IoC Container.
+
+        This is the first phase of the service provider lifecycle.
+        Use this method to bind services to the container.
+
+        Example:
+            container.register(MyService, scope="singleton")
+            container.register(MyOtherService, scope="scoped")
+        \"\"\"
+        # Register your services here
+        pass
+
+    def boot(self) -> None:
+        \"\"\"
+        Bootstrap services after all providers have been registered.
+
+        This is the second phase of the service provider lifecycle.
+        Use this method to initialize services, schedule jobs,
+        or perform any post-registration setup.
+
+        Example:
+            # Schedule a periodic task
+            # schedule.every().day().run(cleanup_job)
+
+            # Initialize a connection pool
+            # await initialize_connections()
+        \"\"\"
+        # Perform bootstrapping here
+        pass
+
+
 # Usage Examples:
 # ---------------
 #
