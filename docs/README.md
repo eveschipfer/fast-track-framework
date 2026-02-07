@@ -143,8 +143,8 @@ Complete documentation for the Fast Track Framework and Fast Query ORM.
 
 **Sprint 3.6 - Custom Validation Rules CLI**
 - 📜 [Summary](history/SPRINT_3_6_SUMMARY.md)
-- Focus: Generate Pydantic v2 validation rules with ftf make rule command
-- Added: ftf make rule command, to_pascal_case function, get_rule_template
+- Focus: Generate Pydantic v2 validation rules with jtc make rule command
+- Added: jtc make rule command, to_pascal_case function, get_rule_template
 - Features: Pydantic AfterValidator pattern, i18n integration, stateful validators
 
 **Sprint 3.5 - i18n System & CLI Extensibility**

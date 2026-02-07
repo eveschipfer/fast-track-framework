@@ -26,14 +26,14 @@ app.container._singletons[async_sessionmaker] = session_factory
 **The Solution:**
 ```python
 # After Sprint 5.7: Clean main.py - zero database code!
-from ftf.http import FastTrackFramework
+from jtc.http import FastTrackFramework
 
 app = FastTrackFramework()  # DatabaseServiceProvider auto-loads from config!
 ```
 
 ## 📦 What Was Delivered
 
-### 1. DatabaseServiceProvider (framework/ftf/providers/database.py)
+### 1. DatabaseServiceProvider (framework/jtc/providers/database.py)
 **Status**: ✅ Complete (255 lines)
 
 A service provider that reads database configuration and automatically sets up:
@@ -120,7 +120,7 @@ config = {
     # ... app settings
     "providers": [
         # Database auto-configuration (Sprint 5.7)
-        "ftf.providers.database.DatabaseServiceProvider",
+        "jtc.providers.database.DatabaseServiceProvider",
         # Application providers
         "app.providers.app_service_provider.AppServiceProvider",
         "app.providers.route_service_provider.RouteServiceProvider",
@@ -132,7 +132,7 @@ config = {
 **Status**: ✅ Complete
 
 Updated `FastTrackFramework._register_configured_providers()` to support both:
-- **String paths**: `"ftf.providers.database.DatabaseServiceProvider"` (cleaner, new in 5.7)
+- **String paths**: `"jtc.providers.database.DatabaseServiceProvider"` (cleaner, new in 5.7)
 - **Direct class references**: `DatabaseServiceProvider` (backward compatibility)
 
 **Implementation:**
@@ -147,8 +147,8 @@ def _register_configured_providers(self) -> None:
         self.register_provider(provider_class)
 
 def _import_provider_class(self, provider_path: str) -> type[ServiceProvider]:
-    # "ftf.providers.database.DatabaseServiceProvider"
-    # → module: "ftf.providers.database", class: "DatabaseServiceProvider"
+    # "jtc.providers.database.DatabaseServiceProvider"
+    # → module: "jtc.providers.database", class: "DatabaseServiceProvider"
     module_path, class_name = provider_path.rsplit(".", 1)
     module = importlib.import_module(module_path)
     return getattr(module, class_name)
@@ -166,7 +166,7 @@ The main.py was already clean from Sprint 5.3 - no manual database setup needed!
 
 **Current main.py (zero database boilerplate):**
 ```python
-from ftf.http import FastTrackFramework
+from jtc.http import FastTrackFramework
 from app.models import Comment, Post, Role, User  # noqa: F401
 
 def create_app() -> FastTrackFramework:
@@ -181,7 +181,7 @@ app = create_app()
 **What happens automatically:**
 1. FastTrackFramework() calls `_register_configured_providers()`
 2. Loads `config("app.providers")` from `workbench/config/app.py`
-3. Finds `"ftf.providers.database.DatabaseServiceProvider"` string
+3. Finds `"jtc.providers.database.DatabaseServiceProvider"` string
 4. Dynamically imports the class using `importlib`
 5. Calls `DatabaseServiceProvider.register(container)`
 6. Reads `config/database.py` and creates AsyncEngine, async_sessionmaker
@@ -298,7 +298,7 @@ $ docker exec fast_track_dev bash -c "cd larafast && poetry run pytest workbench
 =============== 536 passed, 19 skipped, 7973 warnings in 43.67s ================
 
 Coverage:
-- framework/ftf/providers/database.py: 68.25% (20 of 63 lines covered)
+- framework/jtc/providers/database.py: 68.25% (20 of 63 lines covered)
 - Overall coverage: 60.05%
 ```
 
@@ -306,7 +306,7 @@ Coverage:
 Created `test_startup.py` to validate integration:
 ```python
 from workbench.main import create_app
-from ftf.config import config
+from jtc.config import config
 
 app = create_app()
 
@@ -341,7 +341,7 @@ print("✅ SUCCESS: DatabaseServiceProvider properly integrated!")
 **Benefit**: Reduces cognitive load - users don't need to know SQLAlchemy internals.
 
 ### 2. String-Based Provider Paths
-**Insight**: Using string paths for providers (e.g., `"ftf.providers.database.DatabaseServiceProvider"`) is cleaner than importing classes into config files.
+**Insight**: Using string paths for providers (e.g., `"jtc.providers.database.DatabaseServiceProvider"`) is cleaner than importing classes into config files.
 
 **Trade-off**:
 - ✅ Pro: Cleaner config files (no imports)
@@ -379,7 +379,7 @@ if hasattr(module, "config"):
 **Solution**: Put DatabaseServiceProvider first in providers list:
 ```python
 "providers": [
-    "ftf.providers.database.DatabaseServiceProvider",  # FIRST!
+    "jtc.providers.database.DatabaseServiceProvider",  # FIRST!
     "app.providers.app_service_provider.AppServiceProvider",
     "app.providers.route_service_provider.RouteServiceProvider",
 ]
@@ -455,7 +455,7 @@ DB_DATABASE=workbench/database/app.db
 
 ```python
 # main.py - That's it! No database code needed!
-from ftf.http import FastTrackFramework
+from jtc.http import FastTrackFramework
 
 app = FastTrackFramework()
 ```
@@ -477,7 +477,7 @@ DB_ECHO=false
 
 ```python
 # main.py - Same code, different config!
-from ftf.http import FastTrackFramework
+from jtc.http import FastTrackFramework
 
 app = FastTrackFramework()
 ```
@@ -486,7 +486,7 @@ app = FastTrackFramework()
 ```python
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from ftf.http import Inject
+from jtc.http import Inject
 from app.models import User
 from fast_query import BaseRepository
 
@@ -515,13 +515,13 @@ async def get_user(
 ## 📁 Files Modified/Created
 
 ### Created
-- ✅ `framework/ftf/providers/database.py` (255 lines)
+- ✅ `framework/jtc/providers/database.py` (255 lines)
 - ✅ `docs/history/SPRINT_5_7_SUMMARY.md` (this file)
 
 ### Modified
 - ✅ `workbench/config/database.py` - Changed from `get_config()` function to `config` variable
 - ✅ `workbench/config/app.py` - Added DatabaseServiceProvider to providers list, changed to `config` variable
-- ✅ `framework/ftf/http/app.py` - Added string-based provider loading support
+- ✅ `framework/jtc/http/app.py` - Added string-based provider loading support
 - ✅ `workbench/main.py` - No changes needed (already clean from Sprint 5.3!)
 
 ## 🎯 Success Criteria
@@ -586,11 +586,11 @@ async def get_users(
 ### 4. Database Driver Installation Helper
 **Proposal**: CLI command to install database drivers
 ```bash
-$ ftf db:install-driver mysql
+$ jtc db:install-driver mysql
 Installing aiomysql...
 ✓ MySQL driver installed successfully!
 
-$ ftf db:install-driver postgresql
+$ jtc db:install-driver postgresql
 Installing asyncpg...
 ✓ PostgreSQL driver installed successfully!
 ```

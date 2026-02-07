@@ -21,8 +21,8 @@ Usage:
     uvicorn workbench.main:app --reload
 """
 
-from ftf.config import config
-from ftf.http import FastTrackFramework
+from jtc.config import config
+from jtc.http import FastTrackFramework
 
 # Import app models (registers them with SQLAlchemy)
 from app.models import Comment, Post, Role, User  # noqa: F401

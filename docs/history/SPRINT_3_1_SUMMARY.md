@@ -19,13 +19,13 @@ Implement a robust, async Event System integrated with the IoC Container and CLI
 
 ### 1. Event System Core
 
-**Components** (`src/ftf/events/core.py`):
+**Components** (`src/jtc/events/core.py`):
 
 #### Event Base Class
 Simple base class for all events (DTO pattern):
 ```python
 from dataclasses import dataclass
-from ftf.events import Event
+from jtc.events import Event
 
 @dataclass
 class UserRegistered(Event):
@@ -76,9 +76,9 @@ await dispatcher.dispatch(UserRegistered(user_id=1, email="user@test.com"))
 
 ### 2. Helper Function
 
-**Convenience API** (`src/ftf/events/__init__.py`):
+**Convenience API** (`src/jtc/events/__init__.py`):
 ```python
-from ftf.events import dispatch
+from jtc.events import dispatch
 
 # Simple API - no need to resolve dispatcher manually
 await dispatch(UserRegistered(user_id=1, email="user@test.com"))
@@ -93,17 +93,17 @@ await dispatch(UserRegistered(user_id=1, email="user@test.com"))
 
 **Two New Commands:**
 
-#### `ftf make event`
+#### `jtc make event`
 Generates Event DTO with dataclass template:
 ```bash
-$ ftf make event UserRegistered
-✓ Event created: src/ftf/events/user_registered.py
+$ jtc make event UserRegistered
+✓ Event created: src/jtc/events/user_registered.py
 ```
 
 **Generated Code:**
 ```python
 from dataclasses import dataclass
-from ftf.events import Event
+from jtc.events import Event
 
 @dataclass
 class UserRegistered(Event):
@@ -114,18 +114,18 @@ class UserRegistered(Event):
     pass
 ```
 
-#### `ftf make listener`
+#### `jtc make listener`
 Generates Listener with type-safe template:
 ```bash
-$ ftf make listener SendWelcomeEmail --event UserRegistered
-✓ Listener created: src/ftf/listeners/send_welcome_email.py
+$ jtc make listener SendWelcomeEmail --event UserRegistered
+✓ Listener created: src/jtc/listeners/send_welcome_email.py
 Remember to register this listener for UserRegistered!
 ```
 
 **Generated Code:**
 ```python
-from ftf.events import Listener
-from ftf.events.user_registered import UserRegistered
+from jtc.events import Listener
+from jtc.events.user_registered import UserRegistered
 
 class SendWelcomeEmail(Listener[UserRegistered]):
     def __init__(self) -> None:
@@ -308,8 +308,8 @@ $ poetry run pytest tests/unit/test_events.py -v
 ======================== 13 passed in 1.24s =========================
 
 Coverage:
-- src/ftf/events/core.py:    100%
-- src/ftf/events/__init__.py: 100%
+- src/jtc/events/core.py:    100%
+- src/jtc/events/__init__.py: 100%
 ```
 
 ### Key Test Scenarios
@@ -348,7 +348,7 @@ assert log_activity.executed is True
 ```python
 # Step 1: Define Event
 from dataclasses import dataclass
-from ftf.events import Event
+from jtc.events import Event
 
 @dataclass
 class UserRegistered(Event):
@@ -357,7 +357,7 @@ class UserRegistered(Event):
     name: str
 
 # Step 2: Define Listeners
-from ftf.events import Listener
+from jtc.events import Listener
 
 class SendWelcomeEmail(Listener[UserRegistered]):
     def __init__(self, mailer: MailService):
@@ -378,14 +378,14 @@ class LogUserActivity(Listener[UserRegistered]):
         await self.logger.log(f"User {event.user_id} registered")
 
 # Step 3: Register (in app startup)
-from ftf.events import EventDispatcher
+from jtc.events import EventDispatcher
 
 dispatcher = app.container.resolve(EventDispatcher)
 dispatcher.register(UserRegistered, SendWelcomeEmail)
 dispatcher.register(UserRegistered, LogUserActivity)
 
 # Step 4: Dispatch (in controller)
-from ftf.events import dispatch
+from jtc.events import dispatch
 
 @app.post("/users")
 async def create_user(data: CreateUserRequest):
@@ -405,11 +405,11 @@ async def create_user(data: CreateUserRequest):
 
 ```bash
 # Generate event
-$ ftf make event OrderPlaced
-✓ Event created: src/ftf/events/order_placed.py
+$ jtc make event OrderPlaced
+✓ Event created: src/jtc/events/order_placed.py
 
 # Edit event to add fields
-# src/ftf/events/order_placed.py
+# src/jtc/events/order_placed.py
 @dataclass
 class OrderPlaced(Event):
     order_id: int
@@ -418,8 +418,8 @@ class OrderPlaced(Event):
     items: list[dict]
 
 # Generate listener
-$ ftf make listener SendOrderConfirmation --event OrderPlaced
-✓ Listener created: src/ftf/listeners/send_order_confirmation.py
+$ jtc make listener SendOrderConfirmation --event OrderPlaced
+✓ Listener created: src/jtc/listeners/send_order_confirmation.py
 
 # Implement listener
 class SendOrderConfirmation(Listener[OrderPlaced]):
@@ -452,7 +452,7 @@ await dispatch(OrderPlaced(order_id=123, user_id=1, total=99.99, items=[]))
 # Test that controller dispatches event
 async def test_create_user_dispatches_event(mocker):
     # Mock the dispatch function
-    mock_dispatch = mocker.patch('ftf.events.dispatch')
+    mock_dispatch = mocker.patch('jtc.events.dispatch')
 
     # Call controller
     response = await create_user(data)
@@ -502,7 +502,7 @@ async def test_send_welcome_email_listener():
 ### Files Created
 
 ```
-src/ftf/events/
+src/jtc/events/
 ├── __init__.py          # Public API + dispatch() helper
 ├── core.py              # Event, Listener, EventDispatcher
 
@@ -510,8 +510,8 @@ tests/unit/
 └── test_events.py       # 13 comprehensive tests
 
 Updated:
-├── src/ftf/cli/templates.py     # +2 templates (event, listener)
-├── src/ftf/cli/commands/make.py # +2 commands (event, listener)
+├── src/jtc/cli/templates.py     # +2 templates (event, listener)
+├── src/jtc/cli/commands/make.py # +2 commands (event, listener)
 ```
 
 ### Performance
@@ -755,8 +755,8 @@ async def dispatch(event: Event) -> None:
 - [x] Concurrent execution with asyncio.gather
 - [x] Fail-safe processing (return_exceptions=True)
 - [x] Helper function `dispatch(event)`
-- [x] CLI command: `ftf make event`
-- [x] CLI command: `ftf make listener`
+- [x] CLI command: `jtc make event`
+- [x] CLI command: `jtc make listener`
 - [x] 13 comprehensive tests (100% passing)
 - [x] 100% coverage on events module
 - [x] Documentation complete

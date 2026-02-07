@@ -14,7 +14,7 @@ Implement Laravel Eloquent-inspired query builder with fluent interface and comp
 
 ### Phase 1: Query Builder Foundation ✅
 
-**File**: `src/ftf/database/query_builder.py` (~550 lines)
+**File**: `src/jtc/database/query_builder.py` (~550 lines)
 
 Implemented fluent query builder with:
 
@@ -61,25 +61,25 @@ Implemented fluent query builder with:
 
 **New Models Created**:
 
-1. **`src/ftf/models/post.py`** (~110 lines)
+1. **`src/jtc/models/post.py`** (~110 lines)
    - One-to-many: `Post.author` (belongs to User)
    - One-to-many: `Post.comments` (has many Comment)
    - Cascade delete on comments
    - lazy="raise" for async safety
 
-2. **`src/ftf/models/comment.py`** (~100 lines)
+2. **`src/jtc/models/comment.py`** (~100 lines)
    - Many-to-one: `Comment.post` (belongs to Post)
    - Many-to-one: `Comment.author` (belongs to User)
    - Demonstrates nested relationships
    - lazy="raise" enforced
 
-3. **`src/ftf/models/role.py`** (~100 lines)
+3. **`src/jtc/models/role.py`** (~100 lines)
    - Many-to-many: `Role.users` (belongs to many Users)
    - Association table: `user_roles` (pivot table)
    - Unique role names
    - lazy="raise" for consistency
 
-4. **Updated `src/ftf/models/user.py`**
+4. **Updated `src/jtc/models/user.py`**
    - HasMany: `User.posts` (one-to-many with Post)
    - HasMany: `User.comments` (one-to-many with Comment)
    - BelongsToMany: `User.roles` (many-to-many with Role)
@@ -278,7 +278,7 @@ print(post.author.name)  # OK! Author loaded
 - Avoids global state anti-pattern
 - Educational value: shows trade-offs between DX and correctness
 
-**See**: `src/ftf/exercises/sprint_1_2_active_record_trap.py` for detailed explanation
+**See**: `src/jtc/exercises/sprint_1_2_active_record_trap.py` for detailed explanation
 
 ---
 
@@ -549,10 +549,10 @@ Sprint 2.3 is fully backward compatible:
    - `withTrashed()`, `onlyTrashed()` query methods
 
 4. **Artisan-like CLI** (Sprint 3.1)
-   - Model generator: `ftf make:model Post`
-   - Repository generator: `ftf make:repository PostRepository`
-   - Migration generator: `ftf make:migration AddPostsTable`
-   - Seeder generator: `ftf make:seeder UsersSeeder`
+   - Model generator: `jtc make:model Post`
+   - Repository generator: `jtc make:repository PostRepository`
+   - Migration generator: `jtc make:migration AddPostsTable`
+   - Seeder generator: `jtc make:seeder UsersSeeder`
 
 ---
 

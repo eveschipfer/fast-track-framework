@@ -26,7 +26,7 @@ Sprint 15.0: Serverless Connection Handling
         - Non-Serverless: QueuePool (standard pooling with pool_size/max_overflow)
 
 Usage:
-    from ftf.config import config
+    from jtc.config import config
 
     # Get default connection
     default = config("database.default")  # "sqlite"

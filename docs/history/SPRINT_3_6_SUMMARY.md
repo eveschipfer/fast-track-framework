@@ -1,19 +1,19 @@
 # Sprint 3.6 Summary - Custom Validation Rules CLI
 
 **Sprint Duration**: January 31, 2026
-**Sprint Goal**: Implement `ftf make rule` command for generating custom Pydantic validation rules
+**Sprint Goal**: Implement `jtc make rule` command for generating custom Pydantic validation rules
 **Status**: ✅ Complete
 
 ---
 
 ## 📋 Overview
 
-Sprint 3.6 extends the Fast Track Framework CLI tooling with the `ftf make rule` command, allowing developers to generate custom validation rules following the Pydantic v2 pattern. This is similar to Laravel's `php artisan make:rule` but adapted for Python's Pydantic validation ecosystem.
+Sprint 3.6 extends the Fast Track Framework CLI tooling with the `jtc make rule` command, allowing developers to generate custom validation rules following the Pydantic v2 pattern. This is similar to Laravel's `php artisan make:rule` but adapted for Python's Pydantic validation ecosystem.
 
 ### Objectives
 
-1. ✅ Add `get_rule_template()` to `src/ftf/cli/templates.py`
-2. ✅ Implement `ftf make rule <name>` command in `src/ftf/cli/commands/make.py`
+1. ✅ Add `get_rule_template()` to `src/jtc/cli/templates.py`
+2. ✅ Implement `jtc make rule <name>` command in `src/jtc/cli/commands/make.py`
 3. ✅ Support both PascalCase and snake_case input
 4. ✅ Generate validation rules in `src/rules/` directory
 5. ✅ Integrate ftf.i18n for multi-language error messages
@@ -25,7 +25,7 @@ Sprint 3.6 extends the Fast Track Framework CLI tooling with the `ftf make rule`
 
 ### 1. Custom Validation Rule Template
 
-**File**: `src/ftf/cli/templates.py`
+**File**: `src/jtc/cli/templates.py`
 
 Created `get_rule_template(class_name: str)` that generates:
 
@@ -44,7 +44,7 @@ Created `get_rule_template(class_name: str)` that generates:
 
 ### 2. CLI Command Implementation
 
-**File**: `src/ftf/cli/commands/make.py`
+**File**: `src/jtc/cli/commands/make.py`
 
 Added three new functions:
 
@@ -79,7 +79,7 @@ src/
 ### 1. Generate a Validation Rule
 
 ```bash
-$ ftf make rule CpfIsValid
+$ jtc make rule CpfIsValid
 ✓ Validation Rule created: src/rules/cpf_is_valid.py
 
 💡 Usage Example:
@@ -102,7 +102,7 @@ CpfIsValid Validation Rule.
 """
 
 from typing import Any
-from ftf.i18n import trans
+from jtc.i18n import trans
 
 
 class CpfIsValid:
@@ -149,7 +149,7 @@ class CpfIsValid:
 ```python
 # src/rules/cpf_is_valid.py
 from typing import Any
-from ftf.i18n import trans
+from jtc.i18n import trans
 
 
 class CpfIsValid:
@@ -213,7 +213,7 @@ except ValueError as e:
 **Multi-language validation**:
 
 ```python
-from ftf.i18n import set_locale
+from jtc.i18n import set_locale
 
 # Portuguese validation message
 set_locale("pt_BR")
@@ -245,14 +245,14 @@ user = UserRegistration(name="John", cpf="invalid")
 
 | Laravel (PHP) | Fast Track (Python) |
 |---------------|---------------------|
-| `php artisan make:rule Uppercase` | `ftf make rule Uppercase` |
+| `php artisan make:rule Uppercase` | `jtc make rule Uppercase` |
 | `Rule` interface with `passes()` | Callable class with `__call__()` |
 | Returns boolean | Raises `ValueError` on failure |
 | Uses `message()` for errors | Uses `trans()` for i18n errors |
 
 ### 2. Directory Structure (`src/rules/`)
 
-**Decision**: Store validation rules in `src/rules/` instead of `src/ftf/validation/rules/`.
+**Decision**: Store validation rules in `src/rules/` instead of `src/jtc/validation/rules/`.
 
 **Rationale**:
 - ✅ **User-owned**: Rules are application-specific, not framework code
@@ -276,13 +276,13 @@ user = UserRegistration(name="John", cpf="invalid")
 
 ### Modified Files
 
-1. **`src/ftf/cli/templates.py`** (+96 lines)
+1. **`src/jtc/cli/templates.py`** (+96 lines)
    - Added `get_rule_template(class_name: str)` function
    - Generates validation rule class with `__call__` method
    - Includes ftf.i18n integration
    - Comprehensive docstrings and examples
 
-2. **`src/ftf/cli/commands/make.py`** (+85 lines)
+2. **`src/jtc/cli/commands/make.py`** (+85 lines)
    - Added `to_pascal_case(name: str)` function
    - Added `make_rule(name: str, force: bool)` command
    - Updated imports to include `get_rule_template`
@@ -306,29 +306,29 @@ user = UserRegistration(name="John", cpf="invalid")
 
 ```bash
 # Test 1: PascalCase input
-$ ftf make rule CpfIsValid
+$ jtc make rule CpfIsValid
 ✓ Validation Rule created: src/rules/cpf_is_valid.py
 # Class name: CpfIsValid ✅
 
 # Test 2: snake_case input
-$ ftf make rule min_age
+$ jtc make rule min_age
 ✓ Validation Rule created: src/rules/min_age.py
 # Class name: MinAge ✅
 
 # Test 3: Force overwrite
-$ ftf make rule CpfIsValid --force
+$ jtc make rule CpfIsValid --force
 ✓ Validation Rule created: src/rules/cpf_is_valid.py
 # Overwrites existing file ✅
 
 # Test 4: Duplicate detection
-$ ftf make rule CpfIsValid
+$ jtc make rule CpfIsValid
 ❌ Rule already exists: src/rules/cpf_is_valid.py
 Use --force to overwrite
 # Correctly prevents overwrite ✅
 
 # Test 5: Directory creation
 $ rm -rf src/rules
-$ ftf make rule TestRule
+$ jtc make rule TestRule
 ✓ Validation Rule created: src/rules/test_rule.py
 # Creates directory + __init__.py ✅
 ```
@@ -464,7 +464,7 @@ https://docs.pydantic.dev/latest/concepts/validators/#annotated-validators
 
 | Feature | Laravel | Fast Track Framework |
 |---------|---------|---------------------|
-| **Command** | `php artisan make:rule Uppercase` | `ftf make rule Uppercase` |
+| **Command** | `php artisan make:rule Uppercase` | `jtc make rule Uppercase` |
 | **Pattern** | Implements `Rule` interface | Callable class with `__call__()` |
 | **Validation** | `passes()` returns bool | `__call__()` raises ValueError |
 | **Error Messages** | `message()` method | `trans()` for i18n support |
@@ -524,7 +524,7 @@ class MyModel(BaseModel):
 ## 📈 Sprint Metrics
 
 ```
-Command:       ftf make rule
+Command:       jtc make rule
 Files Modified: 2
 Lines Added:   +181
 New Functions: 2 (to_pascal_case, make_rule)
@@ -536,11 +536,11 @@ Test Cases:    5 manual tests (all passing)
 
 ```bash
 # Cold start (first rule)
-$ time ftf make rule CpfIsValid
+$ time jtc make rule CpfIsValid
 real    0m0.234s  # Instant
 
 # Directory already exists
-$ time ftf make rule MinAge
+$ time jtc make rule MinAge
 real    0m0.198s  # Even faster
 ```
 
@@ -553,7 +553,7 @@ real    0m0.198s  # Even faster
 **Idea**: Provide common validation rules out of the box.
 
 ```bash
-$ ftf make rule CpfValidator --preset=cpf
+$ jtc make rule CpfValidator --preset=cpf
 ✓ Using preset: Brazilian CPF validation
 ✓ Validation Rule created: src/rules/cpf_validator.py
 # Full CPF validation logic included
@@ -571,7 +571,7 @@ $ ftf make rule CpfValidator --preset=cpf
 **Idea**: Generate test files automatically.
 
 ```bash
-$ ftf make rule CpfValidator --with-tests
+$ jtc make rule CpfValidator --with-tests
 ✓ Validation Rule created: src/rules/cpf_validator.py
 ✓ Test file created: tests/rules/test_cpf_validator.py
 ```
@@ -600,7 +600,7 @@ def test_cpf_validator_rejects_invalid_cpf():
 **Idea**: Interactive prompt for complex rules.
 
 ```bash
-$ ftf make rule --interactive
+$ jtc make rule --interactive
 ? Rule name: MinAge
 ? Validation type: (Use arrow keys)
   ❯ Numeric range
@@ -618,7 +618,7 @@ $ ftf make rule --interactive
 
 ```python
 # Generate composite rule
-$ ftf make rule EmailWithDomain --compose="email,domain"
+$ jtc make rule EmailWithDomain --compose="email,domain"
 
 # Generated code
 class EmailWithDomain:
@@ -639,7 +639,7 @@ class EmailWithDomain:
 
 ## 🎯 Sprint Success Criteria
 
-- ✅ **Command Implementation**: `ftf make rule` command works correctly
+- ✅ **Command Implementation**: `jtc make rule` command works correctly
 - ✅ **Template Generation**: Generates valid Python code with type hints
 - ✅ **Naming Conversion**: Handles both PascalCase and snake_case inputs
 - ✅ **Directory Management**: Creates `src/rules/` and `__init__.py` automatically
@@ -655,7 +655,7 @@ class EmailWithDomain:
 
 ### 1. Typer 0.15.3 Help Bug
 
-**Issue**: `ftf make rule --help` raises TypeError.
+**Issue**: `jtc make rule --help` raises TypeError.
 
 **Error**:
 ```
@@ -664,7 +664,7 @@ TypeError: TyperArgument.make_metavar() takes 1 positional argument but 2 were g
 
 **Impact**: ⚠️ Cosmetic only - command works perfectly for actual usage
 
-**Workaround**: Use `ftf make --help` to see all make commands
+**Workaround**: Use `jtc make --help` to see all make commands
 
 **Status**: Known Typer bug, does not affect functionality
 
@@ -738,7 +738,7 @@ class Uppercase:
 **Next Sprint**: TBD (Sprint 3.7 - Awaiting user direction)
 
 **Sprint 3.6 delivered**:
-- ✅ New CLI command: `ftf make rule`
+- ✅ New CLI command: `jtc make rule`
 - ✅ Pydantic v2 validation pattern
 - ✅ i18n integration
 - ✅ Comprehensive documentation

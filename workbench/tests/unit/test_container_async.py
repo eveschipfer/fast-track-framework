@@ -28,7 +28,7 @@ import asyncio
 import pytest
 from typing import Any
 
-from ftf.core import (
+from jtc.core import (
     Container,
     get_scoped_cache,
     set_scoped_cache,

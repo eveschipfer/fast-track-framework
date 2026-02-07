@@ -157,7 +157,7 @@ These are deep error paths that would require intentionally broken code to trigg
 
 **ContextVar is Async-Safe**:
 ```python
-# src/ftf/core/container.py:60-66
+# src/jtc/core/container.py:60-66
 _scoped_instances: ContextVar[dict[type, Any]] = ContextVar(
     "scoped_instances", default={}
 )
@@ -171,7 +171,7 @@ Unlike `threading.local`:
 
 **Python's GIL Prevents Classic Race Conditions**:
 ```python
-# src/ftf/core/container.py:203-206
+# src/jtc/core/container.py:203-206
 if scope == "scoped":
     scoped_cache = get_scoped_cache()
     if target in scoped_cache:  # ← Atomic check

@@ -43,7 +43,7 @@ config = {
 }
 
 # Usage - no type safety
-from ftf.config import config
+from jtc.config import config
 name = config("app.name")  # Returns "Fast Track Framework"
 ```
 
@@ -68,7 +68,7 @@ from workbench.config.settings import settings
 name = settings.app.name  # IDE autocomplete, type-checked
 
 # Legacy syntax still works!
-from ftf.config import config
+from jtc.config import config
 name = config("app.name")  # Duck typing makes this work
 ```
 
@@ -271,7 +271,7 @@ settings = AppSettings()
    settings.app["name"]  # Works like a dict!
    ```
 
-#### 2. Updated `framework/ftf/config/repository.py` (280 lines)
+#### 2. Updated `framework/jtc/config/repository.py` (280 lines)
 
 **Refactored ConfigRepository:**
 
@@ -426,7 +426,7 @@ class AppServiceProvider:
 ```python
 # Type-safe dependency injection
 from workbench.config.settings import AppSettings
-from ftf.http import Inject
+from jtc.http import Inject
 
 class MyService:
     def __init__(self, settings: AppSettings):
@@ -440,7 +440,7 @@ async def my_route(settings: AppSettings = Inject(AppSettings)):
     return {"name": settings.app.name}
 ```
 
-#### 4. Updated `framework/ftf/http/app.py` (-70 lines)
+#### 4. Updated `framework/jtc/http/app.py` (-70 lines)
 
 **Removed Obsolete Methods:**
 
@@ -535,7 +535,7 @@ class BaseModelConfig(BaseModel):
 **Usage**:
 ```python
 # Legacy syntax (still works!)
-from ftf.config import config
+from jtc.config import config
 name = config("app.name")  # Internally: settings.app["name"]
 
 # Modern syntax (recommended)
@@ -617,7 +617,7 @@ class ConfigRepository:
 
 **Usage (Testing)**:
 ```python
-from ftf.config import get_config_repository
+from jtc.config import get_config_repository
 
 def test_with_debug_mode():
     repo = get_config_repository()
@@ -654,7 +654,7 @@ class AppServiceProvider:
 **Usage**:
 ```python
 from workbench.config.settings import AppSettings
-from ftf.http import Inject
+from jtc.http import Inject
 
 class MyService:
     def __init__(self, settings: AppSettings):
@@ -677,9 +677,9 @@ class MyService:
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/config/repository.py` | -70 lines | Pydantic backend, functools.reduce, overrides |
+| `framework/jtc/config/repository.py` | -70 lines | Pydantic backend, functools.reduce, overrides |
 | `workbench/app/providers/app_service_provider.py` | +20 lines | Register AppSettings in Container |
-| `framework/ftf/http/app.py` | -70 lines | Remove obsolete config loading methods |
+| `framework/jtc/http/app.py` | -70 lines | Remove obsolete config loading methods |
 | `pyproject.toml` | +2 lines | Add pydantic dependencies |
 
 ### Documentation (1 file)
@@ -713,7 +713,7 @@ sqlite_path = settings.database.connections.sqlite.database
 ### Legacy Dot Notation (Backward Compatible)
 
 ```python
-from ftf.config import config
+from jtc.config import config
 
 # All existing code continues to work
 app_name = config("app.name")  # Works!
@@ -727,7 +727,7 @@ db_host = config("database.connections.mysql.host", "localhost")  # With default
 
 ```python
 from workbench.config.settings import AppSettings
-from ftf.http import FastTrackFramework, Inject
+from jtc.http import FastTrackFramework, Inject
 
 class MyService:
     def __init__(self, settings: AppSettings):
@@ -773,7 +773,7 @@ DB_ECHO=false
 ### Runtime Overrides (Testing)
 
 ```python
-from ftf.config import get_config_repository
+from jtc.config import get_config_repository
 
 def test_with_custom_config():
     repo = get_config_repository()
@@ -817,8 +817,8 @@ collected ... 555 items
 - `workbench/config/settings.py`: **100%** new (comprehensive config classes)
 
 **Updated Modules**:
-- `framework/ftf/config/repository.py`: **64.29%** coverage ✅
-- `framework/ftf/http/app.py`: **85.19%** coverage (maintained) ✅
+- `framework/jtc/config/repository.py`: **64.29%** coverage ✅
+- `framework/jtc/http/app.py`: **85.19%** coverage (maintained) ✅
 - `workbench/app/providers/app_service_provider.py`: **100%** coverage ✅
 
 **Overall**:
@@ -834,7 +834,7 @@ docker exec fast_track_dev bash -c "cd larafast && poetry run python -c 'from wo
 # Output: Fast Track Framework
 
 # Test legacy syntax
-docker exec fast_track_dev bash -c "cd larafast && poetry run python -c 'from ftf.config import config; print(config(\"app.name\"))'"
+docker exec fast_track_dev bash -c "cd larafast && poetry run python -c 'from jtc.config import config; print(config(\"app.name\"))'"
 # Output: Fast Track Framework
 
 # Test environment variable loading
@@ -977,7 +977,7 @@ def test_something():
 # Settings not injectable via Container
 def my_service():
     # Had to use config() helper or direct import
-    from ftf.config import config
+    from jtc.config import config
     debug = config("app.debug")
 ```
 
@@ -1031,7 +1031,7 @@ class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
 # Legacy syntax (backward compatible)
-from ftf.config import config
+from jtc.config import config
 name = config("app.name")  # Works!
 
 # Modern syntax (type-safe)

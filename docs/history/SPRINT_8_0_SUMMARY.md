@@ -190,7 +190,7 @@ async def test_hybrid_repository_pattern():
     """
     Demonstrate hybrid pattern: helper methods + session access.
     """
-    from ftf.core import Container
+    from jtc.core import Container
 
     # Simular container e session
     container = Container()
@@ -515,7 +515,7 @@ async def test_hybrid_repository_simple_operations():
     Verifies that simple Repository methods (find, create, update, delete)
     work correctly.
     """
-    from ftf.core import Container
+    from jtc.core import Container
     from unittest.mock import AsyncMock
 
     # Create container and mock session
@@ -575,7 +575,7 @@ async def test_session_exposure():
     Verifies that the repository's `.session` property exposes
     SQLAlchemy 2.0's native AsyncSession.
     """
-    from ftf.core import Container
+    from jtc.core import Container
     from unittest.mock import AsyncMock, MagicMock
 
     container = Container()
@@ -615,7 +615,7 @@ async def test_query_builder_still_works():
     Verifies that QueryBuilder can be used for complex queries
     with eager loading and multiple operations.
     """
-    from ftf.core import Container
+    from jtc.core import Container
     from unittest.mock import AsyncMock, AsyncMock
 
     container = Container()

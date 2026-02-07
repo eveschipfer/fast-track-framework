@@ -36,7 +36,7 @@ Run tests:
 import pytest
 from typing import Protocol
 
-from ftf.core import Container, set_scoped_cache, clear_scoped_cache
+from jtc.core import Container, set_scoped_cache, clear_scoped_cache
 
 
 # ============================================================================

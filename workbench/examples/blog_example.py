@@ -38,14 +38,14 @@ from typing import AsyncGenerator
 from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-from ftf.database import (
+from jtc.database import (
     AsyncSessionFactory,
     Base,
     BaseRepository,
     create_engine,
     get_engine,
 )
-from ftf.http import FastTrackFramework, Inject
+from jtc.http import FastTrackFramework, Inject
 from app.models import Comment, Post, Role, User
 
 # ===========================

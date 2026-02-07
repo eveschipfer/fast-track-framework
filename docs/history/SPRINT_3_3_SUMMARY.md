@@ -18,7 +18,7 @@ Implement a comprehensive authentication system with JWT (JSON Web Tokens) for s
 Secure password hashing using bcrypt via passlib:
 
 ```python
-from ftf.auth import hash_password, verify_password, needs_rehash
+from jtc.auth import hash_password, verify_password, needs_rehash
 
 # Hash password on registration
 hashed = hash_password("user_password")
@@ -44,7 +44,7 @@ if needs_rehash(old_hash):
 Stateless token creation and verification:
 
 ```python
-from ftf.auth import create_access_token, decode_token
+from jtc.auth import create_access_token, decode_token
 from datetime import timedelta
 
 # Create token on successful login
@@ -79,7 +79,7 @@ Signature: HMAC-SHA256(header.payload, SECRET_KEY)
 FastAPI dependency for route protection:
 
 ```python
-from ftf.auth import CurrentUser
+from jtc.auth import CurrentUser
 
 @app.get("/profile")
 async def get_profile(user: CurrentUser):
@@ -127,26 +127,26 @@ async def settings(user = Depends(get_current_user)):
 Macro command that scaffolds complete authentication system:
 
 ```bash
-$ ftf make auth
+$ jtc make auth
 🔐 Generating authentication system...
 
 Creating User model...
-  ✓ User model: src/ftf/models/user.py
+  ✓ User model: src/jtc/models/user.py
 Creating UserRepository...
-  ✓ UserRepository: src/ftf/repositories/user_repository.py
+  ✓ UserRepository: src/jtc/repositories/user_repository.py
 Creating LoginRequest...
-  ✓ LoginRequest: src/ftf/http/requests/auth/login_request.py
+  ✓ LoginRequest: src/jtc/http/requests/auth/login_request.py
 Creating RegisterRequest...
-  ✓ RegisterRequest: src/ftf/http/requests/auth/register_request.py
+  ✓ RegisterRequest: src/jtc/http/requests/auth/register_request.py
 Creating AuthController...
-  ✓ AuthController: src/ftf/http/controllers/auth_controller.py
+  ✓ AuthController: src/jtc/http/controllers/auth_controller.py
 
 🎉 Authentication scaffolding complete!
 ✓ Created 5 files
 
 📋 Next Steps:
-1. Create migration: ftf make migration create_users_table
-2. Run migration: ftf db migrate
+1. Create migration: jtc make migration create_users_table
+2. Run migration: jtc db migrate
 3. Set JWT secret: export JWT_SECRET_KEY='your-secret'
 4. Register routes: app.include_router(auth_controller.router)
 ```
@@ -322,7 +322,7 @@ tests/unit/test_auth.py::test_get_current_user_raises_500_if_container_not_confi
 
 | Feature | Laravel (PHP) | FTF (Python) |
 |---------|---------------|--------------|
-| **Auth Scaffolding** | `php artisan make:auth` | `ftf make auth` ✅ |
+| **Auth Scaffolding** | `php artisan make:auth` | `jtc make auth` ✅ |
 | **Password Hashing** | bcrypt (via Hash facade) | bcrypt (via passlib) ✅ |
 | **Token Type** | Sanctum (JWT alternative) | Pure JWT ✅ |
 | **Guard Pattern** | Middleware + Guards | FastAPI Dependencies ✅ |
@@ -348,21 +348,21 @@ python-dotenv = "^1.0.0"      # Environment variable management
 ## 📝 Files Created/Modified
 
 ### Created Files
-1. `src/ftf/auth/crypto.py` (138 lines)
+1. `src/jtc/auth/crypto.py` (138 lines)
    - Password hashing functions
    - bcrypt configuration
 
-2. `src/ftf/auth/jwt.py` (248 lines)
+2. `src/jtc/auth/jwt.py` (248 lines)
    - JWT token creation
    - Token verification
    - Environment variable configuration
 
-3. `src/ftf/auth/guard.py` (215 lines)
+3. `src/jtc/auth/guard.py` (215 lines)
    - `get_current_user()` dependency
    - Bearer token extraction
    - Container integration
 
-4. `src/ftf/auth/__init__.py` (75 lines)
+4. `src/jtc/auth/__init__.py` (75 lines)
    - Public API exports
    - CurrentUser type alias
 
@@ -374,13 +374,13 @@ python-dotenv = "^1.0.0"      # Environment variable management
 1. `pyproject.toml`
    - Added pyjwt, passlib[bcrypt], python-dotenv
 
-2. `src/ftf/cli/templates.py` (+335 lines)
+2. `src/jtc/cli/templates.py` (+335 lines)
    - Auth controller template
    - Login/Register request templates
    - User model template
    - UserRepository template
 
-3. `src/ftf/cli/commands/make.py` (+84 lines)
+3. `src/jtc/cli/commands/make.py` (+84 lines)
    - `make:auth` macro command
 
 ---
@@ -494,10 +494,10 @@ We chose **Option B** because:
 
 ```python
 from fastapi import FastAPI, HTTPException
-from ftf.auth import CurrentUser, create_access_token, hash_password, verify_password
-from ftf.http.requests.auth.login_request import LoginRequest
-from ftf.http.requests.auth.register_request import RegisterRequest
-from ftf.repositories.user_repository import UserRepository
+from jtc.auth import CurrentUser, create_access_token, hash_password, verify_password
+from jtc.http.requests.auth.login_request import LoginRequest
+from jtc.http.requests.auth.register_request import RegisterRequest
+from jtc.repositories.user_repository import UserRepository
 
 app = FastAPI()
 
@@ -552,7 +552,7 @@ async def get_current_user(user: CurrentUser):
 ### Example 2: Protected Routes
 
 ```python
-from ftf.auth import CurrentUser
+from jtc.auth import CurrentUser
 
 @app.get("/settings")
 async def get_settings(user: CurrentUser):

@@ -52,7 +52,7 @@ Sprint 16.0 aims to create a CLI tool similar to Laravel's Artisan for scaffoldi
 
 **Before (Sprint 15.0):**
 ```bash
-$ ftf make --help
+$ jtc make --help
 Commands:
   model       Generate a model with TimestampMixin and SoftDeletesMixin.
   repository  Generate a repository inheriting BaseRepository.
@@ -73,7 +73,7 @@ Commands:
 
 **After (Sprint 16.0 Partial):**
 ```bash
-$ ftf make --help
+$ jtc make --help
 Commands:
   controller   Generate a Controller class. (⚠️ NEW - Not fully implemented)
   model       Generate a model with TimestampMixin and SoftDeletesMixin. (✅ Exists)
@@ -123,7 +123,7 @@ Commands:
 $ workbench/http/controllers/user_controller.py
 
 # Write boilerplate code
-from ftf.http import Controller, Get, Post
+from jtc.http import Controller, Get, Post
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User
 from app.repositories.user_repository import UserRepository
@@ -156,7 +156,7 @@ class UserController(Controller):
 $ workbench/app/providers/payment_service_provider.py
 
 # Write boilerplate code
-from ftf.core import Container, ServiceProvider
+from jtc.core import Container, ServiceProvider
 
 class PaymentServiceProvider(ServiceProvider):
     def register(self, container: Container) -> None:
@@ -228,7 +228,7 @@ $ php artisan make:provider PaymentServiceProvider
 
 ### Phase 1: ✅ make:provider (Completed)
 
-**File**: `framework/ftf/cli/templates.py` (ENHANCED)
+**File**: `framework/jtc/cli/templates.py` (ENHANCED)
 
 **Implementation:**
 ```python
@@ -244,9 +244,9 @@ def get_provider_template(name: str) -> str:
     """
     return f"""from typing import Any
 
-from ftf.core import Container, ServiceProvider
+from jtc.core import Container, ServiceProvider
 
-from ftf.http import Request
+from jtc.http import Request
 
 class {name}(ServiceProvider):
     \"\"\"
@@ -310,10 +310,10 @@ def make_provider(
         force: Overwrite if file already exists
 
     Example:
-        $ ftf make:provider PaymentServiceProvider
+        $ jtc make:provider PaymentServiceProvider
         ✓ Provider created: workbench/app/providers/payment_service_provider.py
 
-        $ ftf make:provider Analytics --force
+        $ jtc make:provider Analytics --force
         ✓ Provider created: workbench/app/providers/analytics_service_provider.py (overwritten)
     """
     # Convert to snake_case for filename
@@ -336,7 +336,7 @@ def make_provider(
 
 **Test Results:**
 ```bash
-$ ftf make:provider PaymentServiceProvider
+$ jtc make:provider PaymentServiceProvider
 ✓ Provider created: workbench/app/providers/payment_service_provider.py
 ```
 
@@ -346,7 +346,7 @@ $ ftf make:provider PaymentServiceProvider
 
 ### Phase 2: ❌ make:controller (Blocked)
 
-**File**: `framework/ftf/cli/templates.py` (ATTEMPTED)
+**File**: `framework/jtc/cli/templates.py` (ATTEMPTED)
 
 **Implementation Attempted:**
 ```python
@@ -366,11 +366,11 @@ def get_controller_template(name: str) -> str:
     # ⚠️ PROBLEM: Complex f-string with nested braces
     return f"""from typing import Any
 
-from ftf.http import Controller, Get, Post, Request
+from jtc.http import Controller, Get, Post, Request
 
-from ftf.http import Inject
+from jtc.http import Inject
 from sqlalchemy.ext.asyncio import AsyncSession
-from ftf.validation import FormRequest
+from jtc.validation import FormRequest
 from fast_query import BaseRepository
 
 if True:
@@ -435,12 +435,12 @@ f"class {{name}}(Controller):"
 
 ### Phase 3: Enhanced make.py (Partially Complete)
 
-**File**: `framework/ftf/cli/commands/make.py` (MODIFIED)
+**File**: `framework/jtc/cli/commands/make.py` (MODIFIED)
 
 **Changes:**
 ```python
 # Added to imports
-from ftf.cli.templates import (
+from jtc.cli.templates import (
     get_controller_template,  # ❌ Not fully working
     get_event_template,
     get_factory_template,
@@ -473,7 +473,7 @@ def make_provider(...) -> None:
 
 ### Phase 4: CLI Infrastructure (Already Exists)
 
-**File**: `framework/ftf/cli/main.py` (ALREADY EXISTS)
+**File**: `framework/jtc/cli/main.py` (ALREADY EXISTS)
 
 **Components:**
 - ✅ Typer application for command parsing
@@ -483,7 +483,7 @@ def make_provider(...) -> None:
 
 **Current State:**
 ```bash
-$ ftf --help
+$ jtc --help
 Fast Track Framework CLI (Sprint 9.0 - CLI Modernization & Core Integration)
 
 Commands:
@@ -566,7 +566,7 @@ Commands:
 **Rationale:**
 - ✅ **Framework Standard**: Consistent with existing codebase
 - ✅ **Laravel-Inspired**: Matches Laravel's directory structure
-- ✅ **Clear Separation**: Framework code (`framework/ftf/`) vs app code (`workbench/`)
+- ✅ **Clear Separation**: Framework code (`framework/jtc/`) vs app code (`workbench/`)
 
 **File Structure:**
 ```
@@ -613,8 +613,8 @@ def make_provider(
         force: Overwrite if file already exists
 
     Example:
-        $ ftf make:provider PaymentServiceProvider
-        $ ftf make:provider PaymentServiceProvider --force
+        $ jtc make:provider PaymentServiceProvider
+        $ jtc make:provider PaymentServiceProvider --force
     """
     file_path = Path("workbench/app/providers") / f"{filename}.py"
 
@@ -641,22 +641,22 @@ def make_provider(
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `framework/ftf/providers/database_service_provider.py` | 352 | Database Service Provider (Sprint 15.0) |
+| `framework/jtc/providers/database_service_provider.py` | 352 | Database Service Provider (Sprint 15.0) |
 
 ### Modified Files (3 files)
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/cli/templates.py` | +95 lines | Added `get_provider_template()` function |
-| `framework/ftf/cli/commands/make.py` | +50 lines | Added `make:provider` command and imports |
+| `framework/jtc/cli/templates.py` | +95 lines | Added `get_provider_template()` function |
+| `framework/jtc/cli/commands/make.py` | +50 lines | Added `make:provider` command and imports |
 | `workbench/config/app.py` | +2 lines | Updated provider reference |
 
 ### Attempted Files (1 file - Blocked)
 
 | File | Status | Purpose |
 |------|-------|---------|
-| `framework/ftf/cli/templates.py` | ❌ BLOCKED | `get_controller_template()` added but f-string escaping issues |
-| `framework/ftf/cli/commands/make.py` | ❌ BLOCKED | `make:controller` command added but not functional |
+| `framework/jtc/cli/templates.py` | ❌ BLOCKED | `get_controller_template()` added but f-string escaping issues |
+| `framework/jtc/cli/commands/make.py` | ❌ BLOCKED | `make:controller` command added but not functional |
 
 ### Documentation (1 file)
 
@@ -674,7 +674,7 @@ def make_provider(
 
 **Generate a new Service Provider:**
 ```bash
-$ ftf make:provider PaymentServiceProvider
+$ jtc make:provider PaymentServiceProvider
 ✓ Provider created: workbench/app/providers/payment_service_provider.py
 ```
 
@@ -683,9 +683,9 @@ $ ftf make:provider PaymentServiceProvider
 # workbench/app/providers/payment_service_provider.py
 from typing import Any
 
-from ftf.core import Container, ServiceProvider
+from jtc.core import Container, ServiceProvider
 
-from ftf.http import Request
+from jtc.http import Request
 
 class PaymentServiceProvider(ServiceProvider):
     """
@@ -738,7 +738,7 @@ class PaymentServiceProvider(ServiceProvider):
 # workbench/config/app.py
 config = {
     "providers": [
-        "ftf.providers.database_service_provider.DatabaseServiceProvider",
+        "jtc.providers.database_service_provider.DatabaseServiceProvider",
         "workbench.app.providers.payment_service_provider.PaymentServiceProvider",  # ✅ NEW
         # ... other providers
     ],
@@ -751,13 +751,13 @@ config = {
 
 **Generate a new Controller (BLOCKED):**
 ```bash
-$ ftf make:controller UserController
+$ jtc make:controller UserController
 # ❌ SyntaxError: f-string: unmatched '{' in f-string
 ```
 
 **Error:**
 ```
-E   File "/app/larafast/framework/ftf/cli/templates.py", line 1729
+E   File "/app/larafast/framework/jtc/cli/templates.py", line 1729
 E       repo: {{model_name.lower()}}Repository = Inject({{model_name.lower()}Repository)
       ^
 SyntaxError: f-string: unmatched '{' in f-string
@@ -770,11 +770,11 @@ SyntaxError: f-string: unmatched '{' in f-string
 # workbench/http/controllers/user_controller.py
 from typing import Any
 
-from ftf.http import Controller, Get, Post, Request
+from jtc.http import Controller, Get, Post, Request
 
-from ftf.http import Inject
+from jtc.http import Inject
 from sqlalchemy.ext.asyncio import AsyncSession
-from ftf.validation import FormRequest
+from jtc.validation import FormRequest
 from fast_query import BaseRepository
 
 if True:
@@ -865,7 +865,7 @@ class UserController(Controller):
 
 **Generate a new Model:**
 ```bash
-$ ftf make:model Product
+$ jtc make:model Product
 ✓ Model created: workbench/app/models/product.py
 ```
 
@@ -919,7 +919,7 @@ _______________ coverage: platform linux, python 3.13.11-final-0 _______________
 
 Name                                                   Stmts   Miss   Cover   Missing
 -------------------------------------------------------------------------------------
-framework/ftf/providers/database_service_provider.py      84     84   0.00%   76-365
+framework/jtc/providers/database_service_provider.py      84     84   0.00%   76-365
 -------------------------------------------------------------------------------------
 TOTAL                                                   3365   1916  43.06%
 Coverage HTML written to dir htmlcov
@@ -959,7 +959,7 @@ Coverage HTML written to dir htmlcov
 
 **Test 1: Generate Provider**
 ```bash
-$ ftf make:provider PaymentServiceProvider
+$ jtc make:provider PaymentServiceProvider
 ✓ Provider created: workbench/app/providers/payment_service_provider.py
 ```
 
@@ -968,9 +968,9 @@ $ ftf make:provider PaymentServiceProvider
 $ cat workbench/app/providers/payment_service_provider.py
 from typing import Any
 
-from ftf.core import Container, ServiceProvider
+from jtc.core import Container, ServiceProvider
 
-from ftf.http import Request
+from jtc.http import Request
 
 class PaymentServiceProvider(ServiceProvider):
     # ... full class with docstrings
@@ -982,14 +982,14 @@ class PaymentServiceProvider(ServiceProvider):
 
 **Test 2: --force Flag**
 ```bash
-$ ftf make:provider PaymentServiceProvider
+$ jtc make:provider PaymentServiceProvider
 ✓ Provider created: workbench/app/providers/payment_service_provider.py
 
-$ ftf make:provider PaymentServiceProvider
+$ jtc make:provider PaymentServiceProvider
 ✗ File already exists: workbench/app/providers/payment_service_provider.py
 Use --force to overwrite
 
-$ ftf make:provider PaymentServiceProvider --force
+$ jtc make:provider PaymentServiceProvider --force
 ✓ Provider created: workbench/app/providers/payment_service_provider.py (overwritten)
 ```
 
@@ -1065,16 +1065,16 @@ f"repo: {{model_name.lower()}}Repository = Inject({{model_name.lower()}Repositor
 **Evidence:**
 ```bash
 # Generate provider
-$ ftf make:provider PaymentServiceProvider
+$ jtc make:provider PaymentServiceProvider
 ✓ Provider created: workbench/app/providers/payment_service_provider.py
 
 # Verify code structure
 $ cat workbench/app/providers/payment_service_provider.py | head -30
 from typing import Any
 
-from ftf.core import Container, ServiceProvider
+from jtc.core import Container, ServiceProvider
 
-from ftf.http import Request
+from jtc.http import Request
 
 class PaymentServiceProvider(ServiceProvider):
     """
@@ -1217,11 +1217,11 @@ class PaymentServiceProvider(ServiceProvider):
      # templates/controller.py.j2
      from typing import Any
 
-     from ftf.http import Controller, Get, Post, Request
+     from jtc.http import Controller, Get, Post, Request
 
-     from ftf.http import Inject
+     from jtc.http import Inject
      from sqlalchemy.ext.asyncio import AsyncSession
-     from ftf.validation import FormRequest
+     from jtc.validation import FormRequest
      from fast_query import BaseRepository
 
      if True:
@@ -1269,7 +1269,7 @@ class PaymentServiceProvider(ServiceProvider):
 **Example:**
 ```python
 # Usage
-$ ftf make:request StoreUserRequest --rules required,email
+$ jtc make:request StoreUserRequest --rules required,email
 
 # Generated
 class StoreUserRequest(FormRequest):
@@ -1294,7 +1294,7 @@ class StoreUserRequest(FormRequest):
 **Example:**
 ```python
 # Usage
-$ ftf make:controller Product --with-resource
+$ jtc make:controller Product --with-resource
 
 # Generated
 # workbench/http/controllers/product_controller.py
@@ -1347,7 +1347,7 @@ class UserFactory(Factory[User]):
 **Example:**
 ```python
 # Usage
-$ ftf make:seeder UserSeeder --model User
+$ jtc make:seeder UserSeeder --model User
 
 # Generated
 class UserSeeder(Seeder):
@@ -1381,7 +1381,7 @@ class UserSeeder(Seeder):
 
 **Example:**
 ```bash
-$ ftf make:wizard
+$ jtc make:wizard
 ? What would you like to generate? (Select)
   > Blog Post System (Recommended)
   > E-commerce System
@@ -1405,9 +1405,9 @@ $ ftf make:wizard
 ✓ Done! 6 components generated in 2.3s
 
 📋 Next Steps:
-  1. Run migrations: ftf db:migrate
+  1. Run migrations: jtc db:migrate
   2. Register provider in config/app.py
-  3. Run seeders: ftf db:seed
+  3. Run seeders: jtc db:seed
 ```
 
 ---

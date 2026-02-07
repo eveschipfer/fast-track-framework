@@ -6,9 +6,9 @@ It walks through workbench/ and updates imports from the old structure
 to the new structure.
 
 Changes:
-- from ftf.models.* → from app.models.*
-- from ftf.resources.user_resource → from app.resources.user_resource
-- Framework imports (from ftf.core, ftf.http, etc.) stay the same
+- from jtc.models.* → from app.models.*
+- from jtc.resources.user_resource → from app.resources.user_resource
+- Framework imports (from jtc.core, ftf.http, etc.) stay the same
 
 Usage:
     python fix_imports.py
@@ -29,7 +29,7 @@ IMPORT_MAPPINGS = [
     (r"from ftf\.resources\.(\w+_resource)", r"from app.resources.\1"),
 
     # Note: Generic resource imports (JsonResource, ResourceCollection)
-    # should stay as "from ftf.resources import"
+    # should stay as "from jtc.resources import"
 ]
 
 

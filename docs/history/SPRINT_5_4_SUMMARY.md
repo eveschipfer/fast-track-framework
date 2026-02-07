@@ -15,7 +15,7 @@ This sprint focused on documentation-driven hardening rather than code changes, 
 
 ### 1. Core Module Audit ✅
 
-**Action**: Verified `framework/ftf/core/` for internal helpers and API boundaries.
+**Action**: Verified `framework/jtc/core/` for internal helpers and API boundaries.
 
 **Findings**:
 - Only 4 files: `container.py`, `exceptions.py`, `service_provider.py`, `__init__.py`
@@ -25,7 +25,7 @@ This sprint focused on documentation-driven hardening rather than code changes, 
 
 **Files Reviewed**:
 ```python
-framework/ftf/core/
+framework/jtc/core/
 ├── __init__.py         # 11 exports, comprehensive docstring
 ├── container.py        # Main Container class
 ├── exceptions.py       # DI exceptions
@@ -53,11 +53,11 @@ FRAMEWORK RELATIONSHIP:
     This is a completely standalone ORM package with ZERO dependencies on
     any web framework (ftf, FastAPI, Flask, Django, etc.).
 
-    The ftf web framework builds on top of fast_query, but fast_query can
+    The jtc web framework builds on top of fast_query, but fast_query can
     be used independently in any Python application (CLI tools, scripts,
     other web frameworks).
 
-    Integration: ftf provides IoC Container integration for automatic
+    Integration: jtc provides IoC Container integration for automatic
     dependency injection of repositories and sessions. This is optional -
     fast_query works perfectly with manual session management via get_session().
 """
@@ -66,13 +66,13 @@ FRAMEWORK RELATIONSHIP:
 **Impact**:
 - Clear stability promise for public API
 - Users know what to rely on
-- Fast Query independence from ftf is explicit
+- Fast Query independence from jtc is explicit
 
 ---
 
 ### 3. HTTP Module Boundary Definition ✅
 
-**Action**: Added FastAPI adapter boundary clarification to `framework/ftf/http/app.py`.
+**Action**: Added FastAPI adapter boundary clarification to `framework/jtc/http/app.py`.
 
 **Changes Made**:
 ```python
@@ -114,7 +114,7 @@ ARCHITECTURE BOUNDARY: FastAPI Adapter
 
 ### 4. Auth JWT Educational Warning ✅
 
-**Action**: Added prominent warning to `framework/ftf/auth/jwt.py` about educational nature.
+**Action**: Added prominent warning to `framework/jtc/auth/jwt.py` about educational nature.
 
 **Changes Made**:
 ```python
@@ -122,7 +122,7 @@ ARCHITECTURE BOUNDARY: FastAPI Adapter
 ⚠️ EDUCATIONAL IMPLEMENTATION WARNING ⚠️
 
     This module is designed as an EDUCATIONAL REFERENCE demonstrating how to
-    integrate JWT authentication with the ftf IoC Container and dependency
+    integrate JWT authentication with the jtc IoC Container and dependency
     injection system.
 
     Production Considerations:
@@ -150,7 +150,7 @@ ARCHITECTURE BOUNDARY: FastAPI Adapter
            - Rate limit auth endpoints
            - Monitor for suspicious patterns
 
-        3. Integration with ftf:
+        3. Integration with jtc:
            This module demonstrates:
            - How to integrate auth with the Container
            - How to create dependency injection-friendly auth guards
@@ -161,7 +161,7 @@ ARCHITECTURE BOUNDARY: FastAPI Adapter
 
     For Learning:
         This module teaches core JWT concepts and shows clean integration
-        with FastAPI + ftf patterns. Great for MVPs, prototypes, and
+        with FastAPI + jtc patterns. Great for MVPs, prototypes, and
         understanding authentication flows.
 
     For Production:
@@ -192,12 +192,12 @@ ARCHITECTURE BOUNDARY: FastAPI Adapter
 **Imports Verified**:
 ```python
 # All clean public API imports ✅
-from ftf.core import Container
-from ftf.jobs import JobManager, runner, set_container
-from ftf.providers import QueueProvider
-from ftf.schedule import list_scheduled_tasks
-from ftf.cache import Cache
-from ftf.cli.templates import ...
+from jtc.core import Container
+from jtc.jobs import JobManager, runner, set_container
+from jtc.providers import QueueProvider
+from jtc.schedule import list_scheduled_tasks
+from jtc.cache import Cache
+from jtc.cli.templates import ...
 ```
 
 **Verdict**: CLI is properly decoupled from internal implementation.
@@ -345,22 +345,22 @@ This sprint reinforced the value of explicit contracts.
    - Added FRAMEWORK RELATIONSHIP section
    - Clarified zero-dependency status
 
-2. **`framework/ftf/http/app.py`**
+2. **`framework/jtc/http/app.py`**
    - Added ARCHITECTURE BOUNDARY section
    - Clarified FastAPI adapter nature
    - Documented forward compatibility strategy
 
-3. **`framework/ftf/auth/jwt.py`**
+3. **`framework/jtc/auth/jwt.py`**
    - Added ⚠️ EDUCATIONAL IMPLEMENTATION WARNING
    - Listed production security requirements
    - Recommended specialized libraries for compliance needs
 
 ### Verification Only (No Changes)
 
-- `framework/ftf/core/__init__.py` - Already clean
-- `framework/ftf/cache/__init__.py` - Already hiding drivers
-- `framework/ftf/mail/__init__.py` - Already hiding drivers
-- `framework/ftf/storage/__init__.py` - Already hiding drivers
+- `framework/jtc/core/__init__.py` - Already clean
+- `framework/jtc/cache/__init__.py` - Already hiding drivers
+- `framework/jtc/mail/__init__.py` - Already hiding drivers
+- `framework/jtc/storage/__init__.py` - Already hiding drivers
 - All CLI commands - Already using public APIs
 
 ---

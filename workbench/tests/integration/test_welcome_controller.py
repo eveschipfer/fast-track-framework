@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 
 # Lazy import to avoid collection-time metadata conflicts
 def get_app():
-    from ftf.main import app
+    from jtc.main import app
     return app
 
 def test_root_endpoint() -> None:

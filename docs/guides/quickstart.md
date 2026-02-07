@@ -31,10 +31,10 @@ poetry shell
 
 ```bash
 # Start development server
-poetry run uvicorn ftf.main:app --reload --host 0.0.0.0 --port 8000
+poetry run uvicorn jtc.main:app --reload --host 0.0.0.0 --port 8000
 
 # Or using Python directly
-poetry run python -m ftf.main
+poetry run python -m jtc.main
 ```
 
 ### 4. Verify Installation
@@ -53,7 +53,7 @@ Create your first route with automatic dependency injection:
 
 ```python
 from fastapi import APIRouter
-from ftf.http import FastTrackFramework, Inject
+from jtc.http import FastTrackFramework, Inject
 
 # Create application with built-in IoC Container
 app = FastTrackFramework(
@@ -196,7 +196,7 @@ pyenv local 3.13.0
 ### Port 8000 already in use
 ```bash
 # Use a different port
-poetry run uvicorn ftf.main:app --reload --port 8001
+poetry run uvicorn jtc.main:app --reload --port 8001
 ```
 
 ---

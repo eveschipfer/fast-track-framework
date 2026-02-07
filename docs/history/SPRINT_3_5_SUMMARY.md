@@ -38,14 +38,14 @@ Additionally, users need to extend the `ftf` CLI with project-specific commands 
 
 ## What We Built
 
-### 1. Translator Engine (`src/ftf/i18n/core.py`)
+### 1. Translator Engine (`src/jtc/i18n/core.py`)
 
 **Architecture:**
 
 ```python
 Translator (Singleton)
 ├── _load_translations()
-│   ├── Framework translations (src/ftf/resources/lang/{locale}.json)
+│   ├── Framework translations (src/jtc/resources/lang/{locale}.json)
 │   └── User translations (src/resources/lang/{locale}.json)
 ├── get(key, **kwargs) → str
 ├── set_locale(locale)
@@ -88,7 +88,7 @@ Translator (Singleton)
 **Example Usage:**
 
 ```python
-from ftf.i18n import trans, set_locale
+from jtc.i18n import trans, set_locale
 
 # English (default)
 message = trans('auth.failed')
@@ -108,7 +108,7 @@ message = trans('validation.required', field='Email')
 # "O campo Email é obrigatório."
 ```
 
-### 2. Helper Functions (`src/ftf/i18n/__init__.py`)
+### 2. Helper Functions (`src/jtc/i18n/__init__.py`)
 
 **Public API:**
 
@@ -141,7 +141,7 @@ all_translations()    # Get all loaded translations
 **Framework Translations:**
 
 ```
-src/ftf/resources/lang/
+src/jtc/resources/lang/
 ├── en.json      # English (55 keys)
 └── pt_BR.json   # Portuguese Brazil (55 keys)
 ```
@@ -204,16 +204,16 @@ src/ftf/resources/lang/
 **`make:command` - Generate Custom CLI Command:**
 
 ```bash
-$ ftf make:command deploy
-✓ Command created: src/ftf/cli/commands/deploy.py
+$ jtc make:command deploy
+✓ Command created: src/jtc/cli/commands/deploy.py
 
 ⚠️  Manual Registration Required:
-Add this command to src/ftf/cli/main.py:
+Add this command to src/jtc/cli/main.py:
 
-from ftf.cli.commands.deploy import app as deploy_app
+from jtc.cli.commands.deploy import app as deploy_app
 app.add_typer(deploy_app, name='deploy')
 
-Then run: ftf deploy --help
+Then run: jtc deploy --help
 ```
 
 **Generated Template:**
@@ -240,14 +240,14 @@ def main(
 **`make:lang` - Generate Translation File:**
 
 ```bash
-$ ftf make:lang pt_BR
+$ jtc make:lang pt_BR
 ✓ Translation file created: src/resources/lang/pt_BR.json
 
 💡 Next Steps:
 1. Edit translation keys in the JSON file
 2. Use translations in your code:
 
-from ftf.i18n import trans, set_locale
+from jtc.i18n import trans, set_locale
 set_locale('pt_BR')
 message = trans('auth.failed')
 
@@ -309,7 +309,7 @@ class Translator:
 **Example:**
 
 ```python
-# Framework (src/ftf/resources/lang/en.json)
+# Framework (src/jtc/resources/lang/en.json)
 {"auth.failed": "Invalid credentials"}
 
 # User (src/resources/lang/en.json)
@@ -358,7 +358,7 @@ trans('auth.throttle', seconds=60)
 **Middleware Pattern:**
 
 ```python
-from ftf.i18n import set_locale
+from jtc.i18n import set_locale
 
 async def locale_middleware(request, call_next):
     # Detect from Accept-Language header
@@ -520,11 +520,11 @@ $ php artisan deploy
 **Fast Track (ftf make:command):**
 
 ```bash
-$ ftf make:command deploy
-✓ Command created: src/ftf/cli/commands/deploy.py
+$ jtc make:command deploy
+✓ Command created: src/jtc/cli/commands/deploy.py
 
-⚠️  Manual registration required in src/ftf/cli/main.py
-$ ftf deploy  # After manual registration
+⚠️  Manual registration required in src/jtc/cli/main.py
+$ jtc deploy  # After manual registration
 ```
 
 **Key Difference:**
@@ -567,7 +567,7 @@ $ ftf deploy  # After manual registration
 **Pattern 1: Validation Messages**
 
 ```python
-from ftf.i18n import trans
+from jtc.i18n import trans
 
 # In FormRequest.rules()
 if not email:
@@ -580,8 +580,8 @@ if len(password) < 8:
 **Pattern 2: HTTP Exceptions**
 
 ```python
-from ftf.http import AppException
-from ftf.i18n import trans
+from jtc.http import AppException
+from jtc.i18n import trans
 
 class RecordNotFoundTranslated(AppException):
     def __init__(self, model: str, id: int):
@@ -592,7 +592,7 @@ class RecordNotFoundTranslated(AppException):
 **Pattern 3: Locale Middleware**
 
 ```python
-from ftf.i18n import set_locale
+from jtc.i18n import set_locale
 
 async def locale_middleware(request, call_next):
     # Detect from header or user preference
@@ -606,8 +606,8 @@ async def locale_middleware(request, call_next):
 **Pattern 4: User Preference**
 
 ```python
-from ftf.auth import CurrentUser
-from ftf.i18n import set_locale, trans
+from jtc.auth import CurrentUser
+from jtc.i18n import set_locale, trans
 
 @app.get("/profile")
 async def profile(user: CurrentUser):
@@ -624,20 +624,20 @@ async def profile(user: CurrentUser):
 
 ### New Files
 
-1. **`src/ftf/i18n/core.py` (459 lines)**
+1. **`src/jtc/i18n/core.py` (459 lines)**
    - Translator class (singleton)
    - Translation loading (cascade)
    - Placeholder replacement
    - Locale switching
 
-2. **`src/ftf/i18n/__init__.py` (202 lines)**
+2. **`src/jtc/i18n/__init__.py` (202 lines)**
    - Public API: `trans()`, `t()`, `set_locale()`, `has()`, `all_translations()`
    - Helper functions wrapping Translator singleton
 
-3. **`src/ftf/resources/lang/en.json` (55 keys)**
+3. **`src/jtc/resources/lang/en.json` (55 keys)**
    - English translations (framework defaults)
 
-4. **`src/ftf/resources/lang/pt_BR.json` (55 keys)**
+4. **`src/jtc/resources/lang/pt_BR.json` (55 keys)**
    - Portuguese (Brazil) translations (for "Orça Já")
 
 5. **`tests/unit/test_i18n.py` (377 lines)**
@@ -646,11 +646,11 @@ async def profile(user: CurrentUser):
 
 ### Modified Files
 
-1. **`src/ftf/cli/commands/make.py` (+125 lines)**
+1. **`src/jtc/cli/commands/make.py` (+125 lines)**
    - `make:command` — Generate custom CLI command
    - `make:lang` — Generate translation file
 
-2. **`src/ftf/cli/templates.py` (+79 lines)**
+2. **`src/jtc/cli/templates.py` (+79 lines)**
    - `get_command_template()` — CLI command template
    - `get_lang_template()` — Translation JSON skeleton
 
@@ -771,7 +771,7 @@ trans('user.welcome', user_name=user.name)  // Flatten parameters
 **Workaround:** Implement middleware:
 
 ```python
-from ftf.i18n import set_locale
+from jtc.i18n import set_locale
 
 async def locale_middleware(request, call_next):
     locale = request.headers.get('Accept-Language', 'en').split(',')[0]

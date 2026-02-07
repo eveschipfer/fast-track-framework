@@ -12,10 +12,10 @@ This test suite covers:
 import pytest
 from pathlib import Path
 
-from ftf.mail import Mail, Mailable, MailException
-from ftf.mail.drivers.array_driver import ArrayDriver
-from ftf.mail.drivers.log_driver import LogDriver
-from ftf.mail.exceptions import MailTemplateException
+from jtc.mail import Mail, Mailable, MailException
+from jtc.mail.drivers.array_driver import ArrayDriver
+from jtc.mail.drivers.log_driver import LogDriver
+from jtc.mail.exceptions import MailTemplateException
 
 
 class MockMailable(Mailable):
@@ -276,7 +276,7 @@ async def test_mailable_template_not_found() -> None:
 @pytest.mark.asyncio
 async def test_mail_manager_singleton() -> None:
     """MailManager should be singleton."""
-    from ftf.mail.manager import MailManager
+    from jtc.mail.manager import MailManager
 
     instance1 = MailManager()
     instance2 = MailManager()

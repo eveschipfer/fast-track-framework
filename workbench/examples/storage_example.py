@@ -12,7 +12,7 @@ import asyncio
 import os
 from datetime import datetime
 
-from ftf.storage import Storage
+from jtc.storage import Storage
 
 
 async def main() -> None:
@@ -137,7 +137,7 @@ async def main() -> None:
         print("-" * 70)
         print("Example 11: Inspect Stored Files (MemoryDriver)")
         print("-" * 70)
-        from ftf.storage.drivers.memory_driver import MemoryDriver
+        from jtc.storage.drivers.memory_driver import MemoryDriver
 
         driver = Storage.driver
         if isinstance(driver, MemoryDriver):

@@ -13,7 +13,7 @@ import logging
 import os
 from typing import Any
 
-from ftf.mail import Mail, Mailable
+from jtc.mail import Mail, Mailable
 
 # Configure logging to see mail output
 logging.basicConfig(
@@ -185,7 +185,7 @@ async def main() -> None:
 
     # If using array driver, show stored messages
     if driver_type == "array":
-        from ftf.mail.drivers.array_driver import ArrayDriver
+        from jtc.mail.drivers.array_driver import ArrayDriver
 
         driver = Mail.driver
         if isinstance(driver, ArrayDriver):

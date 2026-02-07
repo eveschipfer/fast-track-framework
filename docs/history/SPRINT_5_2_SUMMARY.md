@@ -97,7 +97,7 @@ The workbench application's `main.py` was becoming a catch-all file:
 
 ### Phase 1: Framework Core (Service Provider Base)
 
-#### 1. Created `framework/ftf/core/service_provider.py`
+#### 1. Created `framework/jtc/core/service_provider.py`
 
 **ServiceProvider Abstract Base Class:**
 ```python
@@ -126,7 +126,7 @@ class DeferredServiceProvider(ServiceProvider):
 - **Abstract base class**: Enforces contract, allows default implementations
 - **Deferred loading**: Future optimization for providers that aren't always needed
 
-#### 2. Updated `framework/ftf/core/__init__.py`
+#### 2. Updated `framework/jtc/core/__init__.py`
 
 Exported new classes:
 ```python
@@ -141,7 +141,7 @@ __all__ = [
 
 ### Phase 2: Framework HTTP (Provider Support)
 
-#### 3. Updated `framework/ftf/http/app.py`
+#### 3. Updated `framework/jtc/http/app.py`
 
 **Added Instance Variables:**
 ```python
@@ -228,7 +228,7 @@ async def list_users() -> list[dict[str, str | int]]:
 
 Application-level service provider:
 ```python
-from ftf.core import Container, ServiceProvider
+from jtc.core import Container, ServiceProvider
 
 class AppServiceProvider(ServiceProvider):
     """Application Service Provider for core services."""
@@ -250,8 +250,8 @@ class AppServiceProvider(ServiceProvider):
 
 Route registration provider:
 ```python
-from ftf.core import Container, ServiceProvider
-from ftf.http import FastTrackFramework
+from jtc.core import Container, ServiceProvider
+from jtc.http import FastTrackFramework
 
 class RouteServiceProvider(ServiceProvider):
     """Route Service Provider for registering application routes."""
@@ -429,7 +429,7 @@ workbench/
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `framework/ftf/core/service_provider.py` | 85 | ServiceProvider base class |
+| `framework/jtc/core/service_provider.py` | 85 | ServiceProvider base class |
 | `workbench/routes/__init__.py` | 6 | Routes package marker |
 | `workbench/routes/api.py` | 56 | API route definitions |
 | `workbench/app/providers/__init__.py` | 14 | Providers package exports |
@@ -441,8 +441,8 @@ workbench/
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/core/__init__.py` | +4 lines | Export ServiceProvider classes |
-| `framework/ftf/http/app.py` | +95 lines | Add provider registration system |
+| `framework/jtc/core/__init__.py` | +4 lines | Export ServiceProvider classes |
+| `framework/jtc/http/app.py` | +95 lines | Add provider registration system |
 | `workbench/main.py` | Refactored | Use factory + providers pattern |
 
 ### Documentation (1 file)
@@ -510,7 +510,7 @@ curl http://localhost:8000/api/users
 
 ```python
 # workbench/app/providers/database_service_provider.py
-from ftf.core import Container, ServiceProvider
+from jtc.core import Container, ServiceProvider
 from fast_query import create_engine, AsyncSessionFactory
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
@@ -554,8 +554,8 @@ def create_app() -> FastTrackFramework:
 
 ```python
 # workbench/app/providers/cors_service_provider.py
-from ftf.core import Container, ServiceProvider
-from ftf.http import FastTrackFramework
+from jtc.core import Container, ServiceProvider
+from jtc.http import FastTrackFramework
 from starlette.middleware.cors import CORSMiddleware
 
 class CorsServiceProvider(ServiceProvider):
@@ -675,7 +675,7 @@ def test_providers_registered():
 
 ```python
 # tests/unit/test_app_service_provider.py
-from ftf.core import Container
+from jtc.core import Container
 from app.providers import AppServiceProvider
 
 def test_app_service_provider_register():
@@ -875,8 +875,8 @@ class RouteServiceProvider extends ServiceProvider
 
 ```python
 # workbench/app/providers/route_service_provider.py
-from ftf.core import Container, ServiceProvider
-from ftf.http import FastTrackFramework
+from jtc.core import Container, ServiceProvider
+from jtc.http import FastTrackFramework
 
 class RouteServiceProvider(ServiceProvider):
     def register(self, container: Container) -> None:
@@ -994,12 +994,12 @@ class CacheServiceProvider(ServiceProvider):
     def publish(self):
         """Publish cache configuration to user's config directory."""
         shutil.copy(
-            "framework/ftf/config/cache.py",
+            "framework/jtc/config/cache.py",
             "workbench/config/cache.py"
         )
 
 # CLI command
-# $ ftf vendor:publish --provider=CacheServiceProvider
+# $ jtc vendor:publish --provider=CacheServiceProvider
 ```
 
 ### 5. Provider Testing Utilities

@@ -27,13 +27,13 @@
 
 ## Overview
 
-Sprint 9.0 transforms the CLI (`src/ftf/cli`) into a "framework client" that operates with the same Container, AppSettings, and Service Providers as the HTTP application.
+Sprint 9.0 transforms the CLI (`src/jtc/cli`) into a "framework client" that operates with the same Container, AppSettings, and Service Providers as the HTTP application.
 
 ### What Changed?
 
 **Before (Sprint 3.0):**
 ```python
-# framework/ftf/cli/commands/db.py
+# framework/jtc/cli/commands/db.py
 from fast_query import get_session
 
 async def _run_seeder(seeder_name: str):
@@ -45,8 +45,8 @@ async def _run_seeder(seeder_name: str):
 
 **After (Sprint 9.0):**
 ```python
-# framework/ftf/cli/commands/db.py
-from ftf.core import Container
+# framework/jtc/cli/commands/db.py
+from jtc.core import Container
 
 async def _run_seeder(seeder_name: str):
     container = Container()
@@ -110,7 +110,7 @@ async def run(self):
 
 ## Implementation
 
-### Phase 1: Bootstrap CLI (`src/ftf/cli/main.py`)
+### Phase 1: Bootstrap CLI (`src/jtc/cli/main.py`)
 
 #### 1. Create `_boot_framework()` function
 
@@ -121,7 +121,7 @@ def _boot_framework() -> None:
 
     Sprint 9.0: Ensures CLI operates with same context as HTTP app.
     """
-    from ftf.core import Container
+    from jtc.core import Container
     from workbench.config.settings import AppSettings, settings
 
     # Step 1: Create/Get Container singleton
@@ -133,7 +133,7 @@ def _boot_framework() -> None:
     container._singletons[AppSettings] = settings
 
     # Step 3: Load and execute Service Providers
-    from ftf.config import config
+    from jtc.config import config
     providers = config("app.providers", [])
 
     for provider_spec in providers:
@@ -182,7 +182,7 @@ def main() -> None:
     console.print("[green]✓ Framework booted successfully![/green]")
 ```
 
-### Phase 2: Update `db:seed` (`src/ftf/cli/commands/db.py`)
+### Phase 2: Update `db:seed` (`src/jtc/cli/commands/db.py`)
 
 #### 1. Remove manual `get_session()`
 
@@ -196,7 +196,7 @@ async def _run_seeder(seeder_name: str):
         await seeder.run()
 
 # ✅ After (Sprint 9.0)
-from ftf.core import Container
+from jtc.core import Container
 
 async def _run_seeder(seeder_name: str):
     container = Container()  # ✅ Global container
@@ -234,7 +234,7 @@ class DatabaseSeeder(Seeder):
         await self.session.commit()
 ```
 
-### Phase 3: Update Templates (`src/ftf/cli/templates.py`)
+### Phase 3: Update Templates (`src/jtc/cli/templates.py`)
 
 #### 1. Update `get_repository_template()` to SQLAlchemy 2.0
 
@@ -310,7 +310,7 @@ class UserFactory(Factory[User]):
         super().__init__(session, User)
 
 # ✅ After (Sprint 9.0)
-from ftf.core import Container
+from jtc.core import Container
 from fast_query import Factory
 from app.models import User
 
@@ -401,9 +401,9 @@ class DatabaseSeeder(Seeder):
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/cli/main.py` | +150 lines | Container boot, AppSettings, Service Providers |
-| `framework/ftf/cli/commands/db.py` | -50 lines | Container DI, remove get_session() |
-| `framework/ftf/cli/templates.py` | +200 lines | SQLAlchemy 2.0, Hybrid Repository patterns |
+| `framework/jtc/cli/main.py` | +150 lines | Container boot, AppSettings, Service Providers |
+| `framework/jtc/cli/commands/db.py` | -50 lines | Container DI, remove get_session() |
+| `framework/jtc/cli/templates.py` | +200 lines | SQLAlchemy 2.0, Hybrid Repository patterns |
 
 ### Documentation (1 file)
 
@@ -420,15 +420,15 @@ class DatabaseSeeder(Seeder):
 ### 1. `db:seed` Command with Container DI
 
 ```python
-# framework/ftf/cli/commands/db.py (Sprint 9.0)
-from ftf.core import Container
+# framework/jtc/cli/commands/db.py (Sprint 9.0)
+from jtc.core import Container
 
 async def _run_seeder(seeder_name: str) -> None:
     """
     Run seeder using Container DI.
     """
     # Import Container for dependency injection
-    from ftf.core import Container
+    from jtc.core import Container
 
     # Create Container singleton
     container = Container()
@@ -455,7 +455,7 @@ async def _run_seeder(seeder_name: str) -> None:
 **Usage:**
 ```bash
 # CLI now operates with the same Container as the application
-poetry run ftf db:seed
+poetry run jtc db:seed
 
 # Internally:
 # 1. AppSettings loaded via Pydantic
@@ -505,7 +505,7 @@ class DatabaseSeeder(Seeder):
 **Usage:**
 ```bash
 # Seeders can now inject any Container dependency
-poetry run ftf db:seed
+poetry run jtc db:seed
 
 # Container automatically resolves:
 # - AsyncSession (from DatabaseServiceProvider)
@@ -516,7 +516,7 @@ poetry run ftf db:seed
 ### 3. Modernized Templates (SQLAlchemy 2.0)
 
 ```python
-# framework/ftf/cli/templates.py (Sprint 9.0)
+# framework/jtc/cli/templates.py (Sprint 9.0)
 def get_model_template(class_name: str, table_name: str) -> str:
     """
     Generate a SQLAlchemy 2.0 model with Mapped and mapped_column.
@@ -566,8 +566,8 @@ class {class_name}(Base, TimestampMixin, SoftDeletesMixin):
 ### Test Results
 
 ```bash
-$ docker exec fast_track_dev bash -c "cd larafast && poetry run ftf --help"
-CLI tool: ftf (Sprint 9.0 - CLI Modernization & Core Integration)
+$ docker exec fast_track_dev bash -c "cd larafast && poetry run jtc --help"
+CLI tool: jtc (Sprint 9.0 - CLI Modernization & Core Integration)
 Fast Track Framework - Laravel-inspired CLI for Python
 
 ╭─ Commands ─────────────────────────────────────────╮
@@ -704,7 +704,7 @@ CLI (ftf):
 **Target**: Adicionar comandos úteis comuns no Laravel.
 
 ```python
-# framework/ftf/cli/commands/
+# framework/jtc/cli/commands/
 
 # cache:clear
 @app.command()

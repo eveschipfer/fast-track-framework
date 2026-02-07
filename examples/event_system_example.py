@@ -31,11 +31,11 @@ Architecture:
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ftf.core.service_provider import ServiceProvider
+from jtc.core.service_provider import ServiceProvider
 
 if TYPE_CHECKING:
-    from ftf.core import Container
-    from ftf.events.core import Event
+    from jtc.core import Container
+    from jtc.events.core import Event
 
 
 # ============================================================================
@@ -214,7 +214,7 @@ class EventServiceProvider(ServiceProvider):
         """
         # Note: The parent class implementation handles the registration
         # This method is here for educational purposes
-        from ftf.events.core import EventDispatcher
+        from jtc.events.core import EventDispatcher
 
         if not container.is_registered(EventDispatcher):
             container.register(EventDispatcher, scope="singleton")
@@ -257,8 +257,8 @@ async def create_user(user_data: dict, dispatch) -> None:
 
             return user
     """
-    from ftf.events.core import EventDispatcher
-    from ftf.core import Container
+    from jtc.events.core import EventDispatcher
+    from jtc.core import Container
 
     container = Container()
 
@@ -348,8 +348,8 @@ async def exception_handling_example(dispatch) -> None:
     This demonstrates how to use should_propagate to prevent a single
     failing listener from crashing the entire request flow.
     """
-    from ftf.events.core import EventDispatcher
-    from ftf.core import Container
+    from jtc.events.core import EventDispatcher
+    from jtc.core import Container
 
     container = Container()
 

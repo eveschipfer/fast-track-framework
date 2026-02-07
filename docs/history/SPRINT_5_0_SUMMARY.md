@@ -44,7 +44,7 @@ larafast/
 ### Key Changes
 
 1. **Framework Isolation**
-   - Moved `ftf` to `framework/ftf/`
+   - Moved `ftf` to `framework/jtc/`
    - Moved `fast_query` to `framework/fast_query/`
    - Framework code has zero app dependencies
 
@@ -79,8 +79,8 @@ larafast/
 - Fixed 20 imports across 16 files
 - Regex-based import rewriting
 - Patterns:
-  - `from ftf.models` → `from app.models`
-  - `from ftf.resources.{name}` → `from app.resources.{name}`
+  - `from jtc.models` → `from app.models`
+  - `from jtc.resources.{name}` → `from app.resources.{name}`
 
 ### Test Isolation Fixes
 
@@ -110,11 +110,11 @@ larafast/
 3. **Lazy Imports**
    ```python
    # Before (collection-time import)
-   from ftf.main import app
+   from jtc.main import app
 
    # After (runtime import)
    def get_app():
-       from ftf.main import app
+       from jtc.main import app
        return app
    ```
 
@@ -160,7 +160,7 @@ larafast/
 
 ### 4. Import Path Changes
 **Problem**: Old imports pointing to `ftf.models`, `ftf.resources`
-**Error**: `ModuleNotFoundError: No module named 'ftf.models'`
+**Error**: `ModuleNotFoundError: No module named 'jtc.models'`
 **Solution**: Fixed 20 imports across 16 files with regex replacement
 
 ### 5. Package Discovery
@@ -189,12 +189,12 @@ packages = [
 ## 📝 Files Modified (Summary)
 
 ### Framework Structure
-- Created `framework/ftf/` (moved from `src/ftf/`)
+- Created `framework/jtc/` (moved from `src/jtc/`)
 - Created `framework/fast_query/` (moved from `src/fast_query/`)
 
 ### Application Structure
-- Created `workbench/app/models/` (moved from `src/ftf/models/`)
-- Created `workbench/app/resources/` (moved from `src/ftf/resources/`)
+- Created `workbench/app/models/` (moved from `src/jtc/models/`)
+- Created `workbench/app/resources/` (moved from `src/jtc/resources/`)
 - Created `workbench/main.py`
 - Created `workbench/.env.example`
 - Created `workbench/.gitignore`

@@ -43,7 +43,7 @@ Both features provide clean, intuitive APIs that integrate seamlessly with exist
        # Return LengthAwarePaginator instance
    ```
 
-3. **ResourceCollection Enhancement** (`framework/ftf/resources/collection.py`)
+3. **ResourceCollection Enhancement** (`framework/jtc/resources/collection.py`)
    - Auto-detects `LengthAwarePaginator` input
    - Generates `meta` section (current_page, last_page, per_page, total, from, to)
    - Generates `links` section (first, last, next, prev)
@@ -75,8 +75,8 @@ Both features provide clean, intuitive APIs that integrate seamlessly with exist
 
 **Usage Example:**
 ```python
-from ftf.http import FastTrackFramework, Inject
-from ftf.resources import ResourceCollection
+from jtc.http import FastTrackFramework, Inject
+from jtc.resources import ResourceCollection
 from app.resources import UserResource
 from app.repositories import UserRepository
 
@@ -101,7 +101,7 @@ async def list_users(
 
 **Components Created:**
 
-1. **`Gate` Singleton** (`framework/ftf/auth/gates.py` - 275 lines)
+1. **`Gate` Singleton** (`framework/jtc/auth/gates.py` - 275 lines)
    - `define(ability, callback)` - Register global abilities
    - `register_policy(Model, Policy)` - Register model-specific policies
    - `allows(user, ability, resource?)` - Check permission (returns bool)
@@ -109,13 +109,13 @@ async def list_users(
    - `authorize(user, ability, resource?)` - Check or raise 403
    - Auto-routing: Policy methods called automatically for registered models
 
-2. **`Policy` Base Class** (`framework/ftf/auth/policies.py` - 226 lines)
+2. **`Policy` Base Class** (`framework/jtc/auth/policies.py` - 226 lines)
    - Standard methods: `view`, `viewAny`, `create`, `update`, `delete`
    - Custom methods: Add domain-specific authorization logic
    - Default behavior: Deny all (secure by default)
    - Clean separation: One policy per model
 
-3. **`Authorize()` Dependency** (`framework/ftf/auth/dependencies.py` - 141 lines)
+3. **`Authorize()` Dependency** (`framework/jtc/auth/dependencies.py` - 141 lines)
    - FastAPI dependency factory for route protection
    - Integration with `CurrentUser` (JWT auth from Sprint 3.3)
    - Automatic 403 responses via `AuthorizationError`
@@ -136,7 +136,7 @@ Policy (Base Class)
 **Usage Examples:**
 
 ```python
-from ftf.auth import Gate, Policy, Authorize, CurrentUser
+from jtc.auth import Gate, Policy, Authorize, CurrentUser
 from fastapi import Depends
 
 # 1. Define global ability
@@ -204,9 +204,9 @@ async def show_post(
 | File | Lines | Purpose |
 |------|-------|---------|
 | `framework/fast_query/pagination.py` | 328 | LengthAwarePaginator class |
-| `framework/ftf/auth/gates.py` | 275 | Gate singleton + ability registry |
-| `framework/ftf/auth/policies.py` | 226 | Policy base class |
-| `framework/ftf/auth/dependencies.py` | 141 | Authorize() dependency factory |
+| `framework/jtc/auth/gates.py` | 275 | Gate singleton + ability registry |
+| `framework/jtc/auth/policies.py` | 226 | Policy base class |
+| `framework/jtc/auth/dependencies.py` | 141 | Authorize() dependency factory |
 | `workbench/tests/unit/test_pagination.py` | 520 | Pagination tests (51 methods) |
 | `workbench/tests/unit/test_gates.py` | 691 | RBAC Gates tests (49 methods) |
 | **Total** | **2,181** | |
@@ -216,9 +216,9 @@ async def show_post(
 | File | Changes |
 |------|---------|
 | `framework/fast_query/repository.py` | Added `paginate()` method (75 lines) |
-| `framework/ftf/resources/collection.py` | Pagination metadata support (60 lines modified) |
+| `framework/jtc/resources/collection.py` | Pagination metadata support (60 lines modified) |
 | `framework/fast_query/__init__.py` | Added `LengthAwarePaginator` export |
-| `framework/ftf/auth/__init__.py` | Added Gate, Policy, Authorize exports |
+| `framework/jtc/auth/__init__.py` | Added Gate, Policy, Authorize exports |
 | `workbench/tests/conftest.py` | Added `db_session` fixture |
 
 ---
@@ -641,7 +641,7 @@ Gate.define("publish-content", lambda user: user.role in ["admin", "editor"])
 **Model Policies:**
 ```python
 # app/policies/post_policy.py
-from ftf.auth import Policy
+from jtc.auth import Policy
 
 class PostPolicy(Policy):
     def view(self, user, post):
@@ -668,7 +668,7 @@ class PostPolicy(Policy):
 
 **Register in AppServiceProvider:**
 ```python
-from ftf.auth import Gate
+from jtc.auth import Gate
 from app.models import Post
 from app.policies import PostPolicy
 

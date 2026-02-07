@@ -23,8 +23,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
 from fast_query import AsyncSessionFactory, Base, BaseRepository, create_engine
-from ftf.http import FastTrackFramework, Inject
-from ftf.http.app import ScopedMiddleware
+from jtc.http import FastTrackFramework, Inject
+from jtc.http.app import ScopedMiddleware
 
 
 # ============================================================================

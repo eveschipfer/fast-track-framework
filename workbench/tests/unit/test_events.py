@@ -33,8 +33,8 @@ from dataclasses import dataclass
 
 import pytest
 
-from ftf.core import Container
-from ftf.events import Event, EventDispatcher, Listener, dispatch, set_container
+from jtc.core import Container
+from jtc.events import Event, EventDispatcher, Listener, dispatch, set_container
 
 # ============================================================================
 # TEST EVENTS
@@ -566,8 +566,8 @@ async def test_event_service_provider_registers_event_dispatcher(
     container: Container
 ) -> None:
     """Test that EventServiceProvider registers EventDispatcher."""
-    from ftf.events import EventDispatcher
-    from ftf.providers.event_service_provider import EventServiceProvider
+    from jtc.events import EventDispatcher
+    from jtc.providers.event_service_provider import EventServiceProvider
 
     # Create provider with multiple events
     class TestEventServiceProvider(EventServiceProvider):
@@ -597,8 +597,8 @@ async def test_event_service_provider_registers_multiple_events(
     container: Container
 ) -> None:
     """Test that EventServiceProvider can register multiple event types."""
-    from ftf.events import EventDispatcher
-    from ftf.providers.event_service_provider import EventServiceProvider
+    from jtc.events import EventDispatcher
+    from jtc.providers.event_service_provider import EventServiceProvider
 
     # Create provider with multiple events
     class TestEventServiceProvider(EventServiceProvider):
@@ -625,8 +625,8 @@ async def test_event_service_provider_with_dependency_injection(
     container: Container
 ) -> None:
     """Test that listeners registered via EventServiceProvider receive DI."""
-    from ftf.events import EventDispatcher
-    from ftf.providers.event_service_provider import EventServiceProvider
+    from jtc.events import EventDispatcher
+    from jtc.providers.event_service_provider import EventServiceProvider
 
     # Register dependency
     dependency_value = "injected service"
@@ -662,8 +662,8 @@ async def test_complete_event_flow_with_exception_handling(
     container: Container
 ) -> None:
     """Test complete flow: EventServiceProvider, dispatch, exception handling."""
-    from ftf.events import EventDispatcher
-    from ftf.providers.event_service_provider import EventServiceProvider
+    from jtc.events import EventDispatcher
+    from jtc.providers.event_service_provider import EventServiceProvider
 
     # Create and register EventServiceProvider
     class TestEventServiceProvider(EventServiceProvider):

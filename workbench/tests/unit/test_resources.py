@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from ftf.resources import JsonResource, ResourceCollection, MISSING
+from jtc.resources import JsonResource, ResourceCollection, MISSING
 
 
 # -------------------------------------------------------------------------
@@ -378,7 +378,7 @@ def test_collection_generic_type() -> None:
 
 def test_missing_is_singleton() -> None:
     """MISSING should be a singleton object."""
-    from ftf.resources.core import MISSING as MISSING2
+    from jtc.resources.core import MISSING as MISSING2
 
     assert MISSING is MISSING2
 

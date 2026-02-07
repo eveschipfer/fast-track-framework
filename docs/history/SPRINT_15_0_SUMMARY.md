@@ -43,10 +43,10 @@ This sprint addresses two critical issues:
 ```python
 # workbench/config/app.py
 providers = [
-    "ftf.providers.database.DatabaseServiceProvider",  # ❌ Wrong filename
+    "jtc.providers.database.DatabaseServiceProvider",  # ❌ Wrong filename
 ]
 
-# framework/ftf/providers/database.py
+# framework/jtc/providers/database.py
 class DatabaseServiceProvider(ServiceProvider):
     def _extract_pool_settings(self, config: dict) -> dict:
         # ❌ Always uses QueuePool
@@ -65,10 +65,10 @@ class DatabaseServiceProvider(ServiceProvider):
 ```python
 # workbench/config/app.py
 providers = [
-    "ftf.providers.database_service_provider.DatabaseServiceProvider",  # ✅ Correct filename
+    "jtc.providers.database_service_provider.DatabaseServiceProvider",  # ✅ Correct filename
 ]
 
-# framework/ftf/providers/database_service_provider.py
+# framework/jtc/providers/database_service_provider.py
 class DatabaseServiceProvider(ServiceProvider):
     def _detect_serverless(self) -> bool:
         """Detect if running in serverless environment."""
@@ -120,12 +120,12 @@ class DatabaseServiceProvider(ServiceProvider):
 
 **Current State (Sprint 14.0):**
 ```python
-# framework/ftf/providers/database.py
+# framework/jtc/providers/database.py
 # ❌ Filename doesn't follow framework standard
 
 # workbench/config/app.py
 providers = [
-    "ftf.providers.database.DatabaseServiceProvider",  # ❌ References database.py
+    "jtc.providers.database.DatabaseServiceProvider",  # ❌ References database.py
 ]
 
 # All other providers follow standard:
@@ -247,7 +247,7 @@ class DatabaseServiceProvider(ServiceProvider):
 
 ### Phase 1: Rename Database Service Provider
 
-**File**: `framework/ftf/providers/database_service_provider.py` (RENAMED)
+**File**: `framework/jtc/providers/database_service_provider.py` (RENAMED)
 
 **Changes:**
 - Renamed from `database.py` to `database_service_provider.py`
@@ -256,12 +256,12 @@ class DatabaseServiceProvider(ServiceProvider):
 
 **Old Path:**
 ```
-framework/ftf/providers/database.py
+framework/jtc/providers/database.py
 ```
 
 **New Path:**
 ```
-framework/ftf/providers/database_service_provider.py
+framework/jtc/providers/database_service_provider.py
 ```
 
 **Impact:**
@@ -273,7 +273,7 @@ framework/ftf/providers/database_service_provider.py
 
 ### Phase 2: Serverless Detection
 
-**File**: `framework/ftf/providers/database_service_provider.py` (NEW METHOD)
+**File**: `framework/jtc/providers/database_service_provider.py` (NEW METHOD)
 
 **Implementation:**
 ```python
@@ -312,7 +312,7 @@ def _detect_serverless(self) -> bool:
 
 ### Phase 3: NullPool Support
 
-**File**: `framework/ftf/providers/database_service_provider.py` (ENHANCED METHOD)
+**File**: `framework/jtc/providers/database_service_provider.py` (ENHANCED METHOD)
 
 **Implementation:**
 ```python
@@ -379,7 +379,7 @@ def _extract_pool_settings(self, connection_config: dict[str, Any], is_serverles
 
 ### Phase 4: Enhanced Registration
 
-**File**: `framework/ftf/providers/database_service_provider.py` (ENHANCED METHOD)
+**File**: `framework/jtc/providers/database_service_provider.py` (ENHANCED METHOD)
 
 **Implementation:**
 ```python
@@ -462,7 +462,7 @@ def register(self, container: Any) -> None:
     # Database auto-configuration (Sprint 5.7 + Sprint 15.0)
     # Reads config/database.py and sets up AsyncEngine + AsyncSession
     # Sprint 15.0: Serverless connection handling (NullPool in AWS Lambda)
-    "ftf.providers.database_service_provider.DatabaseServiceProvider",
+    "jtc.providers.database_service_provider.DatabaseServiceProvider",
 
     # ... other providers
 ],
@@ -633,13 +633,13 @@ Sprint 15.0: Serverless Connection Handling
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `framework/ftf/providers/database_service_provider.py` | 352 | Database Service Provider with serverless support |
+| `framework/jtc/providers/database_service_provider.py` | 352 | Database Service Provider with serverless support |
 
 ### Deleted Files (1 file)
 
 | File | Reason |
 |------|---------|
-| `framework/ftf/providers/database.py` | Renamed to `database_service_provider.py` |
+| `framework/jtc/providers/database.py` | Renamed to `database_service_provider.py` |
 
 ### Documentation (1 file)
 
@@ -674,7 +674,7 @@ DB_MAX_OVERFLOW=20  # Ignored
 # config/app.py
 config = {
     "providers": [
-        "ftf.providers.database_service_provider.DatabaseServiceProvider",
+        "jtc.providers.database_service_provider.DatabaseServiceProvider",
     ]
 }
 
@@ -714,7 +714,7 @@ config = {
     "serverless": True,
 
     "providers": [
-        "ftf.providers.database_service_provider.DatabaseServiceProvider",
+        "jtc.providers.database_service_provider.DatabaseServiceProvider",
     ]
 }
 
@@ -771,7 +771,7 @@ config = {
     # "serverless": False,  # Default, can omit
 
     "providers": [
-        "ftf.providers.database_service_provider.DatabaseServiceProvider",
+        "jtc.providers.database_service_provider.DatabaseServiceProvider",
     ]
 }
 
@@ -848,7 +848,7 @@ class UserRepository(BaseRepository[User]):
 
 # workbench/http/controllers/user_controller.py
 from fastapi import Depends
-from ftf.http import Inject
+from jtc.http import Inject
 from app.repositories.user_repository import UserRepository
 
 @app.get("/users/{user_id}")
@@ -1097,7 +1097,7 @@ print("✓ Manual non-serverless override works")
 
 **Before (Sprint 14.0):**
 ```
-framework/ftf/providers/
+framework/jtc/providers/
     ├── database.py  # ❌ Doesn't follow convention
     ├── event_service_provider.py  # ✅ Follows convention
     ├── auth_service_provider.py  # ✅ Follows convention
@@ -1106,7 +1106,7 @@ framework/ftf/providers/
 
 **After (Sprint 15.0):**
 ```
-framework/ftf/providers/
+framework/jtc/providers/
     ├── database_service_provider.py  # ✅ Follows convention
     ├── event_service_provider.py  # ✅ Follows convention
     ├── auth_service_provider.py  # ✅ Follows convention

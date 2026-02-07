@@ -33,7 +33,7 @@ Sprint 11.0 introduces **Method Injection** for the `FormRequest` validation sys
 
 **Before (Sprint 2.9):**
 ```python
-# framework/ftf/validation/request.py
+# framework/jtc/validation/request.py
 class FormRequest(BaseModel):
     # ❌ rules() hardcoded to accept AsyncSession
     async def rules(self, session: AsyncSession) -> None:
@@ -43,7 +43,7 @@ class FormRequest(BaseModel):
 
 **After (Sprint 11.0):**
 ```python
-# framework/ftf/validation/request.py
+# framework/jtc/validation/request.py
 class FormRequest(BaseModel):
     # ✅ rules() accepts ANY type-hinted dependencies
     async def rules(self, user_repo: UserRepository) -> None:  # Method Injection!
@@ -101,7 +101,7 @@ This created several issues:
 
 ### Phase 1: FormRequest Base Class Update
 
-**File**: `framework/ftf/validation/request.py`
+**File**: `framework/jtc/validation/request.py`
 
 Updated `rules()` method signature to accept `**dependencies: Any`:
 
@@ -143,7 +143,7 @@ async def rules(self, **dependencies: Any) -> None:
 
 ### Phase 2: Validate Dependency Handler
 
-**File**: `framework/ftf/validation/handler.py`
+**File**: `framework/jtc/validation/handler.py`
 
 Updated `Validate()` dependency resolver to inspect `rules()` signature and resolve type-hinted dependencies:
 
@@ -202,7 +202,7 @@ if 'session' in rules_signature.parameters and 'session' not in resolved_depende
 
 ### Phase 3: Rule Helpers Update
 
-**File**: `framework/ftf/validation/rules.py`
+**File**: `framework/jtc/validation/rules.py`
 
 Updated `Rule.unique()` and `Rule.exists()` to accept both `AsyncSession` and `BaseRepository`:
 
@@ -286,9 +286,9 @@ async def unique(
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/validation/request.py` | +100 lines | Update rules() signature and docstrings |
-| `framework/ftf/validation/handler.py` | +180 lines | Inspect-based dependency resolution with Container |
-| `framework/ftf/validation/rules.py` | +80 lines | Support AsyncSession or BaseRepository |
+| `framework/jtc/validation/request.py` | +100 lines | Update rules() signature and docstrings |
+| `framework/jtc/validation/handler.py` | +180 lines | Inspect-based dependency resolution with Container |
+| `framework/jtc/validation/rules.py` | +80 lines | Support AsyncSession or BaseRepository |
 
 ### Created Files (1 file)
 
@@ -311,7 +311,7 @@ async def unique(
 ### 1. Repository Injection
 
 ```python
-from ftf.validation import FormRequest, Validate, Rule
+from jtc.validation import FormRequest, Validate, Rule
 from app.repositories import UserRepository
 
 class StoreUserRequest(FormRequest):
@@ -342,9 +342,9 @@ async def create(request: StoreUserRequest = Validate(StoreUserRequest)):
 ### 2. AuthManager Injection
 
 ```python
-from ftf.validation import FormRequest, Validate, Rule
-from ftf.auth import AuthManager
-from ftf.auth.contracts import Credentials
+from jtc.validation import FormRequest, Validate, Rule
+from jtc.auth import AuthManager
+from jtc.auth.contracts import Credentials
 
 class LoginRequest(FormRequest):
     """
@@ -362,7 +362,7 @@ class LoginRequest(FormRequest):
 
     async def rules(self, auth: AuthManager) -> None:
         """Validate credentials using injected AuthManager."""
-        from ftf.auth.contracts import Credentials
+        from jtc.auth.contracts import Credentials
         credentials = Credentials(email=self.email, password=self.password)
         if not await auth.check(credentials):
             self.stop("Invalid credentials")
@@ -378,7 +378,7 @@ async def login(request: LoginRequest = Validate(LoginRequest)):
 ### 3. Custom Service Injection
 
 ```python
-from ftf.validation import FormRequest, Validate, Rule
+from jtc.validation import FormRequest, Validate, Rule
 
 class CreatePostRequest(FormRequest):
     """

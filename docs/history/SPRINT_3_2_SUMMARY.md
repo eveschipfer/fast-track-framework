@@ -21,7 +21,7 @@ Implement a robust background job processing system using SAQ (Simple Async Queu
 - Full support for dependency injection via `__init__`
 
 ```python
-from ftf.jobs import Job
+from jtc.jobs import Job
 
 class SendWelcomeEmail(Job):
     def __init__(self, mailer: MailerService):
@@ -70,7 +70,7 @@ async def runner(ctx, *, job_class: str, payload: dict) -> None:
 - Configuration support for Redis URL
 
 ```python
-from ftf.jobs import JobManager
+from jtc.jobs import JobManager
 
 JobManager.initialize("redis://localhost:6379")
 queue = JobManager.get_queue()
@@ -78,7 +78,7 @@ queue = JobManager.get_queue()
 
 ### 4. **CLI Commands**
 
-#### `ftf make job <Name>`
+#### `jtc make job <Name>`
 Scaffolds a new Job class with:
 - Template includes dependency injection pattern
 - Automatic `async def handle()` method
@@ -86,12 +86,12 @@ Scaffolds a new Job class with:
 - Example usage in docstring
 
 ```bash
-$ ftf make job SendWelcomeEmail
-✓ Job created: src/ftf/jobs/send_welcome_email.py
+$ jtc make job SendWelcomeEmail
+✓ Job created: src/jtc/jobs/send_welcome_email.py
 💡 Dispatch with: await SendWelcomeEmail.dispatch(...)
 ```
 
-#### `ftf queue work`
+#### `jtc queue work`
 Starts the SAQ worker to process background jobs:
 - Initializes IoC Container
 - Registers the `runner()` function
@@ -99,14 +99,14 @@ Starts the SAQ worker to process background jobs:
 - Configurable concurrency (default: 10)
 
 ```bash
-$ ftf queue work
+$ jtc queue work
 🚀 Starting worker for queue: default
 📡 Redis: redis://localhost:6379
 ✓ Worker ready!
 Press Ctrl+C to stop
 ```
 
-#### `ftf queue dashboard`
+#### `jtc queue dashboard`
 Starts the SAQ monitoring UI (like Laravel Horizon):
 - Web-based dashboard at http://localhost:8080
 - Monitor running jobs
@@ -115,7 +115,7 @@ Starts the SAQ monitoring UI (like Laravel Horizon):
 - Queue statistics
 
 ```bash
-$ ftf queue dashboard
+$ jtc queue dashboard
 🎛️  Starting SAQ dashboard...
 ✓ Dashboard ready!
 🌐 Visit: http://localhost:8080
@@ -268,10 +268,10 @@ tests/unit/test_jobs.py::test_job_with_dependency_full_flow SKIPPED (needs Redis
 
 | Feature | Laravel Horizon | FTF Job Queue |
 |---------|----------------|---------------|
-| **Job Classes** | ✅ `php artisan make:job` | ✅ `ftf make job` |
+| **Job Classes** | ✅ `php artisan make:job` | ✅ `jtc make job` |
 | **Dispatch API** | `SendEmail::dispatch($user)` | `await SendEmail.dispatch(user=user)` |
 | **Dependency Injection** | ✅ Constructor injection | ✅ IoC Container injection |
-| **Worker Command** | `php artisan queue:work` | `ftf queue work` |
+| **Worker Command** | `php artisan queue:work` | `jtc queue work` |
 | **Dashboard** | Horizon UI | SAQ Dashboard |
 | **Queue Backend** | Redis/SQS/Beanstalk | Redis (SAQ) |
 | **Async Native** | ❌ Sync PHP | ✅ Full async Python |
@@ -295,16 +295,16 @@ aiohttp = "^3.9.0"    # For SAQ dashboard UI
 ## 📝 Files Created/Modified
 
 ### Created Files
-1. `src/ftf/jobs/core.py` (328 lines)
+1. `src/jtc/jobs/core.py` (328 lines)
    - `Job` abstract base class
    - `runner()` universal function
    - `JobManager` singleton
    - Container management helpers
 
-2. `src/ftf/jobs/__init__.py` (41 lines)
+2. `src/jtc/jobs/__init__.py` (41 lines)
    - Public API exports
 
-3. `src/ftf/cli/commands/queue.py` (188 lines)
+3. `src/jtc/cli/commands/queue.py` (188 lines)
    - `queue:work` command
    - `queue:dashboard` command
 
@@ -316,14 +316,14 @@ aiohttp = "^3.9.0"    # For SAQ dashboard UI
 1. `pyproject.toml`
    - Added saq, redis, aiohttp dependencies
 
-2. `src/ftf/cli/templates.py`
+2. `src/jtc/cli/templates.py`
    - Added `get_job_template()` function
 
-3. `src/ftf/cli/commands/make.py`
+3. `src/jtc/cli/commands/make.py`
    - Added `make:job` command
    - Imported `get_job_template`
 
-4. `src/ftf/cli/main.py`
+4. `src/jtc/cli/main.py`
    - Registered `queue:*` command group
    - Updated version to Sprint 3.2
 
@@ -386,7 +386,7 @@ def set_container(container: Container) -> None:
 ### Example 1: Simple Job
 
 ```python
-from ftf.jobs import Job
+from jtc.jobs import Job
 
 class SendWelcomeEmail(Job):
     def __init__(self) -> None:
@@ -404,9 +404,9 @@ await SendWelcomeEmail.dispatch(email="user@test.com", name="John")
 ### Example 2: Job with Dependencies
 
 ```python
-from ftf.jobs import Job
-from ftf.repositories import UserRepository
-from ftf.services import MailerService
+from jtc.jobs import Job
+from jtc.repositories import UserRepository
+from jtc.services import MailerService
 
 class SendWelcomeEmail(Job):
     def __init__(
@@ -433,10 +433,10 @@ await SendWelcomeEmail.dispatch(user_id=123)
 ### Example 3: Complete Setup
 
 ```python
-from ftf.core import Container
-from ftf.jobs import JobManager, set_container
-from ftf.repositories import UserRepository
-from ftf.services import MailerService
+from jtc.core import Container
+from jtc.jobs import JobManager, set_container
+from jtc.repositories import UserRepository
+from jtc.services import MailerService
 
 # Initialize
 container = Container()
@@ -455,14 +455,14 @@ await ProcessPayment.dispatch(payment_id=456)
 
 ```bash
 # Terminal 1: Start worker
-$ ftf queue work
+$ jtc queue work
 🚀 Starting worker for queue: default
 📡 Redis: redis://localhost:6379
 ✓ Worker ready!
 Press Ctrl+C to stop
 
 # Terminal 2: Start dashboard
-$ ftf queue dashboard
+$ jtc queue dashboard
 🎛️  Starting SAQ dashboard...
 ✓ Dashboard ready!
 🌐 Visit: http://localhost:8080

@@ -12,7 +12,7 @@ import asyncio
 from datetime import datetime
 from typing import Any
 
-from ftf.resources import JsonResource, MISSING
+from jtc.resources import JsonResource, MISSING
 
 try:
     from fastapi import Request
@@ -20,7 +20,7 @@ except ImportError:
     Request = None  # type: ignore
 
 
-# Mock User model (in real app, this would be from ftf.models)
+# Mock User model (in real app, this would be from jtc.models)
 class User:
     def __init__(
         self,

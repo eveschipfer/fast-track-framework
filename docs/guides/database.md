@@ -43,7 +43,7 @@ Fast Query is a standalone, framework-agnostic ORM package extracted from Fast T
 ### With Fast Track Framework
 
 ```python
-from ftf.http import FastTrackFramework, Inject
+from jtc.http import FastTrackFramework, Inject
 from fast_query import (
     create_engine, AsyncSessionFactory,
     Base, BaseRepository,

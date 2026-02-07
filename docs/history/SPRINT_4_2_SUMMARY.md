@@ -86,11 +86,11 @@ UserResource.collection(users).resolve()
 
 Generate resource classes with `make:resource` command:
 ```bash
-$ ftf make resource UserResource
-✓ Resource created: src/ftf/resources/user_resource.py
+$ jtc make resource UserResource
+✓ Resource created: src/jtc/resources/user_resource.py
 
-$ ftf make resource PostResource --model Post
-✓ Resource created: src/ftf/resources/post_resource.py
+$ jtc make resource PostResource --model Post
+✓ Resource created: src/jtc/resources/post_resource.py
 ```
 
 ---
@@ -98,12 +98,12 @@ $ ftf make resource PostResource --model Post
 ## File Structure
 
 ```
-src/ftf/resources/
+src/jtc/resources/
 ├── __init__.py              # Public API (JsonResource, ResourceCollection, MISSING)
 ├── core.py                  # JsonResource base class with when() and when_loaded()
 └── collection.py            # ResourceCollection for handling lists
 
-src/ftf/cli/
+src/jtc/cli/
 ├── commands/make.py         # Added make:resource command
 └── templates.py             # Added get_resource_template()
 
@@ -236,7 +236,7 @@ class JsonResource(Generic[T]):
     @classmethod
     def collection(cls, resources: Iterable[T]) -> "ResourceCollection[T]":
         """Create collection."""
-        from ftf.resources.collection import ResourceCollection
+        from jtc.resources.collection import ResourceCollection
         return ResourceCollection(cls, resources)
 
     def when(self, condition: bool, value: Any, default: Any = MISSING) -> Any:
@@ -307,7 +307,7 @@ def make_resource(
         model = name.replace("Resource", "")
 
     filename = to_snake_case(name)
-    file_path = Path("src/ftf/resources") / f"{filename}.py"
+    file_path = Path("src/jtc/resources") / f"{filename}.py"
     content = get_resource_template(name, model)
 
     if create_file(file_path, content, force):
@@ -447,8 +447,8 @@ class UserResource(JsonResource[User]):
 ### Example 5: In FastAPI Routes
 
 ```python
-from ftf.http import FastTrackFramework, Inject
-from ftf.resources import JsonResource
+from jtc.http import FastTrackFramework, Inject
+from jtc.resources import JsonResource
 
 app = FastTrackFramework()
 

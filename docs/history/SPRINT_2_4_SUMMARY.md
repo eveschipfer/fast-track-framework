@@ -97,10 +97,10 @@ assert len(list(result.scalars().all())) == 0
 
 **Models Coverage** (was 0%, now **100%**):
 ```
-src/ftf/models/comment.py    14 stmts    0 missed    100.00% ✅
-src/ftf/models/post.py        14 stmts    0 missed    100.00% ✅
-src/ftf/models/role.py        11 stmts    0 missed    100.00% ✅
-src/ftf/models/user.py        12 stmts    0 missed    100.00% ✅
+src/jtc/models/comment.py    14 stmts    0 missed    100.00% ✅
+src/jtc/models/post.py        14 stmts    0 missed    100.00% ✅
+src/jtc/models/role.py        11 stmts    0 missed    100.00% ✅
+src/jtc/models/user.py        12 stmts    0 missed    100.00% ✅
 ```
 
 **Overall Project Coverage**: 43.03% → Will increase when all tests run together
@@ -375,10 +375,10 @@ Sprint 2.4 is complete when:
 
 ### Sprint 3.2: Artisan-like CLI
 
-- [ ] `ftf make:model` - Generate model files
-- [ ] `ftf make:repository` - Generate repository classes
-- [ ] `ftf make:migration` - Generate migrations
-- [ ] `ftf db:seed` - Database seeding
+- [ ] `jtc make:model` - Generate model files
+- [ ] `jtc make:repository` - Generate repository classes
+- [ ] `jtc make:migration` - Generate migrations
+- [ ] `jtc db:seed` - Database seeding
 
 ---
 

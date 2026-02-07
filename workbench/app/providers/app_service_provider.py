@@ -32,7 +32,7 @@ Example:
             cache.configure(driver="redis")
 """
 
-from ftf.core import Container, ServiceProvider
+from jtc.core import Container, ServiceProvider
 
 
 class AppServiceProvider:

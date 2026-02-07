@@ -84,7 +84,7 @@ if not AIOBOTO3_AVAILABLE:
 ## File Structure
 
 ```
-src/ftf/storage/
+src/jtc/storage/
 ├── __init__.py              # Public API (Storage, exceptions)
 ├── contracts.py             # StorageDriver Protocol
 ├── exceptions.py            # StorageException, FileNotFoundException, etc.
@@ -420,7 +420,7 @@ class StorageManager:
 ### Basic Operations
 
 ```python
-from ftf.storage import Storage
+from jtc.storage import Storage
 
 # Store file
 await Storage.put("uploads/avatar.jpg", image_bytes)
@@ -469,8 +469,8 @@ exists = await Storage.disk("s3").exists("backup.txt")
 ### File Upload in API
 
 ```python
-from ftf.http import FastTrackFramework, Inject
-from ftf.storage import Storage
+from jtc.http import FastTrackFramework, Inject
+from jtc.storage import Storage
 from fastapi import UploadFile
 
 app = FastTrackFramework()
@@ -497,8 +497,8 @@ async def upload_file(file: UploadFile):
 
 ```python
 import pytest
-from ftf.storage import Storage
-from ftf.storage.drivers.memory_driver import MemoryDriver
+from jtc.storage import Storage
+from jtc.storage.drivers.memory_driver import MemoryDriver
 
 @pytest.fixture
 def storage():
@@ -795,7 +795,7 @@ Storage::disk('s3')->put('backup.txt', $content);
 
 ```python
 # FTF (async)
-from ftf.storage import Storage
+from jtc.storage import Storage
 
 # Store file
 await Storage.put("uploads/avatar.jpg", content)

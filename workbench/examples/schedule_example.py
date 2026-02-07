@@ -11,7 +11,7 @@ Features Demonstrated:
     - Background jobs with @Job.dispatch()
 
 Run the worker:
-    $ ftf queue work
+    $ jtc queue work
 
 Then these tasks will automatically execute according to their schedules:
     - hourly_cleanup: Every hour at minute 0
@@ -25,8 +25,8 @@ You can also dispatch background jobs from anywhere in your app:
 
 from datetime import datetime
 
-from ftf.jobs import Job
-from ftf.schedule import Schedule
+from jtc.jobs import Job
+from jtc.schedule import Schedule
 
 # ============================================================================
 # SCHEDULED TASKS (Cron & Interval)
@@ -247,7 +247,7 @@ if __name__ == "__main__":
     Instead, start the worker which will automatically discover
     and register all scheduled tasks:
 
-        $ ftf queue work
+        $ jtc queue work
 
     To dispatch background jobs from your application:
 
@@ -258,17 +258,17 @@ if __name__ == "__main__":
 
     To list all scheduled tasks:
 
-        $ ftf queue list
+        $ jtc queue list
     """
     print("=" * 70)
     print("Schedule Example - DO NOT RUN DIRECTLY")
     print("=" * 70)
     print()
     print("To start the worker with scheduled tasks:")
-    print("  $ ftf queue work")
+    print("  $ jtc queue work")
     print()
     print("To list all scheduled tasks:")
-    print("  $ ftf queue list")
+    print("  $ jtc queue list")
     print()
     print("To dispatch background jobs:")
     print("  from examples.schedule_example import ProcessOrderJob")

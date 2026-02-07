@@ -93,7 +93,7 @@ After Sprint 5.2, the application still had scattered configuration:
 
 ### Phase 1: Framework Config Core
 
-#### 1. Created `framework/ftf/config/repository.py` (350+ lines)
+#### 1. Created `framework/jtc/config/repository.py` (350+ lines)
 
 **ConfigRepository Singleton:**
 
@@ -190,7 +190,7 @@ def get(self, key: str, default: Any = None) -> Any:
 3. **Singleton Pattern**: Single source of truth for configuration
 4. **Graceful Defaults**: Always return default if key doesn't exist
 
-#### 2. Created `framework/ftf/config/__init__.py`
+#### 2. Created `framework/jtc/config/__init__.py`
 
 **Global Helper Function:**
 ```python
@@ -292,7 +292,7 @@ config = {
 
 ### Phase 3: Framework HTTP Integration
 
-#### 5. Updated `framework/ftf/http/app.py` (+50 lines)
+#### 5. Updated `framework/jtc/http/app.py` (+50 lines)
 
 **New Constructor Parameter:**
 ```python
@@ -351,7 +351,7 @@ def _load_configuration(self, config_path: str) -> None:
 ```python
 def _register_configured_providers(self) -> None:
     """Auto-register providers from config("app.providers")."""
-    from ftf.config import config
+    from jtc.config import config
 
     providers = config("app.providers", [])
 
@@ -571,8 +571,8 @@ app = FastTrackFramework()
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `framework/ftf/config/repository.py` | 350 | ConfigRepository singleton |
-| `framework/ftf/config/__init__.py` | 30 | Global config() helper |
+| `framework/jtc/config/repository.py` | 350 | ConfigRepository singleton |
+| `framework/jtc/config/__init__.py` | 30 | Global config() helper |
 | `workbench/config/__init__.py` | 10 | Package marker |
 | `workbench/config/app.py` | 80 | Application configuration |
 | `workbench/config/database.py` | 110 | Database configuration |
@@ -582,7 +582,7 @@ app = FastTrackFramework()
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/http/app.py` | +50 lines | Config loading + auto-registration |
+| `framework/jtc/http/app.py` | +50 lines | Config loading + auto-registration |
 | `workbench/main.py` | Refactored | Simplified to use config |
 
 ### Documentation (1 file)
@@ -600,7 +600,7 @@ app = FastTrackFramework()
 ### Basic Configuration Access
 
 ```python
-from ftf.config import config
+from jtc.config import config
 
 # Simple value
 app_name = config("app.name")  # "Fast Track Framework"
@@ -640,8 +640,8 @@ config = {
 ### Using Config in Application
 
 ```python
-from ftf.config import config
-from ftf.http import FastTrackFramework
+from jtc.config import config
+from jtc.http import FastTrackFramework
 
 app = FastTrackFramework()
 
@@ -684,7 +684,7 @@ cache_path = config("cache.stores.file.path")
 ### Runtime Config Modification (Testing)
 
 ```python
-from ftf.config import get_config_repository
+from jtc.config import get_config_repository
 
 def test_with_debug_mode():
     repo = get_config_repository()
@@ -722,13 +722,13 @@ $ docker exec fast_track_dev bash -c "cd larafast && poetry run pytest workbench
 ### Coverage Analysis
 
 **New Modules**:
-- `framework/ftf/config/__init__.py`: **100%** coverage ✅
-- `framework/ftf/config/repository.py`: **64.29%** coverage ✅
+- `framework/jtc/config/__init__.py`: **100%** coverage ✅
+- `framework/jtc/config/repository.py`: **64.29%** coverage ✅
 - `workbench/app/providers/app_service_provider.py`: **100%** coverage ✅
 - `workbench/app/providers/route_service_provider.py`: **100%** coverage ✅
 
 **Updated Modules**:
-- `framework/ftf/http/app.py`: **88.89%** coverage (maintained) ✅
+- `framework/jtc/http/app.py`: **88.89%** coverage (maintained) ✅
 
 **Overall**:
 - Total Coverage: **58.80%** (maintained from Sprint 5.2)
@@ -932,7 +932,7 @@ config = {
 }
 
 # Usage
-from ftf.config import config, get_config_repository
+from jtc.config import config, get_config_repository
 
 name = config("app.name")
 get_config_repository().set("app.debug", True)  # Set at runtime
@@ -964,7 +964,7 @@ get_config_repository().set("app.debug", True)  # Set at runtime
 ### 1. Config Caching
 
 ```python
-# ftf config:cache
+# jtc config:cache
 def cache_config():
     """Pre-compile config to cached file."""
     config_repo = get_config_repository()
@@ -999,10 +999,10 @@ app_config = AppConfig(**config("app"))
 ### 3. Config Publishing
 
 ```python
-# ftf vendor:publish --tag=config
+# jtc vendor:publish --tag=config
 # Copy framework defaults to workbench
 shutil.copy(
-    "framework/ftf/config/defaults/mail.py",
+    "framework/jtc/config/defaults/mail.py",
     "workbench/config/mail.py"
 )
 ```

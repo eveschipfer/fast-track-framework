@@ -89,7 +89,7 @@ from fast_query import (
 ### 3. Fast Track Framework Integration
 
 #### Global Exception Handler
-Added automatic conversion of `RecordNotFound` to HTTP 404 in `src/ftf/http/app.py`:
+Added automatic conversion of `RecordNotFound` to HTTP 404 in `src/jtc/http/app.py`:
 
 ```python
 async def handle_record_not_found(request: Request, exc: RecordNotFound) -> JSONResponse:
@@ -113,7 +113,7 @@ class User(Base, TimestampMixin, SoftDeletesMixin):
 ### 4. Cleanup & Refactoring
 
 **Removed**:
-- ✅ `src/ftf/database/` directory (deleted completely)
+- ✅ `src/jtc/database/` directory (deleted completely)
 - ✅ All `.old` backup files
 - ✅ FastAPI imports from ORM layer
 - ✅ FTF-specific references in ORM code
@@ -342,12 +342,12 @@ await main()
 ### With Fast Track Framework
 
 ```python
-from ftf.http import FastTrackFramework, Inject
+from jtc.http import FastTrackFramework, Inject
 from fast_query import (
     create_engine, AsyncSession, AsyncSessionFactory,
     BaseRepository, RecordNotFound
 )
-from ftf.models import User
+from jtc.models import User
 
 app = FastTrackFramework()
 
@@ -536,7 +536,7 @@ async def handle_not_found(request, exc):
 
 ### Key Files
 - `src/fast_query/` - Complete ORM package
-- `src/ftf/http/app.py` - Exception handler integration
+- `src/jtc/http/app.py` - Exception handler integration
 - `tests/unit/test_repository.py` - Repository tests
 - `tests/unit/test_query_builder.py` - Query builder tests
 - `tests/integration/test_database_integration.py` - Full stack tests

@@ -13,7 +13,7 @@ Tests cover:
 
 import pytest
 
-from ftf.schedule import (
+from jtc.schedule import (
     Schedule,
     ScheduleRegistry,
     ScheduledTask,

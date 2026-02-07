@@ -5,7 +5,7 @@ description = "Modern async Python framework orchestrating FastAPI and SQLAlchem
 authors = ["Everton Schipfer <eveschipfer@gmail.com>"]
 readme = "README.md"
 packages = [
-    {include = "ftf", from = "framework"},
+    {include = "jtc", from = "framework"},
     {include = "fast_query", from = "framework"},
     {include = "app", from = "workbench"},
     {include = "tests", from = "workbench"}
@@ -51,7 +51,7 @@ aiosmtplib = "^5.1.0"
 aioboto3 = {version = "^15.5.0", optional = true}
 
 [tool.poetry.scripts]
-ftf = "ftf.cli.main:app"  # CLI entry point (Sprint 3.0)
+jtc = "jtc.cli.main:app"  # CLI entry point (Sprint 3.0)
 
 [tool.poetry.group.dev.dependencies]
 # Testing
@@ -98,7 +98,7 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
-    "--cov=framework/ftf",
+    "--cov=framework/jtc",
     "--cov=workbench/app",
     "--cov-report=term-missing",
     "--cov-report=html",
@@ -116,7 +116,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
-source = ["framework/ftf", "framework/fast_query", "workbench/app"]
+source = ["framework/jtc", "framework/fast_query", "workbench/app"]
 omit = [
     "*/tests/*",
     "*/exercises/*",
@@ -255,10 +255,10 @@ ignore = [
     "T201",   # print allowed in exercises/demos
     "S311",   # random for non-cryptographic use is ok in demos
 ]
-"framework/ftf/http/controllers/**/*.py" = [
+"framework/jtc/http/controllers/**/*.py" = [
     "B008",   # function call in defaults (FastAPI Depends pattern)
 ]
-"framework/ftf/main.py" = [
+"framework/jtc/main.py" = [
     "ERA001", # commented code allowed for examples
 ]
 "workbench/main.py" = [

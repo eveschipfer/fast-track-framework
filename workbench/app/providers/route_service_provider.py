@@ -25,8 +25,8 @@ Example:
             app.include_router(web_router, prefix="/web", tags=["Web"])
 """
 
-from ftf.core import Container, ServiceProvider
-from ftf.http import FastTrackFramework
+from jtc.core import Container, ServiceProvider
+from jtc.http import FastTrackFramework
 
 
 class RouteServiceProvider(ServiceProvider):

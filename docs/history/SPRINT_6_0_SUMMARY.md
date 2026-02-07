@@ -219,7 +219,7 @@ mkdocs gh-deploy
 Application entry point.
 """
 
-from ftf.main import create_app
+from jtc.main import create_app
 
 # Create application with auto-configuration
 app = create_app()
@@ -261,14 +261,14 @@ fast_track_framework-1.0.0a1-py3-none-any.whl
 
 1. **Together** (full framework):
    ```python
-   from ftf.http import FastTrackFramework
+   from jtc.http import FastTrackFramework
    from fast_query import BaseRepository
    ```
 
 2. **Independently** (ORM only):
    ```python
    from fast_query import create_engine, get_session, Base, BaseRepository
-   # Zero ftf imports, zero FastAPI dependency
+   # Zero jtc imports, zero FastAPI dependency
    ```
 
 **Why Single Wheel?**

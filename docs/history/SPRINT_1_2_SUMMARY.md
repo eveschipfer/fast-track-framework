@@ -24,7 +24,7 @@ Sprint 1.2 implemented the core IoC (Inversion of Control) Container that powers
 
 ### 1. Core IoC Container
 
-**File**: `src/ftf/core/container.py`
+**File**: `src/jtc/core/container.py`
 
 **Key Features**:
 - Type-hint based resolution (not name-based)
@@ -230,7 +230,7 @@ except CircularDependencyError as e:
 
 ### 1. Why NOT Active Record in Async Python?
 
-**File**: `src/ftf/exercises/sprint_1_2_active_record_trap.py`
+**File**: `src/jtc/exercises/sprint_1_2_active_record_trap.py`
 
 **The Problem**:
 ```python
@@ -323,11 +323,11 @@ container.register(AsyncSession, scope="scoped")
 
 ## 📊 Files Created
 
-1. **`src/ftf/core/container.py`** - Core IoC container
-2. **`src/ftf/core/exceptions.py`** - DI exceptions
-3. **`src/ftf/core/__init__.py`** - Public API
-4. **`src/ftf/exercises/sprint_1_2_demo.py`** - DI examples
-5. **`src/ftf/exercises/sprint_1_2_active_record_trap.py`** - Educational anti-pattern
+1. **`src/jtc/core/container.py`** - Core IoC container
+2. **`src/jtc/core/exceptions.py`** - DI exceptions
+3. **`src/jtc/core/__init__.py`** - Public API
+4. **`src/jtc/exercises/sprint_1_2_demo.py`** - DI examples
+5. **`src/jtc/exercises/sprint_1_2_active_record_trap.py`** - Educational anti-pattern
 
 ---
 
@@ -363,7 +363,7 @@ This container powers all dependency injection:
 
 ### FastAPI Integration (Sprint 2.1)
 ```python
-from ftf.http import Inject
+from jtc.http import Inject
 
 @app.get("/users/{user_id}")
 async def get_user(

@@ -19,8 +19,8 @@ Educational Note:
 import pytest
 from redis.asyncio import Redis
 
-from ftf.core import Container
-from ftf.jobs import Job, JobManager, get_container, runner, set_container
+from jtc.core import Container
+from jtc.jobs import Job, JobManager, get_container, runner, set_container
 
 # ============================================================================
 # TEST JOBS
@@ -341,7 +341,7 @@ async def test_complete_job_flow(
 
     assert job is not None
     # SAQ job has function name and kwargs
-    assert job["function"] == "ftf.jobs.core.runner"
+    assert job["function"] == "jtc.jobs.core.runner"
     assert job["kwargs"]["job_class"] == "tests.unit.test_jobs.SimpleJob"
     assert job["kwargs"]["payload"]["user_id"] == 777
 

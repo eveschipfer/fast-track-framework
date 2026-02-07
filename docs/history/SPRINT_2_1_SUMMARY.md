@@ -17,7 +17,7 @@ Installed via Poetry:
 
 ## 🏗️ Architecture Implemented
 
-### 1. Application Kernel (`src/ftf/http/app.py`)
+### 1. Application Kernel (`src/jtc/http/app.py`)
 
 **FastTrackFramework Class**
 - Extends FastAPI with built-in IoC Container
@@ -44,7 +44,7 @@ app.register(UserService)  # Convenience wrapper
 
 ---
 
-### 2. Dependency Injection Bridge (`src/ftf/http/params.py`)
+### 2. Dependency Injection Bridge (`src/jtc/http/params.py`)
 
 **Inject() Function**
 - Bridges FastAPI's `Depends()` system with our Container
@@ -74,7 +74,7 @@ def get_user(user_id: int, service: UserService = Inject(UserService)):
 
 ---
 
-### 3. Welcome Controller (`src/ftf/http/controllers/welcome_controller.py`)
+### 3. Welcome Controller (`src/jtc/http/controllers/welcome_controller.py`)
 
 **Proof-of-Concept Routes:**
 - `GET /` - Welcome message (demonstrates basic DI)
@@ -87,7 +87,7 @@ def get_user(user_id: int, service: UserService = Inject(UserService)):
 
 ---
 
-### 4. Main Entry Point (`src/ftf/main.py`)
+### 4. Main Entry Point (`src/jtc/main.py`)
 
 **Application Bootstrap:**
 ```python
@@ -110,10 +110,10 @@ app.include_router(router)
 **Runnable with:**
 ```bash
 # Development
-uvicorn ftf.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn jtc.main:app --reload --host 0.0.0.0 --port 8000
 
 # Or directly
-python -m ftf.main
+python -m jtc.main
 ```
 
 ---
@@ -148,11 +148,11 @@ Coverage: 97.42%
 ```
 
 **Coverage Breakdown:**
-- `src/ftf/core/container.py`: 97.18%
-- `src/ftf/http/app.py`: 95.12%
-- `src/ftf/http/params.py`: 100%
-- `src/ftf/http/controllers/welcome_controller.py`: 100%
-- `src/ftf/main.py`: 100%
+- `src/jtc/core/container.py`: 97.18%
+- `src/jtc/http/app.py`: 95.12%
+- `src/jtc/http/params.py`: 100%
+- `src/jtc/http/controllers/welcome_controller.py`: 100%
+- `src/jtc/main.py`: 100%
 
 ---
 
@@ -162,7 +162,7 @@ All quality checks pass:
 
 ### Type Checking (MyPy - Strict Mode)
 ```bash
-$ poetry run mypy src/ftf/http/ src/ftf/core/ src/ftf/main.py
+$ poetry run mypy src/jtc/http/ src/jtc/core/ src/jtc/main.py
 Success: no issues found in 10 source files
 ```
 
@@ -180,7 +180,7 @@ $ poetry run isort --check-only src/ tests/
 
 ### Linting (Ruff)
 ```bash
-$ poetry run ruff check src/ftf/http/ src/ftf/main.py tests/integration/
+$ poetry run ruff check src/jtc/http/ src/jtc/main.py tests/integration/
 All checks passed!
 ```
 
@@ -197,7 +197,7 @@ All checks passed!
 
 ```
 larafast/
-├── src/ftf/
+├── src/jtc/
 │   ├── http/
 │   │   ├── __init__.py              # Public API exports
 │   │   ├── app.py                   # Application Kernel ⭐
@@ -241,7 +241,7 @@ larafast/
 # Inside Docker container
 docker exec -it fast_track_dev bash
 cd /app/larafast
-poetry run uvicorn ftf.main:app --reload --host 0.0.0.0 --port 8000
+poetry run uvicorn jtc.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Testing the API
@@ -267,7 +267,7 @@ open http://localhost:8000/docs
 
 ```python
 from fastapi import APIRouter
-from ftf.http.params import Inject
+from jtc.http.params import Inject
 
 router = APIRouter()
 

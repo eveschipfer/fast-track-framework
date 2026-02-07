@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from ftf.i18n import Translator, all_translations, has, set_locale, t, trans
+from jtc.i18n import Translator, all_translations, has, set_locale, t, trans
 
 
 # ============================================================================

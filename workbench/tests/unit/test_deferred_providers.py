@@ -10,8 +10,8 @@ Tests verify:
 
 import pytest
 
-from ftf.core import Container
-from ftf.core.service_provider import DeferredServiceProvider, ServiceProvider
+from jtc.core import Container
+from jtc.core.service_provider import DeferredServiceProvider, ServiceProvider
 
 
 class QueueService:

@@ -74,7 +74,7 @@ Bcrypt 5.0.0 introduced stricter enforcement of the 72-byte password limit. This
 
 2. **SHA256 Pre-Hashing** (Best Practice Implementation):
    ```python
-   # framework/ftf/auth/crypto.py
+   # framework/jtc/auth/crypto.py
 
    def _prehash_password(password: str) -> str:
        """
@@ -112,7 +112,7 @@ This demonstrates the "defense in depth" security principle - using SHA256 + bcr
 
 **Files Modified**:
 - `pyproject.toml` - Pinned bcrypt version
-- `framework/ftf/auth/crypto.py` - Added pre-hashing implementation
+- `framework/jtc/auth/crypto.py` - Added pre-hashing implementation
 
 ---
 
@@ -246,7 +246,7 @@ For internal framework endpoints, **Option A** is appropriate.
 **Error**:
 ```python
 assert "from app.models import Product" in content
-# Generated code had: from ftf.models import Product
+# Generated code had: from jtc.models import Product
 # Expected after monorepo: from app.models import Product
 ```
 
@@ -278,8 +278,8 @@ workbench/
 
 **Generated Code (Incorrect)**:
 ```python
-# framework/ftf/cli/templates.py - get_repository_template()
-from ftf.models import {model_name}  # ❌ Wrong - framework package
+# framework/jtc/cli/templates.py - get_repository_template()
+from jtc.models import {model_name}  # ❌ Wrong - framework package
 ```
 
 **Expected Code (Correct)**:
@@ -293,11 +293,11 @@ Updated all template import paths:
 ```bash
 # Replace ftf.models with app.models in templates
 sed -i 's/from ftf\.models import/from app.models import/g' \
-    framework/ftf/cli/templates.py
+    framework/jtc/cli/templates.py
 ```
 
 **Files Modified**:
-- `framework/ftf/cli/templates.py` (3 occurrences):
+- `framework/jtc/cli/templates.py` (3 occurrences):
   - Line 114: `get_repository_template()`
   - Line 187: `get_request_template()`
   - Line 298: `get_factory_template()`
@@ -305,7 +305,7 @@ sed -i 's/from ftf\.models import/from app.models import/g' \
 **Why This Matters**:
 - CLI generates **application code**, not framework code
 - Application models live in `workbench/app/models/`
-- Framework models (if any) live in `framework/ftf/models/`
+- Framework models (if any) live in `framework/jtc/models/`
 - **Separation of concerns** - user code vs framework code
 
 **Lesson Learned**:
@@ -338,7 +338,7 @@ assert job_instance.executed is True
 Job runner uses dynamic import with string-based class paths:
 
 ```python
-# framework/ftf/jobs/core.py - runner function
+# framework/jtc/jobs/core.py - runner function
 module_path, class_name = job_class.rsplit(".", 1)
 # Example: "tests.unit.test_jobs.SimpleJob"
 #          -> module="tests.unit.test_jobs", class="SimpleJob"
@@ -457,15 +457,15 @@ job_cls = getattr(module, "SendWelcomeEmailJob")
   - Reason: Compatibility with passlib 1.7.4
 
 ### 2. Framework Code
-- **framework/ftf/auth/crypto.py**
+- **framework/jtc/auth/crypto.py**
   - Added: `import hashlib`
   - Added: `_prehash_password()` helper function
   - Updated: `hash_password()` to use SHA256 pre-hashing
   - Updated: `verify_password()` to use SHA256 pre-hashing
   - Updated: Docstrings explaining the two-layer approach
 
-- **framework/ftf/cli/templates.py**
-  - Changed: `from ftf.models import` → `from app.models import` (3 occurrences)
+- **framework/jtc/cli/templates.py**
+  - Changed: `from jtc.models import` → `from app.models import` (3 occurrences)
   - Affected templates: repository, request, factory
 
 ### 3. Test Code
@@ -627,7 +627,7 @@ $ pytest workbench/tests/unit/test_auth.py::test_hash_password_returns_bcrypt_ha
 
 # 3. Apply fix (bcrypt downgrade + SHA256 pre-hashing)
 $ poetry update bcrypt
-$ edit framework/ftf/auth/crypto.py
+$ edit framework/jtc/auth/crypto.py
 
 # 4. Verify fix
 $ pytest workbench/tests/unit/test_auth.py -v
@@ -663,7 +663,7 @@ workbench/tests/
 
 **Final Coverage** (after Sprint 5.1):
 ```
-framework/ftf/                   57.85%
+framework/jtc/                   57.85%
 └── auth/                        100%    # ✅ Full coverage
     ├── crypto.py               100%    # All functions tested
     ├── jwt.py                   92%    # Token management
@@ -877,24 +877,24 @@ Refactoring Checklist:
 **What to Check**:
 ```python
 # CLI templates
-framework/ftf/cli/templates.py
+framework/jtc/cli/templates.py
 ├── get_model_template()      # from ??? import Base
 ├── get_repository_template() # from ??? import Model
 ├── get_factory_template()    # from ??? import Model
 └── ...
 
 # Scaffolding commands
-framework/ftf/cli/commands/make.py
+framework/jtc/cli/commands/make.py
 └── Path calculations  # Where to generate files?
 ```
 
 **Detection Strategy**:
 ```bash
 # 1. Grep for old import patterns
-$ grep -r "from ftf.models import" framework/ftf/cli/
+$ grep -r "from jtc.models import" framework/jtc/cli/
 
 # 2. Generate test file
-$ ftf make repository TestRepo
+$ jtc make repository TestRepo
 
 # 3. Inspect generated code
 $ cat src/repositories/test_repository.py
@@ -1167,9 +1167,9 @@ Framework is now **production-ready** with:
 - [Passlib documentation](https://passlib.readthedocs.io/)
 
 ### Code Locations
-- Auth module: `framework/ftf/auth/`
-- Job queue: `framework/ftf/jobs/`
-- CLI templates: `framework/ftf/cli/templates.py`
+- Auth module: `framework/jtc/auth/`
+- Job queue: `framework/jtc/jobs/`
+- CLI templates: `framework/jtc/cli/templates.py`
 - Tests: `workbench/tests/`
 
 ---

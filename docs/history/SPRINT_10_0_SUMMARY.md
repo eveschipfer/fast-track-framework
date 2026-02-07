@@ -33,7 +33,7 @@ Sprint 10.0 introduces the **Guard Pattern** inspired by Laravel's authenticatio
 
 **Before (Sprint 9.0):**
 ```python
-# framework/ftf/auth/guard.py
+# framework/jtc/auth/guard.py
 async def get_current_user(request: Request, credentials: HTTPAuthorizationCredentials) -> Any:
     # ❌ Hardcoded JWT logic
     # Cannot switch authentication methods
@@ -42,7 +42,7 @@ async def get_current_user(request: Request, credentials: HTTPAuthorizationCrede
 
 **After (Sprint 10.0):**
 ```python
-# framework/ftf/auth/auth_manager.py
+# framework/jtc/auth/auth_manager.py
 class AuthManager:
     # Main entry point (Singleton)
     def guard(name) -> Guard
@@ -50,13 +50,13 @@ class AuthManager:
     def check(credentials) -> bool
     def authenticate(credentials) -> Any
 
-# framework/ftf/auth/guards/jwt_guard.py
+# framework/jtc/auth/guards/jwt_guard.py
 class JwtGuard(Guard):
     def user() -> User
     def check(credentials) -> bool
 
 # Usage
-from ftf.auth import AuthManager
+from jtc.auth import AuthManager
 user = await AuthManager.user()  # Uses default guard
 api_guard = await AuthManager.guard("api")  # Specific guard
 ```
@@ -80,7 +80,7 @@ The Sprint 3.3 authentication system had several limitations:
 
 **Problem 1: Hardcoded JWT Logic**
 
-The old `get_current_user()` function in `framework/ftf/auth/guard.py` was hardcoded to:
+The old `get_current_user()` function in `framework/jtc/auth/guard.py` was hardcoded to:
 - Extract JWT token from `Authorization: Bearer` header
 - Decode and verify JWT
 - Fetch user from database
@@ -109,7 +109,7 @@ user = await user_repo.find(user_id)
 
 **Problem 3: Not Configuration-Driven**
 
-JWT settings (secret key, expiration) were hardcoded in `framework/ftf/auth/jwt.py`:
+JWT settings (secret key, expiration) were hardcoded in `framework/jtc/auth/jwt.py`:
 
 ```python
 # ❌ Hardcoded in jwt.py
@@ -135,7 +135,7 @@ DEFAULT_EXPIRATION = timedelta(minutes=30)
 
 ### Phase 1: Authentication Contracts
 
-**File**: `framework/ftf/auth/contracts.py`
+**File**: `framework/jtc/auth/contracts.py`
 
 Created abstract interfaces for `Guard` and `UserProvider`:
 
@@ -190,7 +190,7 @@ class Credentials(BaseModel):
 
 ### Phase 2: AuthManager
 
-**File**: `framework/ftf/auth/auth_manager.py`
+**File**: `framework/jtc/auth/auth_manager.py`
 
 AuthManager is the main entry point for authentication. It's a Singleton registered in the Container and provides:
 
@@ -259,7 +259,7 @@ class AuthManager:
 
 ### Phase 3: JwtGuard
 
-**File**: `framework/ftf/auth/guards/jwt_guard.py`
+**File**: `framework/jtc/auth/guards/jwt_guard.py`
 
 Implements the `Guard` interface for JWT authentication:
 
@@ -304,7 +304,7 @@ class JwtGuard(Guard):
 
 ### Phase 4: Database UserProvider
 
-**File**: `framework/ftf/auth/user_provider.py`
+**File**: `framework/jtc/auth/user_provider.py`
 
 Implements `UserProvider` interface for database user retrieval:
 
@@ -398,16 +398,16 @@ auth: AuthConfig = Field(default_factory=AuthConfig)
 
 ### Phase 7: Backward Compatibility
 
-**File**: `framework/ftf/auth/__init__.py`
+**File**: `framework/jtc/auth/__init__.py`
 
 Updated exports to include `AuthManager` while keeping backward compatibility with `get_current_user()`:
 
 ```python
 # NEW: Guard Pattern (Sprint 10)
-from ftf.auth import AuthManager
+from jtc.auth import AuthManager
 
 # OLD: Keep for backward compatibility
-from ftf.auth.guard import get_current_user
+from jtc.auth.guard import get_current_user
 
 # CurrentUser type alias
 CurrentUser = Annotated[Any, Depends(get_current_user)]
@@ -458,17 +458,17 @@ CurrentUser = Annotated[Any, Depends(get_current_user)]
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `framework/ftf/auth/contracts.py` | 180 | Guard and UserProvider interfaces |
-| `framework/ftf/auth/auth_manager.py` | 120 | Main auth entry point (AuthManager) |
-| `framework/ftf/auth/guards/__init__.py` | 5 | Guards package init |
-| `framework/ftf/auth/guards/jwt_guard.py` | 130 | JWT Guard implementation |
-| `framework/ftf/auth/user_provider.py` | 90 | Database UserProvider |
+| `framework/jtc/auth/contracts.py` | 180 | Guard and UserProvider interfaces |
+| `framework/jtc/auth/auth_manager.py` | 120 | Main auth entry point (AuthManager) |
+| `framework/jtc/auth/guards/__init__.py` | 5 | Guards package init |
+| `framework/jtc/auth/guards/jwt_guard.py` | 130 | JWT Guard implementation |
+| `framework/jtc/auth/user_provider.py` | 90 | Database UserProvider |
 
 ### Modified Files (2 files)
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/auth/__init__.py` | +20 lines | Add AuthManager, update exports |
+| `framework/jtc/auth/__init__.py` | +20 lines | Add AuthManager, update exports |
 | `workbench/config/settings.py` | +25 lines | Add AuthConfig class |
 
 ### Documentation (1 file)
@@ -486,8 +486,8 @@ CurrentUser = Annotated[Any, Depends(get_current_user)]
 ### 1. Using AuthManager in Routes
 
 ```python
-from ftf.http import FastTrackFramework, Inject
-from ftf.auth import CurrentUser
+from jtc.http import FastTrackFramework, Inject
+from jtc.auth import CurrentUser
 
 app = FastTrackFramework()
 
@@ -497,8 +497,8 @@ async def get_profile(user: CurrentUser = Inject(CurrentUser)):
 
 @app.post("/login")
 async def login(data: dict):
-    from ftf.auth import Credentials, AuthManager
-    from ftf.auth import AuthManager
+    from jtc.auth import Credentials, AuthManager
+    from jtc.auth import AuthManager
 
     credentials = Credentials(**data)
     
@@ -524,8 +524,8 @@ async def get_users(user: CurrentUser = Inject(CurrentUser)):
 ### 3. Creating Custom Guard
 
 ```python
-from ftf.auth.contracts import Guard, UserProvider
-from ftf.auth import AuthManager
+from jtc.auth.contracts import Guard, UserProvider
+from jtc.auth import AuthManager
 
 class CustomGuard(Guard):
     def __init__(self, user_provider: UserProvider):
@@ -649,7 +649,7 @@ $ poetry run pytest workbench/tests/ --tb=no -q
 - Session middleware for automatic session injection
 
 ```python
-# framework/ftf/auth/guards/session_guard.py
+# framework/jtc/auth/guards/session_guard.py
 class SessionGuard(Guard):
     async def user(self) -> Optional[Any]:
         # Get session from request
@@ -671,7 +671,7 @@ class SessionGuard(Guard):
 - Token permission system
 
 ```python
-# framework/ftf/auth/guards/token_guard.py
+# framework/jtc/auth/guards/token_guard.py
 class TokenGuard(Guard):
     async def user(self) -> Optional[Any]:
         # Validate API token

@@ -20,46 +20,46 @@ Implement the Fast Track CLI (`ftf`) using Typer and Rich to automate code gener
 - **Rich Output**: Beautiful terminal formatting with colors and structured output
 - **Command Groups**: Organized `make` and `db` command groups
 - **Entry Point**: `poetry run ftf` command registered in `pyproject.toml`
-- **Version Command**: `ftf version` shows framework version
+- **Version Command**: `jtc version` shows framework version
 
 ### 2. Scaffolding Commands (`make:*`)
 
 All commands support `--force` flag to overwrite existing files:
 
-#### `ftf make model <Name>`
+#### `jtc make model <Name>`
 - Generates SQLAlchemy model with `TimestampMixin` and `SoftDeletesMixin`
 - Auto-pluralizes table names (User → users, Category → categories)
 - Includes proper imports from `fast_query`
-- Creates file at `src/ftf/models/<snake_case>.py`
+- Creates file at `src/jtc/models/<snake_case>.py`
 
 **Example:**
 ```bash
-$ ftf make model Product
-✓ Model created: src/ftf/models/product.py
+$ jtc make model Product
+✓ Model created: src/jtc/models/product.py
 ```
 
-#### `ftf make repository <NameRepository>`
+#### `jtc make repository <NameRepository>`
 - Generates repository inheriting `BaseRepository[T]`
 - Auto-detects model name from repository name
 - Supports custom model via `--model` flag
-- Creates file at `src/ftf/repositories/<snake_case>.py`
+- Creates file at `src/jtc/repositories/<snake_case>.py`
 
 **Example:**
 ```bash
-$ ftf make repository ProductRepository
-✓ Repository created: src/ftf/repositories/product_repository.py
+$ jtc make repository ProductRepository
+✓ Repository created: src/jtc/repositories/product_repository.py
 ```
 
-#### `ftf make request <RequestName>`
+#### `jtc make request <RequestName>`
 - Generates `FormRequest` with validation methods
 - **INCLUDES GOVERNANCE WARNING** about side effects in `rules()`
 - Shows reminder on creation: "⚠️ Remember: rules() is for validation only!"
-- Creates file at `src/ftf/requests/<snake_case>.py`
+- Creates file at `src/jtc/requests/<snake_case>.py`
 
 **Example:**
 ```bash
-$ ftf make request StoreProductRequest
-✓ Request created: src/ftf/requests/store_product_request.py
+$ jtc make request StoreProductRequest
+✓ Request created: src/jtc/requests/store_product_request.py
 ⚠️  Remember: rules() is for validation only!
 ```
 
@@ -71,7 +71,7 @@ DO NOT mutate data or perform side effects here.
 """
 ```
 
-#### `ftf make factory <NameFactory>`
+#### `jtc make factory <NameFactory>`
 - Generates factory for test data generation with Faker
 - Auto-detects model name from factory name
 - Supports custom model via `--model` flag
@@ -79,24 +79,24 @@ DO NOT mutate data or perform side effects here.
 
 **Example:**
 ```bash
-$ ftf make factory ProductFactory
+$ jtc make factory ProductFactory
 ✓ Factory created: tests/factories/product_factory.py
 ```
 
-#### `ftf make seeder <NameSeeder>`
+#### `jtc make seeder <NameSeeder>`
 - Generates seeder for database seeding
 - Includes skeleton with `async def run()` method
 - Creates file at `tests/seeders/<snake_case>.py`
 
 **Example:**
 ```bash
-$ ftf make seeder ProductSeeder
+$ jtc make seeder ProductSeeder
 ✓ Seeder created: tests/seeders/product_seeder.py
 ```
 
 ### 3. Database Commands (`db:*`)
 
-#### `ftf db seed`
+#### `jtc db seed`
 - Runs database seeders asynchronously
 - Supports custom seeder via `--class` flag
 - Default: `DatabaseSeeder`
@@ -104,11 +104,11 @@ $ ftf make seeder ProductSeeder
 
 **Example:**
 ```bash
-$ ftf db seed
+$ jtc db seed
 Seeding database with DatabaseSeeder...
 ✓ Database seeded successfully
 
-$ ftf db seed --class UserSeeder
+$ jtc db seed --class UserSeeder
 Seeding database with UserSeeder...
 ✓ Database seeded successfully
 ```
@@ -144,7 +144,7 @@ Simple pluralization for table names:
 ### Project Structure
 
 ```
-src/ftf/cli/
+src/jtc/cli/
 ├── __init__.py           # Public API (app, console)
 ├── main.py               # Main CLI app with Typer
 ├── templates.py          # Code generation templates
@@ -174,7 +174,7 @@ def get_model_template(name: str, table: str) -> str:
     '''
 ```
 
-#### 3. Command Syntax: `ftf make model` not `ftf make:model`
+#### 3. Command Syntax: `jtc make model` not `jtc make:model`
 **Why**: Typer uses subcommands (spaces) not Laravel-style colons
 
 **Usage:**
@@ -267,19 +267,19 @@ Missing coverage:
 ```bash
 # Create model
 ftf make model Product
-# ✓ Model created: src/ftf/models/product.py
+# ✓ Model created: src/jtc/models/product.py
 
 # Create repository
 ftf make repository ProductRepository
-# ✓ Repository created: src/ftf/repositories/product_repository.py
+# ✓ Repository created: src/jtc/repositories/product_repository.py
 
 # Create form requests
 ftf make request StoreProductRequest
-# ✓ Request created: src/ftf/requests/store_product_request.py
+# ✓ Request created: src/jtc/requests/store_product_request.py
 # ⚠️ Remember: rules() is for validation only!
 
 ftf make request UpdateProductRequest
-# ✓ Request created: src/ftf/requests/update_product_request.py
+# ✓ Request created: src/jtc/requests/update_product_request.py
 
 # Create test factories
 ftf make factory ProductFactory
@@ -295,16 +295,16 @@ ftf make seeder ProductSeeder
 ```bash
 # First creation
 ftf make model User
-# ✓ Model created: src/ftf/models/user.py
+# ✓ Model created: src/jtc/models/user.py
 
 # Try to create again
 ftf make model User
-# ✗ File already exists: src/ftf/models/user.py
+# ✗ File already exists: src/jtc/models/user.py
 # Use --force to overwrite
 
 # Force overwrite
 ftf make model User --force
-# ✓ Model created: src/ftf/models/user.py
+# ✓ Model created: src/jtc/models/user.py
 ```
 
 ### 3. Custom Model Names
@@ -340,9 +340,9 @@ ftf db seed --class TestDataSeeder
 ### 1. Developer Experience (DX)
 **Before Sprint 3.0:**
 To create a model, repository, and request, developer must:
-1. Create `src/ftf/models/user.py` (write 50+ lines)
-2. Create `src/ftf/repositories/user_repository.py` (write 40+ lines)
-3. Create `src/ftf/requests/store_user_request.py` (write 60+ lines)
+1. Create `src/jtc/models/user.py` (write 50+ lines)
+2. Create `src/jtc/repositories/user_repository.py` (write 40+ lines)
+3. Create `src/jtc/requests/store_user_request.py` (write 60+ lines)
 4. Remember all imports
 5. Follow architectural patterns
 6. Include governance warnings
@@ -391,7 +391,7 @@ The CLI elevates FTF from "library collection" to "complete framework":
 ### Test Coverage
 
 ```
-src/ftf/cli/
+src/jtc/cli/
 ├── __init__.py           100% coverage ✅
 ├── main.py                87% coverage ✅
 ├── templates.py          100% coverage ✅
@@ -404,12 +404,12 @@ Note: db.py has lower coverage because it requires full async database setup for
 ### Files Created
 
 - **New Files**: 7
-  - `src/ftf/cli/__init__.py`
-  - `src/ftf/cli/main.py`
-  - `src/ftf/cli/templates.py`
-  - `src/ftf/cli/commands/__init__.py`
-  - `src/ftf/cli/commands/make.py`
-  - `src/ftf/cli/commands/db.py`
+  - `src/jtc/cli/__init__.py`
+  - `src/jtc/cli/main.py`
+  - `src/jtc/cli/templates.py`
+  - `src/jtc/cli/commands/__init__.py`
+  - `src/jtc/cli/commands/make.py`
+  - `src/jtc/cli/commands/db.py`
   - `tests/cli/test_make_commands.py`
 
 - **Modified Files**: 1
@@ -506,7 +506,7 @@ ftf make model User
 
 # Second time: fails with helpful message
 ftf make model User
-✗ File already exists: src/ftf/models/user.py
+✗ File already exists: src/jtc/models/user.py
 Use --force to overwrite
 
 # Force: overwrites
@@ -521,14 +521,14 @@ ftf make model User --force
 ### Planned for Sprint 3.1+
 
 1. **More Make Commands:**
-   - `ftf make controller` (FastAPI route controllers)
-   - `ftf make migration` (Alembic migrations)
-   - `ftf make middleware` (Custom middleware)
-   - `ftf make test` (Test file scaffolding)
+   - `jtc make controller` (FastAPI route controllers)
+   - `jtc make migration` (Alembic migrations)
+   - `jtc make middleware` (Custom middleware)
+   - `jtc make test` (Test file scaffolding)
 
 2. **Interactive Mode:**
    ```bash
-   ftf make model --interactive
+   jtc make model --interactive
    ? Model name: Product
    ? Include soft deletes? Yes
    ? Include timestamps? Yes
@@ -536,20 +536,20 @@ ftf make model User --force
    ```
 
 3. **Database Commands:**
-   - `ftf db:migrate` (Run migrations)
-   - `ftf db:rollback` (Rollback migrations)
-   - `ftf db:fresh` (Drop all + migrate)
-   - `ftf db:reset` (Rollback + migrate)
+   - `jtc db:migrate` (Run migrations)
+   - `jtc db:rollback` (Rollback migrations)
+   - `jtc db:fresh` (Drop all + migrate)
+   - `jtc db:reset` (Rollback + migrate)
 
 4. **Code Generation from Schema:**
    ```bash
-   ftf make:crud Product --fields="name:string,price:float,stock:int"
+   jtc make:crud Product --fields="name:string,price:float,stock:int"
    # Generates: model + repository + requests + routes + tests
    ```
 
 5. **Template Customization:**
    - Allow users to publish and customize templates
-   - `ftf publish:templates` to create local template copies
+   - `jtc publish:templates` to create local template copies
    - Load from `templates/` directory instead of built-in
 
 ---
@@ -590,7 +590,7 @@ By embedding warnings in templates, we ensure:
 | Feature | Laravel Artisan | FTF CLI |
 |---------|----------------|---------|
 | **Language** | PHP | Python |
-| **Syntax** | `php artisan make:model User` | `ftf make model User` |
+| **Syntax** | `php artisan make:model User` | `jtc make model User` |
 | **Templating** | PHP stubs | Python f-strings |
 | **Async Support** | No | Yes (db:seed) |
 | **Type Safety** | No | Yes (Typer) |
@@ -601,7 +601,7 @@ By embedding warnings in templates, we ensure:
 | Feature | Django manage.py | FTF CLI |
 |---------|------------------|---------|
 | **Language** | Python | Python |
-| **Syntax** | `manage.py startapp users` | `ftf make model User` |
+| **Syntax** | `manage.py startapp users` | `jtc make model User` |
 | **Templating** | Django templates | F-strings |
 | **Async Support** | Limited | Full |
 | **Type Safety** | No | Yes (Typer) |
@@ -612,8 +612,8 @@ By embedding warnings in templates, we ensure:
 ## ✅ Success Criteria
 
 - [x] CLI entry point registered in `pyproject.toml`
-- [x] `ftf --help` shows command groups
-- [x] `ftf version` shows framework version
+- [x] `jtc --help` shows command groups
+- [x] `jtc version` shows framework version
 - [x] All 5 `make:*` commands implemented and tested
 - [x] `db:seed` command implemented
 - [x] Templates enforce architectural standards

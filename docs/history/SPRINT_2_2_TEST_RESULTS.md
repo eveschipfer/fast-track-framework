@@ -99,7 +99,7 @@ if is_sqlite:
         )
 ```
 
-**File**: `src/ftf/database/engine.py`
+**File**: `src/jtc/database/engine.py`
 
 ### 2. SQLite In-Memory Connection Loss ❌ → ✅
 **Problem**: `OperationalError: no active connection`
@@ -133,7 +133,7 @@ app.container._singletons[AsyncEngine] = engine  # ✅
 
 **Solution**:
 ```python
-from ftf.http.app import ScopedMiddleware
+from jtc.http.app import ScopedMiddleware
 
 app.add_middleware(ScopedMiddleware)  # ✅
 ```
@@ -160,11 +160,11 @@ docker exec fast_track_dev bash -c "cd larafast && poetry run pytest tests/unit/
 ```
 Name                                             Stmts   Miss   Cover   Missing
 -------------------------------------------------------------------------------
-src/ftf/database/__init__.py                         5      0 100.00%
-src/ftf/database/base.py                             4      0 100.00%
-src/ftf/database/engine.py                          19      4  78.95%   91-98, 125-129
-src/ftf/database/repository.py                      38     13  65.79%   127-128, 169-176, 196-198, 220-221, 251
-src/ftf/database/session.py                         17      8  52.94%   107-115
+src/jtc/database/__init__.py                         5      0 100.00%
+src/jtc/database/base.py                             4      0 100.00%
+src/jtc/database/engine.py                          19      4  78.95%   91-98, 125-129
+src/jtc/database/repository.py                      38     13  65.79%   127-128, 169-176, 196-198, 220-221, 251
+src/jtc/database/session.py                         17      8  52.94%   107-115
 -------------------------------------------------------------------------------
 TOTAL (database module)                             83     25  69.88%
 ```

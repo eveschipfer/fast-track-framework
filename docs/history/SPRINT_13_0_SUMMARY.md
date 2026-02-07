@@ -40,7 +40,7 @@ This feature is specifically designed to improve:
 ```python
 # workbench/config/app.py
 providers = [
-    "ftf.providers.database.DatabaseServiceProvider",  # ❌ Loads at startup
+    "jtc.providers.database.DatabaseServiceProvider",  # ❌ Loads at startup
     "app.providers.route.RouteServiceProvider",        # ❌ Loads at startup
     "app.providers.queue.QueueServiceProvider",        # ❌ Loads at startup (even if unused!)
 ]
@@ -54,7 +54,7 @@ providers = [
 ```python
 # workbench/config/app.py
 providers = [
-    "ftf.providers.database.DatabaseServiceProvider",  # ✅ Loads at startup (eager)
+    "jtc.providers.database.DatabaseServiceProvider",  # ✅ Loads at startup (eager)
     "app.providers.route.RouteServiceProvider",        # ✅ Loads at startup (eager)
     "app.providers.queue.QueueServiceProvider",        # ✅ Loads JIT when first requested
 ]
@@ -84,7 +84,7 @@ providers = [
 The Sprint 12.0 Service Provider system loads ALL registered providers at application startup:
 
 ```python
-# framework/ftf/http/app.py
+# framework/jtc/http/app.py
 def _register_configured_providers(self) -> None:
     for provider_spec in config("app.providers", []):
         provider_class = self._load_provider_class(provider_spec)
@@ -167,7 +167,7 @@ Yet ALL load at startup!
 
 ### Phase 1: Container Deferred Support
 
-**File**: `framework/ftf/core/container.py`
+**File**: `framework/jtc/core/container.py`
 
 Added deferred provider storage and JIT loading logic:
 
@@ -311,7 +311,7 @@ class Container:
 
 ### Phase 2: DeferredServiceProvider Base Class
 
-**File**: `framework/ftf/core/service_provider.py`
+**File**: `framework/jtc/core/service_provider.py`
 
 Already properly implemented with validation:
 
@@ -342,7 +342,7 @@ class DeferredServiceProvider(ServiceProvider):
 
 ### Phase 3: FastTrackFramework Deferred Registration
 
-**File**: `framework/ftf/http/app.py`
+**File**: `framework/jtc/http/app.py`
 
 Updated `register_provider()` to detect and handle deferred providers:
 
@@ -370,7 +370,7 @@ def register_provider(self, provider_class: type["ServiceProvider"]) -> None:
         >>> app.register_provider(RouteServiceProvider)
         >>> app.boot_providers()  # Called automatically during startup
     """
-    from ftf.core.service_provider import DeferredServiceProvider
+    from jtc.core.service_provider import DeferredServiceProvider
 
     # Check if provider is deferred (Sprint 13)
     if issubclass(provider_class, DeferredServiceProvider):
@@ -417,8 +417,8 @@ Tests verify:
 
 import pytest
 
-from ftf.core import Container
-from ftf.core.service_provider import DeferredServiceProvider, ServiceProvider
+from jtc.core import Container
+from jtc.core.service_provider import DeferredServiceProvider, ServiceProvider
 
 
 class QueueService:
@@ -740,8 +740,8 @@ class TestAsyncBootDeferredProvider:
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/core/container.py` | +60 lines | Add deferred_map, add_deferred(), _load_deferred_provider(), update resolve() |
-| `framework/ftf/http/app.py` | +20 lines | Update register_provider() to detect DeferredServiceProvider |
+| `framework/jtc/core/container.py` | +60 lines | Add deferred_map, add_deferred(), _load_deferred_provider(), update resolve() |
+| `framework/jtc/http/app.py` | +20 lines | Update register_provider() to detect DeferredServiceProvider |
 | `workbench/tests/unit/test_container.py` | -5 lines | Fix test_optional_dependency to reflect actual behavior |
 
 ### Created Files (1 file)
@@ -766,8 +766,8 @@ class TestAsyncBootDeferredProvider:
 ### 1. Basic Deferred Provider
 
 ```python
-from ftf.core.service_provider import DeferredServiceProvider
-from ftf.core import Container
+from jtc.core.service_provider import DeferredServiceProvider
+from jtc.core import Container
 
 class QueueService:
     """Background job queue service."""
@@ -789,7 +789,7 @@ class QueueServiceProvider(DeferredServiceProvider):
 
 # In workbench/config/app.py
 providers = [
-    "ftf.providers.database.DatabaseServiceProvider",  # Eager: loads at startup
+    "jtc.providers.database.DatabaseServiceProvider",  # Eager: loads at startup
     "app.providers.queue.QueueServiceProvider",        # Deferred: loads on first use
 ]
 
@@ -802,7 +802,7 @@ queue = container.resolve(QueueService)  # JIT load now!
 ### 2. Deferred Provider with Multiple Services
 
 ```python
-from ftf.core.service_provider import DeferredServiceProvider
+from jtc.core.service_provider import DeferredServiceProvider
 
 class CacheService:
     """Cache service."""
@@ -836,7 +836,7 @@ storage = container.resolve(StorageService)  # Already loaded!
 ### 3. Eager vs Deferred Providers
 
 ```python
-from ftf.core.service_provider import ServiceProvider, DeferredServiceProvider
+from jtc.core.service_provider import ServiceProvider, DeferredServiceProvider
 
 # Eager: Loads at startup (always needed)
 class DatabaseServiceProvider(ServiceProvider):
@@ -867,7 +867,7 @@ providers = [
 ### 4. Deferred Provider with Async Boot
 
 ```python
-from ftf.core.service_provider import DeferredServiceProvider
+from jtc.core.service_provider import DeferredServiceProvider
 
 class QueueService:
     pass
@@ -897,14 +897,14 @@ queue = container.resolve(QueueService)  # Boot runs async
 
 ```python
 # AWS Lambda handler - optimized with deferred providers
-from ftf.http import FastTrackFramework
+from jtc.http import FastTrackFramework
 
 app = FastTrackFramework()
 
 # workbench/config/app.py
 providers = [
     # Eager: Always needed (fast path)
-    "ftf.providers.database.DatabaseServiceProvider",
+    "jtc.providers.database.DatabaseServiceProvider",
     "app.providers.route.RouteServiceProvider",
 
     # Deferred: Rarely needed (slow path, JIT load)
@@ -978,8 +978,8 @@ collected 496 items
 
 **Test 1: Deferred Provider Not Loaded Initially**
 ```python
-from ftf.core import Container
-from ftf.core.service_provider import DeferredServiceProvider
+from jtc.core import Container
+from jtc.core.service_provider import DeferredServiceProvider
 
 class QueueService:
     pass
@@ -1252,7 +1252,7 @@ class QueueServiceProvider(DeferredServiceProvider):
 
 ```python
 # CLI command
-$ ftf provider:reload --watch
+$ jtc provider:reload --watch
 
 Watching provider files...
 Reloading QueueServiceProvider... ✓

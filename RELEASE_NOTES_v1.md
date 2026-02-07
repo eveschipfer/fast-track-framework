@@ -100,8 +100,8 @@ def get_config() -> dict:
 Application service provider.
 """
 
-from ftf.core.service_provider import ServiceProvider
-from ftf.core import Container
+from jtc.core.service_provider import ServiceProvider
+from jtc.core import Container
 
 
 class AppServiceProvider(ServiceProvider):
@@ -125,7 +125,7 @@ class AppServiceProvider(ServiceProvider):
 API routes.
 """
 
-from ftf.http import FastTrackFramework
+from jtc.http import FastTrackFramework
 
 
 def register_routes(app: FastTrackFramework) -> None:
@@ -147,7 +147,7 @@ def register_routes(app: FastTrackFramework) -> None:
 Application entry point.
 """
 
-from ftf.main import create_app
+from jtc.main import create_app
 
 # Create application with auto-configuration
 app = create_app()
@@ -447,7 +447,7 @@ Can be used together or independently:
 
 ```python
 # Use both (full framework)
-from ftf.http import FastTrackFramework
+from jtc.http import FastTrackFramework
 from fast_query import BaseRepository
 
 # Use fast_query standalone (ORM only)
@@ -513,8 +513,8 @@ from fast_query import create_engine, get_session, Base, BaseRepository
 **See it in action:**
 
 ```python
-from ftf.http import FastTrackFramework, Inject
-from ftf.resources import ResourceCollection, JsonResource
+from jtc.http import FastTrackFramework, Inject
+from jtc.resources import ResourceCollection, JsonResource
 from fast_query import BaseRepository, Base, TimestampMixin
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column

@@ -6,7 +6,7 @@ Sprint 5.2 refactors the workbench application to use the **Service Provider Pat
 
 ## What Was Implemented
 
-### 1. Framework Core (`framework/ftf/core/`)
+### 1. Framework Core (`framework/jtc/core/`)
 
 #### `service_provider.py` - NEW
 - **ServiceProvider** abstract base class with two-phase initialization:
@@ -20,7 +20,7 @@ Sprint 5.2 refactors the workbench application to use the **Service Provider Pat
 - Exported `ServiceProvider` and `DeferredServiceProvider`
 - Added to `__all__` list for public API
 
-### 2. Framework HTTP (`framework/ftf/http/`)
+### 2. Framework HTTP (`framework/jtc/http/`)
 
 #### `app.py` - UPDATED
 Added provider support to `FastTrackFramework`:
@@ -244,8 +244,8 @@ curl http://localhost:8000/api/users
 
 ```python
 # workbench/app/providers/cache_service_provider.py
-from ftf.core import Container, ServiceProvider
-from ftf.cache import CacheManager
+from jtc.core import Container, ServiceProvider
+from jtc.cache import CacheManager
 
 class CacheServiceProvider(ServiceProvider):
     def register(self, container: Container) -> None:
@@ -274,7 +274,7 @@ def create_app() -> FastTrackFramework:
 ```python
 # workbench/routes/api.py
 from fastapi import APIRouter
-from ftf.http import Inject
+from jtc.http import Inject
 from app.repositories import UserRepository
 
 api_router = APIRouter()
@@ -348,7 +348,7 @@ All code is fully type-hinted:
 ```python
 # tests/unit/test_providers.py
 import pytest
-from ftf.core import Container
+from jtc.core import Container
 from app.providers import AppServiceProvider
 
 def test_app_service_provider_register():

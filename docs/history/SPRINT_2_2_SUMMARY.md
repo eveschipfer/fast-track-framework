@@ -19,7 +19,7 @@ Implement database integration with SQLAlchemy AsyncEngine and Repository Patter
 
 ## ✅ Completed Features
 
-### 1. Database Module (`src/ftf/database/`)
+### 1. Database Module (`src/jtc/database/`)
 
 | Component | Purpose | Scope |
 |-----------|---------|-------|
@@ -30,7 +30,7 @@ Implement database integration with SQLAlchemy AsyncEngine and Repository Patter
 
 **Lines of Code**: ~450
 
-### 2. Models Module (`src/ftf/models/`)
+### 2. Models Module (`src/jtc/models/`)
 
 | Component | Purpose |
 |-----------|---------|
@@ -263,7 +263,7 @@ class ProductRepository(BaseRepository[Product]):
 
 ```python
 # Database Module
-from ftf.database import (
+from jtc.database import (
     create_engine,        # Create AsyncEngine singleton
     get_engine,           # Get existing engine
     AsyncSessionFactory,  # Create session factory
@@ -273,18 +273,18 @@ from ftf.database import (
 )
 
 # Models
-from ftf.models import User
+from jtc.models import User
 
 # Core (Updated)
-from ftf.core import clear_scoped_cache_async  # New async cleanup
+from jtc.core import clear_scoped_cache_async  # New async cleanup
 ```
 
 ### Usage Examples
 
 #### 1. Application Setup
 ```python
-from ftf.http import FastTrackFramework
-from ftf.database import create_engine, AsyncSessionFactory
+from jtc.http import FastTrackFramework
+from jtc.database import create_engine, AsyncSessionFactory
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 app = FastTrackFramework()
@@ -325,7 +325,7 @@ class UserRepository(BaseRepository[User]):
 
 #### 4. Manual Session Usage
 ```python
-from ftf.database import get_session
+from jtc.database import get_session
 
 async def create_admin():
     async with get_session() as session:
@@ -425,13 +425,13 @@ curl http://localhost:8000/stats
 ## 📝 Files Created/Modified
 
 ### Created (15 files)
-1. `src/ftf/database/__init__.py`
-2. `src/ftf/database/engine.py`
-3. `src/ftf/database/session.py`
-4. `src/ftf/database/base.py`
-5. `src/ftf/database/repository.py`
-6. `src/ftf/models/__init__.py`
-7. `src/ftf/models/user.py`
+1. `src/jtc/database/__init__.py`
+2. `src/jtc/database/engine.py`
+3. `src/jtc/database/session.py`
+4. `src/jtc/database/base.py`
+5. `src/jtc/database/repository.py`
+6. `src/jtc/models/__init__.py`
+7. `src/jtc/models/user.py`
 8. `tests/unit/test_repository.py`
 9. `tests/integration/test_database_integration.py`
 10. `alembic.ini`
@@ -442,8 +442,8 @@ curl http://localhost:8000/stats
 15. `examples/README.md`
 
 ### Modified (3 files)
-1. `src/ftf/__init__.py` - Exported `clear_scoped_cache_async`
-2. `src/ftf/http/app.py` - Updated middleware for async cleanup
+1. `src/jtc/__init__.py` - Exported `clear_scoped_cache_async`
+2. `src/jtc/http/app.py` - Updated middleware for async cleanup
 3. `pyproject.toml` - Added SQLAlchemy dependencies
 
 ### Documentation (2 files)
@@ -464,7 +464,7 @@ curl http://localhost:8000/stats
 ### Future (Sprint 2.4+)
 - [ ] Database seeders
 - [ ] Factory pattern for testing
-- [ ] CLI commands (`ftf migrate`, `ftf seed`)
+- [ ] CLI commands (`jtc migrate`, `jtc seed`)
 - [ ] Connection pooling configuration
 - [ ] Read replicas support
 

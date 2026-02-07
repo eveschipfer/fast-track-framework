@@ -393,7 +393,7 @@ user = await factory.after_create(create_posts).create()
 
 ```python
 from fast_query import get_session, Factory
-from ftf.models import User
+from jtc.models import User
 
 class UserFactory(Factory[User]):
     _model_class = User

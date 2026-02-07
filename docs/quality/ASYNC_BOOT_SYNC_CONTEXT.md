@@ -33,12 +33,12 @@
 
 ### Where It Occurs
 
-**File**: `framework/ftf/core/container.py`
+**File**: `framework/jtc/core/container.py`
 **Method**: `_load_deferred_provider()` (called by `resolve()`)
 
 **Code Location**:
 ```python
-# framework/ftf/core/container.py:811-822
+# framework/jtc/core/container.py:811-822
 def _load_deferred_provider(self, service_type: type) -> None:
     # ... instantiate provider, call register() ...
 
@@ -260,7 +260,7 @@ class QueueServiceProvider(DeferredServiceProvider):
 # workbench/config/app.py
 providers = [
     # ✅ EAGER: Always load at startup (safe)
-    "ftf.providers.database.DatabaseServiceProvider",
+    "jtc.providers.database.DatabaseServiceProvider",
     "app.providers.redis.RedisServiceProvider",
 
     # ✅ DEFERRED: Safe to load JIT
@@ -301,7 +301,7 @@ providers = [
 # workbench/config/app.py
 providers = [
     # 1. Critical Infrastructure - EAGER + SYNC BOOT (always safe)
-    "ftf.providers.database.DatabaseServiceProvider",
+    "jtc.providers.database.DatabaseServiceProvider",
     "app.providers.cache.RedisCacheProvider",  # Sync boot
 
     # 2. Non-Critical Services - DEFERRED + ASYNC BOOT (safe to lazy-load)
@@ -766,8 +766,8 @@ THEN ALERT: "Provider boot incomplete - state corruption risk"
 ### Code Locations
 
 **Implementation**:
-- `framework/ftf/core/container.py:811-822` - `_load_deferred_provider()` method
-- `framework/ftf/http/app.py:320-344` - `register_provider()` method
+- `framework/jtc/core/container.py:811-822` - `_load_deferred_provider()` method
+- `framework/jtc/http/app.py:320-344` - `register_provider()` method
 
 **Tests**:
 - `workbench/tests/unit/test_deferred_providers.py:238-252` - Async boot test

@@ -41,7 +41,7 @@ This feature enables:
 **Before (Sprint 13.0):**
 ```python
 # workbench/http/controllers/user_controller.py
-from ftf.events import EventDispatcher
+from jtc.events import EventDispatcher
 
 class UserController:
     def __init__(self, dispatcher: EventDispatcher) -> None:
@@ -74,7 +74,7 @@ providers = [
 ]
 
 # workbench/http/controllers/user_controller.py
-from ftf.events import dispatch
+from jtc.events import dispatch
 
 @app.post("/users")
 async def create_user(request: CreateUserRequest) -> User:
@@ -206,7 +206,7 @@ class OrderController:
 
 ### Phase 1: Enhanced Event with `should_propagate`
 
-**File**: `framework/ftf/events/core.py` (Enhanced)
+**File**: `framework/jtc/events/core.py` (Enhanced)
 
 **Key Changes:**
 - Added `should_propagate: bool = True` attribute to `Event` class
@@ -236,7 +236,7 @@ class Event(ABC):
 
 ### Phase 2: Enhanced EventDispatcher
 
-**File**: `framework/ftf/events/core.py` (Enhanced)
+**File**: `framework/jtc/events/core.py` (Enhanced)
 
 **Key Changes:**
 - Enhanced `dispatch()` method with exception handling
@@ -302,7 +302,7 @@ async def dispatch(self, event: Event) -> None:
 
 ### Phase 3: EventServiceProvider
 
-**File**: `framework/ftf/providers/event_service_provider.py` (NEW - 88 lines)
+**File**: `framework/jtc/providers/event_service_provider.py` (NEW - 88 lines)
 
 **Key Features:**
 - `listen` attribute: Dictionary mapping events to listener lists
@@ -333,7 +333,7 @@ class EventServiceProvider(ServiceProvider):
         2. Iterates through `listen` dictionary
         3. Registers each listener class with the dispatcher
         """
-        from ftf.events.core import EventDispatcher
+        from jtc.events.core import EventDispatcher
 
         if not container.is_registered(EventDispatcher):
             container.register(EventDispatcher, implementation=EventDispatcher, scope="singleton")
@@ -500,14 +500,14 @@ async def test_complete_event_flow_with_exception_handling()
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/events/core.py` | +23 lines | Added `should_propagate` to Event, enhanced exception handling in `dispatch()` |
+| `framework/jtc/events/core.py` | +23 lines | Added `should_propagate` to Event, enhanced exception handling in `dispatch()` |
 | `workbench/tests/unit/test_events.py` | +100 lines | Added Sprint 14.0 tests (exception handling, EventServiceProvider) |
 
 ### Created Files (2 files)
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `framework/ftf/providers/event_service_provider.py` | 88 | EventServiceProvider for automatic event discovery |
+| `framework/jtc/providers/event_service_provider.py` | 88 | EventServiceProvider for automatic event discovery |
 | `examples/event_system_example.py` | 401 | Complete usage example |
 
 ### Documentation (1 file)
@@ -526,7 +526,7 @@ async def test_complete_event_flow_with_exception_handling()
 
 ```python
 from dataclasses import dataclass
-from ftf.events import Event, Listener, dispatch
+from jtc.events import Event, Listener, dispatch
 
 # Define event
 @dataclass
@@ -559,8 +559,8 @@ providers = [
 ]
 
 # In controller
-from ftf.http import Inject
-from ftf.events import dispatch
+from jtc.http import Inject
+from jtc.events import dispatch
 
 @app.post("/users")
 async def create_user(request: CreateUserRequest) -> User:
@@ -589,7 +589,7 @@ UserController → dispatch() → EventDispatcher → SendWelcomeEmail, LogUserA
 
 ```python
 from dataclasses import dataclass
-from ftf.events import Event, Listener, dispatch
+from jtc.events import Event, Listener, dispatch
 
 # Define events
 @dataclass
@@ -868,8 +868,8 @@ collected 487 items
 
 **Test 1: EventServiceProvider Discovery**
 ```python
-from ftf.events import EventDispatcher
-from ftf.providers.event_service_provider import EventServiceProvider
+from jtc.events import EventDispatcher
+from jtc.providers.event_service_provider import EventServiceProvider
 
 # Define events and listeners
 class TestEventServiceProvider(EventServiceProvider):

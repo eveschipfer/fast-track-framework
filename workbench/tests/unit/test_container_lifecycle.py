@@ -30,7 +30,7 @@ import asyncio
 import pytest
 from typing import Any
 
-from ftf.core import (
+from jtc.core import (
     Container,
     set_scoped_cache,
     clear_scoped_cache,

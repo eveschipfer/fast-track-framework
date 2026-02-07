@@ -142,7 +142,7 @@ python examples/database_example.py
 ## Adding Your Own Examples
 
 1. Create new file: `examples/my_example.py`
-2. Import framework: `from ftf.http import FastTrackFramework`
+2. Import framework: `from jtc.http import FastTrackFramework`
 3. Follow patterns from existing examples
 4. Add documentation to this README
 

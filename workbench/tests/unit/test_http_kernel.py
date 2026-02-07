@@ -18,7 +18,7 @@ from fastapi import Request
 from fastapi.testclient import TestClient
 
 from fast_query import RecordNotFound
-from ftf.http import (
+from jtc.http import (
     AppException,
     AuthenticationError,
     AuthorizationError,
@@ -29,8 +29,8 @@ from ftf.http import (
     configure_gzip,
     configure_trusted_host,
 )
-from ftf.http.middleware import MiddlewareManager
-from ftf.validation.request import ValidationError
+from jtc.http.middleware import MiddlewareManager
+from jtc.validation.request import ValidationError
 
 
 # ============================================================================

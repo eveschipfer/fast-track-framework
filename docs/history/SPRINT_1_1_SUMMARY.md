@@ -24,7 +24,7 @@ Sprint 1.1 established the async Python foundation for the Fast Track Framework.
 
 ### 1. Async Data Ingestor (Educational Example)
 
-**File**: `src/ftf/exercises/sprint_1_1_async_ingestor.py`
+**File**: `src/jtc/exercises/sprint_1_1_async_ingestor.py`
 
 **Purpose**: Demonstrate async patterns through a practical example
 

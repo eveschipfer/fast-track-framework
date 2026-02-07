@@ -43,7 +43,7 @@ All **three critical technical gaps** in the IoC Container have been identified 
 ## Resolution 1: Async Concurrency Validation
 
 **File**: `tests/unit/test_container_async.py`
-**Implementation**: `src/ftf/core/container.py` (validated existing code)
+**Implementation**: `src/jtc/core/container.py` (validated existing code)
 **Status**: ✅ **VALIDATED & DOCUMENTED**
 
 ### The Problem
@@ -105,7 +105,7 @@ assert db1 is not db2  # ✅ Proves concurrent isolation
 ## Resolution 2: Lifecycle Management
 
 **File**: `tests/unit/test_container_lifecycle.py`
-**Implementation**: `src/ftf/core/container.py` (new features added)
+**Implementation**: `src/jtc/core/container.py` (new features added)
 **Status**: ✅ **IMPLEMENTED & VALIDATED**
 
 ### The Problem
@@ -170,7 +170,7 @@ await container.dispose_all()  # App shutdown
 ## Resolution 3: Dependency Override
 
 **File**: `tests/unit/test_container_override.py`
-**Implementation**: `src/ftf/core/container.py` (new features added)
+**Implementation**: `src/jtc/core/container.py` (new features added)
 **Status**: ✅ **IMPLEMENTED & VALIDATED**
 
 ### The Problem
@@ -309,7 +309,7 @@ Fallback Instantiation (lowest)
 ### Pattern 1: FastAPI Middleware (Production)
 
 ```python
-from ftf.core import Container
+from jtc.core import Container
 
 container = Container()
 container.register(Database, scope="scoped")
@@ -466,8 +466,8 @@ The Fast Track Framework IoC Container has been **hardened for production use**.
 - `tests/unit/test_container_override.py` - Override tests (15 tests)
 
 **Implementation**:
-- `src/ftf/core/container.py` - Main container (152 lines, 84.21% coverage)
-- `src/ftf/core/__init__.py` - Public API exports
+- `src/jtc/core/container.py` - Main container (152 lines, 84.21% coverage)
+- `src/jtc/core/__init__.py` - Public API exports
 
 **Documentation**:
 - `ASYNC_CONCURRENCY_VALIDATION.md` - Concurrency analysis

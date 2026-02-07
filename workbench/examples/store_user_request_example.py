@@ -7,8 +7,8 @@ for FormRequest.rules() method.
 Created for testing and documentation purposes.
 """
 
-from ftf.validation import FormRequest, Validate, Rule
-from ftf.auth.contracts import Credentials
+from jtc.validation import FormRequest, Validate, Rule
+from jtc.auth.contracts import Credentials
 from app.models import User
 
 
@@ -60,8 +60,8 @@ class LoginRequest(FormRequest):
         Args:
             auth: AuthManager (injected automatically!)
         """
-        from ftf.auth import AuthManager
-        from ftf.auth.contracts import Credentials
+        from jtc.auth import AuthManager
+        from jtc.auth.contracts import Credentials
 
         credentials = Credentials(email=self.email, password=self.password)
         return await auth.check(credentials)

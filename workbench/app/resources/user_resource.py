@@ -28,7 +28,7 @@ This allows you to:
 
 from typing import Any
 
-from ftf.resources import JsonResource, MISSING
+from jtc.resources import JsonResource, MISSING
 
 try:
     from fastapi import Request

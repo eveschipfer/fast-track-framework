@@ -29,13 +29,13 @@ Repository Pattern provides:
 - ✅ Manual transaction control
 - ✅ Type-safe with full MyPy support
 
-See: `src/ftf/exercises/sprint_1_2_active_record_trap.py` for detailed rationale.
+See: `src/jtc/exercises/sprint_1_2_active_record_trap.py` for detailed rationale.
 
 ---
 
 ## What Was Implemented
 
-### 1. Database Module (`src/ftf/database/`)
+### 1. Database Module (`src/jtc/database/`)
 
 #### `engine.py` - Singleton AsyncEngine
 - Connection pool management
@@ -44,7 +44,7 @@ See: `src/ftf/exercises/sprint_1_2_active_record_trap.py` for detailed rationale
 - Pre-ping for connection health checks
 
 ```python
-from ftf.database import create_engine
+from jtc.database import create_engine
 
 # Create engine at startup
 engine = create_engine("sqlite+aiosqlite:///./app.db")
@@ -58,7 +58,7 @@ app.container.register(AsyncEngine, instance=engine)
 - FastAPI-compatible configuration
 
 ```python
-from ftf.database import AsyncSessionFactory
+from jtc.database import AsyncSessionFactory
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Register session factory (scoped)
@@ -75,7 +75,7 @@ app.register(AsyncSession, implementation=session_factory, scope="scoped")
 - Metadata tracking for Alembic
 
 ```python
-from ftf.database import Base
+from jtc.database import Base
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -95,7 +95,7 @@ class User(Base):
 - Extensible for custom queries
 
 ```python
-from ftf.database import BaseRepository
+from jtc.database import BaseRepository
 
 class UserRepository(BaseRepository[User]):
     def __init__(self, session: AsyncSession):
@@ -108,7 +108,7 @@ class UserRepository(BaseRepository[User]):
         return result.scalar_one_or_none()
 ```
 
-### 2. Models Module (`src/ftf/models/`)
+### 2. Models Module (`src/jtc/models/`)
 
 #### `user.py` - Example Model
 - Demonstrates SQLAlchemy 2.0 patterns
@@ -116,7 +116,7 @@ class UserRepository(BaseRepository[User]):
 - Proper table naming conventions
 - `__repr__` for debugging
 
-### 3. Middleware Integration (`src/ftf/http/app.py`)
+### 3. Middleware Integration (`src/jtc/http/app.py`)
 
 Updated scoped_middleware to use `clear_scoped_cache_async()` for proper resource cleanup:
 
@@ -154,9 +154,9 @@ async def middleware(request: Request, call_next: Any) -> Response:
 ### Complete Application Setup
 
 ```python
-from ftf.http import FastTrackFramework, Inject
-from ftf.database import create_engine, AsyncSessionFactory, BaseRepository
-from ftf.models import User
+from jtc.http import FastTrackFramework, Inject
+from jtc.database import create_engine, AsyncSessionFactory, BaseRepository
+from jtc.models import User
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 # Initialize app
@@ -228,8 +228,8 @@ async def list_users(
 ### Manual Session Usage (CLI, Jobs)
 
 ```python
-from ftf.database import get_session
-from ftf.models import User
+from jtc.database import get_session
+from jtc.models import User
 
 async def create_admin_user():
     """CLI command to create admin user."""
@@ -486,7 +486,7 @@ await repo.update(user)
 ### Immediate (Sprint 2.3)
 - [ ] Alembic integration for migrations
 - [ ] Migration auto-discovery
-- [ ] CLI commands (`ftf migrate`, `ftf seed`)
+- [ ] CLI commands (`jtc migrate`, `jtc seed`)
 - [ ] Query builder (fluent interface)
 
 ### Future (Sprint 2.4+)
@@ -501,21 +501,21 @@ await repo.update(user)
 ## Files Created/Modified
 
 ### Created Files (11)
-1. `src/ftf/database/__init__.py` - Database module public API
-2. `src/ftf/database/engine.py` - AsyncEngine singleton
-3. `src/ftf/database/session.py` - AsyncSession factory
-4. `src/ftf/database/base.py` - Declarative base
-5. `src/ftf/database/repository.py` - Generic repository
-6. `src/ftf/models/__init__.py` - Models module public API
-7. `src/ftf/models/user.py` - Example User model
+1. `src/jtc/database/__init__.py` - Database module public API
+2. `src/jtc/database/engine.py` - AsyncEngine singleton
+3. `src/jtc/database/session.py` - AsyncSession factory
+4. `src/jtc/database/base.py` - Declarative base
+5. `src/jtc/database/repository.py` - Generic repository
+6. `src/jtc/models/__init__.py` - Models module public API
+7. `src/jtc/models/user.py` - Example User model
 8. `tests/unit/test_repository.py` - Repository unit tests (21 tests)
 9. `tests/integration/test_database_integration.py` - Integration tests (9 tests)
 10. `pyproject.toml` - Added SQLAlchemy dependencies
 11. `SPRINT_2_2_DATABASE_IMPLEMENTATION.md` - This document
 
 ### Modified Files (2)
-1. `src/ftf/__init__.py` - Exported database module
-2. `src/ftf/http/app.py` - Updated middleware for async cleanup
+1. `src/jtc/__init__.py` - Exported database module
+2. `src/jtc/http/app.py` - Updated middleware for async cleanup
 
 ---
 

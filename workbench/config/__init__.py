@@ -11,7 +11,7 @@ Available Configurations:
     - mail: Email service configuration
 
 Usage:
-    from ftf.config import config
+    from jtc.config import config
 
     # Access configuration values
     app_name = config("app.name")

@@ -26,7 +26,7 @@ Sprint 1.3 hardened the IoC Container from Sprint 1.2 by adding production-criti
 
 **Problem**: Multiple concurrent requests sharing scoped cache
 
-**File**: `src/ftf/core/container.py` (enhanced)
+**File**: `src/jtc/core/container.py` (enhanced)
 
 **The Issue**:
 ```python
@@ -101,7 +101,7 @@ class Container:
 
 **Usage in FastAPI**:
 ```python
-from ftf.core import Container, clear_scoped_cache_async
+from jtc.core import Container, clear_scoped_cache_async
 
 @app.middleware("http")
 async def cleanup_middleware(request: Request, call_next):

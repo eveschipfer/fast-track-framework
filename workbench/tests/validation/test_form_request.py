@@ -29,9 +29,9 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from fast_query import Base, create_engine
-from ftf.http.params import Inject
+from jtc.http.params import Inject
 from app.models import User
-from ftf.validation import FormRequest, Rule, Validate
+from jtc.validation import FormRequest, Rule, Validate
 
 
 # ============================================================================
@@ -236,7 +236,7 @@ async def test_rule_unique_fails_when_value_exists(session: AsyncSession) -> Non
     """
     Test that Rule.unique fails when value already exists in DB.
     """
-    from ftf.validation import ValidationError
+    from jtc.validation import ValidationError
 
     # Create a user
     user = User(name="Existing User", email="existing@test.com")
@@ -290,7 +290,7 @@ async def test_rule_exists_fails_when_value_not_exists(session: AsyncSession) ->
     """
     Test that Rule.exists fails when value doesn't exist in DB.
     """
-    from ftf.validation import ValidationError
+    from jtc.validation import ValidationError
 
     # No users in database
     with pytest.raises(ValidationError) as exc:
@@ -348,7 +348,7 @@ async def test_form_request_rules_failure_returns_422(session: AsyncSession) -> 
     """
     Test that validation failure returns 422 Unprocessable Entity.
     """
-    from ftf.validation import ValidationError
+    from jtc.validation import ValidationError
 
     # Create a user
     user = User(name="Existing", email="existing@test.com")
@@ -435,7 +435,7 @@ async def test_update_user_with_duplicate_email_fails(session: AsyncSession) -> 
 
     This ensures Rule.unique still catches duplicates even with ignore_id.
     """
-    from ftf.validation import ValidationError
+    from jtc.validation import ValidationError
 
     # Create two users
     user1 = User(name="User 1", email="user1@test.com")

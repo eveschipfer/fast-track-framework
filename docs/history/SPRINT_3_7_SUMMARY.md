@@ -29,7 +29,7 @@ Sprint 3.7 implements a comprehensive caching layer following Laravel's multi-dr
 
 **Pattern**: Strategy Pattern + Abstract Base Class
 
-**File**: `src/ftf/cache/drivers/base.py`
+**File**: `src/jtc/cache/drivers/base.py`
 
 Created abstract `CacheDriver` interface:
 
@@ -59,7 +59,7 @@ class CacheDriver(ABC):
 
 ### 2. FileDriver - Development Cache
 
-**File**: `src/ftf/cache/drivers/file_driver.py`
+**File**: `src/jtc/cache/drivers/file_driver.py`
 
 **Key Features**:
 - Stores cache as files in `storage/framework/cache/`
@@ -111,7 +111,7 @@ class FileDriver(CacheDriver):
 
 ### 3. RedisDriver - Production Cache
 
-**File**: `src/ftf/cache/drivers/redis_driver.py`
+**File**: `src/jtc/cache/drivers/redis_driver.py`
 
 **Key Features**:
 - Uses `redis.asyncio` for async operations
@@ -164,7 +164,7 @@ REDIS_CACHE_PREFIX=ftf_cache:
 
 ### 4. ArrayDriver - Testing Cache
 
-**File**: `src/ftf/cache/drivers/array_driver.py`
+**File**: `src/jtc/cache/drivers/array_driver.py`
 
 **Key Features**:
 - Pure in-memory Python dict
@@ -200,7 +200,7 @@ class ArrayDriver(CacheDriver):
 
 ### 5. Cache Manager - Singleton Facade
 
-**File**: `src/ftf/cache/manager.py`
+**File**: `src/jtc/cache/manager.py`
 
 **Pattern**: Singleton + Strategy Pattern
 
@@ -252,7 +252,7 @@ Cache = CacheManager()
 
 ### 6. Rate Limiting Middleware
 
-**File**: `src/ftf/http/middleware/throttle.py`
+**File**: `src/jtc/http/middleware/throttle.py`
 
 **Algorithm**: Sliding Window with Cache-Based Counters
 
@@ -311,8 +311,8 @@ class ThrottleMiddleware(BaseHTTPMiddleware):
 
 **Usage**:
 ```python
-from ftf.http import FastTrackFramework
-from ftf.http.middleware.throttle import ThrottleMiddleware
+from jtc.http import FastTrackFramework
+from jtc.http.middleware.throttle import ThrottleMiddleware
 
 app = FastTrackFramework()
 
@@ -333,13 +333,13 @@ app.add_middleware(
 
 ### 7. CLI Commands
 
-**File**: `src/ftf/cli/commands/cache.py`
+**File**: `src/jtc/cli/commands/cache.py`
 
 **Commands**:
 
-1. **`ftf cache test`** - Verify cache is working
+1. **`jtc cache test`** - Verify cache is working
    ```bash
-   $ ftf cache test
+   $ jtc cache test
    Testing cache operations...
    ✓ Put: Stored test value
    ✓ Get: Retrieved test value
@@ -348,9 +348,9 @@ app.add_middleware(
    ✓ Cache is working correctly!
    ```
 
-2. **`ftf cache config`** - Show cache configuration
+2. **`jtc cache config`** - Show cache configuration
    ```bash
-   $ ftf cache config
+   $ jtc cache config
    Cache Configuration
    ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┓
    ┃ Setting   ┃ Value                   ┃
@@ -360,16 +360,16 @@ app.add_middleware(
    └───────────┴─────────────────────────┘
    ```
 
-3. **`ftf cache clear`** - Clear all cached data
+3. **`jtc cache clear`** - Clear all cached data
    ```bash
-   $ ftf cache clear
+   $ jtc cache clear
    Clearing cache...
    ✓ Cache cleared successfully!
    ```
 
-4. **`ftf cache forget <key>`** - Remove specific key
+4. **`jtc cache forget <key>`** - Remove specific key
    ```bash
-   $ ftf cache forget user:123
+   $ jtc cache forget user:123
    Removing cache key: user:123
    ✓ Cache key 'user:123' removed
    ```
@@ -381,7 +381,7 @@ app.add_middleware(
 ### Basic Caching
 
 ```python
-from ftf.cache import Cache
+from jtc.cache import Cache
 
 # Get cached value
 user = await Cache.get("user:123")
@@ -415,8 +415,8 @@ print(cached_user.name)  # "John"
 ### Rate Limiting
 
 ```python
-from ftf.http import FastTrackFramework
-from ftf.http.middleware.throttle import ThrottleMiddleware
+from jtc.http import FastTrackFramework
+from jtc.http.middleware.throttle import ThrottleMiddleware
 
 app = FastTrackFramework()
 
@@ -437,9 +437,9 @@ app.add_middleware(
 ### Cache in Routes
 
 ```python
-from ftf.http import FastTrackFramework, Inject
-from ftf.cache import Cache
-from ftf.models import User
+from jtc.http import FastTrackFramework, Inject
+from jtc.cache import Cache
+from jtc.models import User
 from fast_query import BaseRepository
 
 app = FastTrackFramework()
@@ -570,13 +570,13 @@ user = User(**cached_dict)  # Manual reconstruction
 **Developer Experience**:
 ```bash
 # Development (just works)
-$ poetry run uvicorn ftf.main:app --reload
+$ poetry run uvicorn jtc.main:app --reload
 # Cache works immediately with FileDriver
 
 # Production (one env var change)
 $ export CACHE_DRIVER=redis
 $ docker-compose up redis
-$ poetry run uvicorn ftf.main:app
+$ poetry run uvicorn jtc.main:app
 # Cache now uses Redis (no code changes)
 ```
 
@@ -674,23 +674,23 @@ app.add_middleware(
 ### New Files (9)
 
 **Cache System:**
-1. `src/ftf/cache/__init__.py` - Public API exports
-2. `src/ftf/cache/manager.py` - CacheManager singleton
-3. `src/ftf/cache/drivers/__init__.py` - Driver exports
-4. `src/ftf/cache/drivers/base.py` - CacheDriver interface
-5. `src/ftf/cache/drivers/file_driver.py` - FileDriver implementation
-6. `src/ftf/cache/drivers/redis_driver.py` - RedisDriver implementation
-7. `src/ftf/cache/drivers/array_driver.py` - ArrayDriver implementation
+1. `src/jtc/cache/__init__.py` - Public API exports
+2. `src/jtc/cache/manager.py` - CacheManager singleton
+3. `src/jtc/cache/drivers/__init__.py` - Driver exports
+4. `src/jtc/cache/drivers/base.py` - CacheDriver interface
+5. `src/jtc/cache/drivers/file_driver.py` - FileDriver implementation
+6. `src/jtc/cache/drivers/redis_driver.py` - RedisDriver implementation
+7. `src/jtc/cache/drivers/array_driver.py` - ArrayDriver implementation
 
 **Middleware & CLI:**
-8. `src/ftf/http/middleware/throttle.py` - ThrottleMiddleware
-9. `src/ftf/cli/commands/cache.py` - Cache CLI commands
+8. `src/jtc/http/middleware/throttle.py` - ThrottleMiddleware
+9. `src/jtc/cli/commands/cache.py` - Cache CLI commands
 
 ### Modified Files (4)
 
-1. `src/ftf/cli/main.py` - Register cache commands
-2. `src/ftf/resources/lang/en.json` - Add rate limit translations
-3. `src/ftf/resources/lang/pt_BR.json` - Add Portuguese translations
+1. `src/jtc/cli/main.py` - Register cache commands
+2. `src/jtc/resources/lang/en.json` - Add rate limit translations
+3. `src/jtc/resources/lang/pt_BR.json` - Add Portuguese translations
 4. `docs/history/SPRINT_3_7_SUMMARY.md` - This document
 
 ---
@@ -701,7 +701,7 @@ app.add_middleware(
 
 ```bash
 # Test 1: Cache test command
-$ ftf cache test
+$ jtc cache test
 Testing cache operations...
 ✓ Put: Stored test value
 ✓ Get: Retrieved test value
@@ -710,7 +710,7 @@ Testing cache operations...
 ✓ Cache is working correctly!
 
 # Test 2: Cache config
-$ ftf cache config
+$ jtc cache config
 Cache Configuration
 ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Setting   ┃ Value                   ┃
@@ -726,7 +726,7 @@ $ ls storage/framework/cache/
 # Test 4: Cache operations
 $ python -c "
 import asyncio
-from ftf.cache import Cache
+from jtc.cache import Cache
 
 async def test():
     await Cache.put('test:key', {'hello': 'world'}, ttl=60)
@@ -917,7 +917,7 @@ async def get_data():
 **Concept**: Pre-populate cache on application startup.
 
 ```python
-from ftf.cache import Cache
+from jtc.cache import Cache
 
 async def warm_cache():
     """Warm cache on startup."""
@@ -936,7 +936,7 @@ async def warm_cache():
 **Concept**: Emit events on cache operations.
 
 ```python
-from ftf.events import Event
+from jtc.events import Event
 
 class CacheHit(Event):
     def __init__(self, key: str):

@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from ftf.storage import Storage, FileNotFoundException
-from ftf.storage.drivers.memory_driver import MemoryDriver
-from ftf.storage.drivers.local_driver import LocalDriver
+from jtc.storage import Storage, FileNotFoundException
+from jtc.storage.drivers.memory_driver import MemoryDriver
+from jtc.storage.drivers.local_driver import LocalDriver
 
 
 # -------------------------------------------------------------------------
@@ -281,7 +281,7 @@ async def test_local_driver_path() -> None:
 @pytest.mark.asyncio
 async def test_storage_manager_singleton() -> None:
     """StorageManager should be singleton."""
-    from ftf.storage.manager import StorageManager
+    from jtc.storage.manager import StorageManager
 
     instance1 = StorageManager()
     instance2 = StorageManager()

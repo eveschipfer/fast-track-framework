@@ -626,8 +626,8 @@ from fast_query import (
 ### Example 1: Filtered Pagination (Sprint 5.6 Killer Feature)
 
 ```python
-from ftf.http import FastTrackFramework, Inject
-from ftf.resources import ResourceCollection, UserResource
+from jtc.http import FastTrackFramework, Inject
+from jtc.resources import ResourceCollection, UserResource
 from app.repositories import UserRepository
 
 app = FastTrackFramework()

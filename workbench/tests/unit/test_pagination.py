@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from fast_query import Base, BaseRepository, create_engine
 from fast_query.pagination import LengthAwarePaginator
-from ftf.resources.core import JsonResource
+from jtc.resources.core import JsonResource
 
 # --- Mocks ---
 class PaginationItem(Base):

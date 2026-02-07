@@ -26,12 +26,12 @@ FormRequest inherits from Pydantic BaseModel but adds async `authorize()` and `r
 
 ## ✨ Features Implemented
 
-### 1. FormRequest Base Class (`src/ftf/validation/request.py`)
+### 1. FormRequest Base Class (`src/jtc/validation/request.py`)
 
 A Pydantic BaseModel with async validation capabilities:
 
 ```python
-from ftf.validation import FormRequest, Rule
+from jtc.validation import FormRequest, Rule
 from pydantic import EmailStr
 
 class StoreUserRequest(FormRequest):
@@ -52,12 +52,12 @@ class StoreUserRequest(FormRequest):
 - ✅ `rules(session)` - Async business logic validation (default: pass)
 - ✅ `stop(message, field)` - Raise validation error with custom message
 
-### 2. Validate Dependency Resolver (`src/ftf/validation/handler.py`)
+### 2. Validate Dependency Resolver (`src/jtc/validation/handler.py`)
 
 FastAPI dependency that orchestrates the validation flow:
 
 ```python
-from ftf.validation import Validate
+from jtc.validation import Validate
 
 @app.post("/users")
 async def create(request: StoreUserRequest = Validate(StoreUserRequest)):
@@ -72,7 +72,7 @@ async def create(request: StoreUserRequest = Validate(StoreUserRequest)):
 4. **Run rules()** - Raise 422 if validation fails
 5. **Return validated model** - To route handler
 
-### 3. Validation Rule Helpers (`src/ftf/validation/rules.py`)
+### 3. Validation Rule Helpers (`src/jtc/validation/rules.py`)
 
 Database validation patterns made simple:
 
@@ -99,24 +99,24 @@ await Rule.exists(session, Role, "id", self.role_id)
 
 ### Core Implementation
 
-1. **`src/ftf/validation/request.py`** (190 lines)
+1. **`src/jtc/validation/request.py`** (190 lines)
    - FormRequest base class (extends Pydantic BaseModel)
    - async authorize() and rules() methods
    - stop() helper for custom validation errors
    - ValidationError exception
 
-2. **`src/ftf/validation/handler.py`** (150 lines)
+2. **`src/jtc/validation/handler.py`** (150 lines)
    - Validate() dependency resolver
    - ValidateWith helper for manual validation
    - Integration with FastAPI Depends()
    - Error handling (403, 422, 500)
 
-3. **`src/ftf/validation/rules.py`** (160 lines)
+3. **`src/jtc/validation/rules.py`** (160 lines)
    - Rule.unique() for uniqueness checks
    - Rule.exists() for foreign key validation
    - Future: RuleExtensions (min_count, max_count)
 
-4. **`src/ftf/validation/__init__.py`** (40 lines)
+4. **`src/jtc/validation/__init__.py`** (40 lines)
    - Public API exports
    - Documentation and examples
 
@@ -316,7 +316,7 @@ class UpdateUserRequest(FormRequest):
 ### Example 1: Basic Form Request
 
 ```python
-from ftf.validation import FormRequest, Validate, Rule
+from jtc.validation import FormRequest, Validate, Rule
 from pydantic import EmailStr
 
 class StoreUserRequest(FormRequest):
@@ -633,7 +633,7 @@ class StoreUserRequest(FormRequest):
 - ✅ 16 comprehensive tests passing
 - ✅ Documentation written
 - ✅ Dependencies added to pyproject.toml
-- ✅ Public API exported from ftf.validation
+- ✅ Public API exported from jtc.validation
 
 ---
 

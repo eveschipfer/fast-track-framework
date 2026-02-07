@@ -20,7 +20,7 @@ Usage:
     debug_mode = settings.app.debug
 
     # Legacy dot notation (still works!)
-    from ftf.config import config
+    from jtc.config import config
     app_name = config("app.name")  # Uses settings under the hood
 
     # Container injection (type-safe)
@@ -423,7 +423,7 @@ class AppSettings(BaseSettings):
         "localhost"
 
         # Via config() helper (backward compatible)
-        >>> from ftf.config import config
+        >>> from jtc.config import config
         >>> config("app.name")  # Internally uses settings
         "Fast Track Framework"
 

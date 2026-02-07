@@ -6,7 +6,7 @@ Sprint 5.3 implements a centralized **Configuration System** inspired by Laravel
 
 ## What Was Implemented
 
-### 1. Framework Core (`framework/ftf/config/`)
+### 1. Framework Core (`framework/jtc/config/`)
 
 #### `repository.py` - NEW (350+ lines)
 **ConfigRepository** singleton class with:
@@ -144,7 +144,7 @@ config = {
 
 **Design**: Shows nested configuration structure for complex settings.
 
-### 3. Framework HTTP (`framework/ftf/http/app.py`) - UPDATED
+### 3. Framework HTTP (`framework/jtc/http/app.py`) - UPDATED
 
 **Added Config Support:**
 
@@ -188,7 +188,7 @@ def _load_configuration(self, config_path: str) -> None:
 ```python
 def _register_configured_providers(self) -> None:
     """Auto-register providers from config("app.providers")."""
-    from ftf.config import config
+    from jtc.config import config
 
     providers = config("app.providers", [])
 
@@ -436,7 +436,7 @@ larafast/
 ### Basic Config Access
 
 ```python
-from ftf.config import config
+from jtc.config import config
 
 # Get simple value
 app_name = config("app.name")  # "Fast Track Framework"
@@ -454,8 +454,8 @@ providers = config("app.providers", [])
 ### Using Config in Routes
 
 ```python
-from ftf.http import FastTrackFramework
-from ftf.config import config
+from jtc.http import FastTrackFramework
+from jtc.config import config
 
 app = FastTrackFramework()
 
@@ -516,7 +516,7 @@ config = {
 }
 
 # Usage
-from ftf.config import config
+from jtc.config import config
 
 cache_driver = config("cache.default")  # "file"
 redis_connection = config("cache.stores.redis.connection")  # "cache"
@@ -525,7 +525,7 @@ redis_connection = config("cache.stores.redis.connection")  # "cache"
 ### Runtime Config Modification (Testing)
 
 ```python
-from ftf.config import get_config_repository
+from jtc.config import get_config_repository
 
 def test_with_custom_config():
     repo = get_config_repository()
@@ -617,7 +617,7 @@ config = {
 }
 
 # Usage
-from ftf.config import config
+from jtc.config import config
 name = config("app.name")
 ```
 
@@ -688,7 +688,7 @@ name = config("app.name")
 ### 1. Config Caching
 
 ```python
-# ftf config:cache command
+# jtc config:cache command
 def cache_config():
     """Pre-compile config to PHP-style cached array."""
     config_repo = get_config_repository()
@@ -722,10 +722,10 @@ app_config = AppConfig(**config("app"))
 ### 3. Config Publishing
 
 ```python
-# ftf vendor:publish --tag=config
+# jtc vendor:publish --tag=config
 # Copy framework config to user's workbench/config
 shutil.copy(
-    "framework/ftf/config/defaults/cache.py",
+    "framework/jtc/config/defaults/cache.py",
     "workbench/config/cache.py"
 )
 ```

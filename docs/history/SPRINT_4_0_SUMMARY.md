@@ -17,31 +17,31 @@ Implement a comprehensive, Laravel-inspired Mailer System with multi-driver supp
 **New Files (17 total):**
 
 1. **Type Definitions**:
-   - `src/ftf/mail/contracts.py` - EmailAddress, Attachment, Message TypedDicts, MailDriver Protocol
-   - `src/ftf/mail/exceptions.py` - MailException, MailSendException, MailTemplateException, MailConfigException
+   - `src/jtc/mail/contracts.py` - EmailAddress, Attachment, Message TypedDicts, MailDriver Protocol
+   - `src/jtc/mail/exceptions.py` - MailException, MailSendException, MailTemplateException, MailConfigException
 
 2. **Driver System**:
-   - `src/ftf/mail/drivers/base.py` - MailDriver ABC
-   - `src/ftf/mail/drivers/log_driver.py` - Development driver (logs emails)
-   - `src/ftf/mail/drivers/array_driver.py` - Testing driver (in-memory storage)
-   - `src/ftf/mail/drivers/smtp_driver.py` - Production driver (aiosmtplib)
+   - `src/jtc/mail/drivers/base.py` - MailDriver ABC
+   - `src/jtc/mail/drivers/log_driver.py` - Development driver (logs emails)
+   - `src/jtc/mail/drivers/array_driver.py` - Testing driver (in-memory storage)
+   - `src/jtc/mail/drivers/smtp_driver.py` - Production driver (aiosmtplib)
 
 3. **Core Classes**:
-   - `src/ftf/mail/mailable.py` - Mailable ABC with Builder pattern
-   - `src/ftf/mail/pending_mail.py` - PendingMail fluent API for recipients
-   - `src/ftf/mail/manager.py` - MailManager singleton (Factory + Facade)
+   - `src/jtc/mail/mailable.py` - Mailable ABC with Builder pattern
+   - `src/jtc/mail/pending_mail.py` - PendingMail fluent API for recipients
+   - `src/jtc/mail/manager.py` - MailManager singleton (Factory + Facade)
 
 4. **Job Integration**:
-   - `src/ftf/jobs/send_mail_job.py` - SendMailJob for queued emails
+   - `src/jtc/jobs/send_mail_job.py` - SendMailJob for queued emails
 
 5. **Email Templates**:
-   - `src/ftf/resources/views/mail/layout.html` - Base email template
-   - `src/ftf/resources/views/mail/welcome.html` - Welcome email example
-   - `src/ftf/resources/views/mail/password_reset.html` - Password reset example
+   - `src/jtc/resources/views/mail/layout.html` - Base email template
+   - `src/jtc/resources/views/mail/welcome.html` - Welcome email example
+   - `src/jtc/resources/views/mail/password_reset.html` - Password reset example
 
 6. **CLI Tooling**:
-   - Updated `src/ftf/cli/commands/make.py` - Added `make:mail` command
-   - Updated `src/ftf/cli/templates.py` - Added `get_mailable_template()`
+   - Updated `src/jtc/cli/commands/make.py` - Added `make:mail` command
+   - Updated `src/jtc/cli/templates.py` - Added `get_mailable_template()`
 
 7. **Examples & Tests**:
    - `examples/mail_example.py` - Complete working examples
@@ -110,7 +110,7 @@ Each file includes extensive docstrings explaining:
 ### Basic Email
 
 ```python
-from ftf.mail import Mail, Mailable
+from jtc.mail import Mail, Mailable
 
 class WelcomeEmail(Mailable):
     def __init__(self, user: User):
@@ -172,7 +172,7 @@ class InvoiceEmail(Mailable):
 
 ```bash
 # Generate new mailable
-$ ftf make mail WelcomeEmail
+$ jtc make mail WelcomeEmail
 ✓ Mailable created: src/mail/welcome_email.py
 
 # Use in code

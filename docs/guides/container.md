@@ -26,7 +26,7 @@ Created once for the entire application lifetime.
 - Heavy resources
 
 ```python
-from ftf import Container
+from jtc import Container
 
 container = Container()
 container.register(DatabaseEngine, scope="singleton")
@@ -82,7 +82,7 @@ assert repo1 is not repo2  # True
 ### 1. Register Dependencies
 
 ```python
-from ftf.http import FastTrackFramework
+from jtc.http import FastTrackFramework
 
 app = FastTrackFramework()
 
@@ -105,7 +105,7 @@ app.register(AsyncSession, implementation=create_session, scope="scoped")
 ### 2. Auto-Injection in Routes
 
 ```python
-from ftf.http import Inject
+from jtc.http import Inject
 
 @app.get("/users")
 async def list_users(
@@ -168,7 +168,7 @@ service = app.container.resolve(UserService)
 Scoped dependencies are created once per request and automatically cleaned up:
 
 ```python
-from ftf.http import FastTrackFramework
+from jtc.http import FastTrackFramework
 
 app = FastTrackFramework()
 
@@ -230,7 +230,7 @@ except CircularDependencyError as e:
 Override dependencies for testing:
 
 ```python
-from ftf import Container
+from jtc import Container
 
 # Production code
 container = Container()

@@ -56,7 +56,7 @@ config = {
         # Database auto-configuration (Sprint 5.7 + Sprint 15.0)
         # Reads config/database.py and sets up AsyncEngine + AsyncSession
         # Sprint 15.0: Serverless connection handling (NullPool in AWS Lambda)
-        "ftf.providers.database_service_provider.DatabaseServiceProvider",
+        "jtc.providers.database_service_provider.DatabaseServiceProvider",
 
         # Application-level service registration
         "app.providers.app_service_provider.AppServiceProvider",
@@ -68,9 +68,9 @@ config = {
         "workbench.app.providers.auth_service_provider.AuthServiceProvider",
 
         # Future providers:
-        # "ftf.providers.cache.CacheServiceProvider",      # Cache driver configuration
-        # "ftf.providers.mail.MailServiceProvider",        # Email service setup
-        # "ftf.providers.queue.QueueServiceProvider",      # Job queue workers
+        # "jtc.providers.cache.CacheServiceProvider",      # Cache driver configuration
+        # "jtc.providers.mail.MailServiceProvider",        # Email service setup
+        # "jtc.providers.queue.QueueServiceProvider",      # Job queue workers
     ],
 
     # Locale Configuration

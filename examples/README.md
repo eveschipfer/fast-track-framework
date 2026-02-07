@@ -142,13 +142,13 @@ python examples/database_example.py
 ## Adding Your Own Examples
 
 1. Create new file: `examples/my_example.py`
-2. Import framework: `from ftf.http import FastTrackFramework`
+2. Import framework: `from jtc.http import FastTrackFramework`
 3. Follow patterns from existing examples
 4. Add documentation to this README
 
 ## More Information
 
 - [Sprint 2.2 Implementation](../SPRINT_2_2_DATABASE_IMPLEMENTATION.md)
-- [Database Module](../src/ftf/database/)
-- [Models Module](../src/ftf/models/)
+- [Database Module](../src/jtc/database/)
+- [Models Module](../src/jtc/models/)
 - [Integration Tests](../tests/integration/)

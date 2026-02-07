@@ -29,7 +29,7 @@ poetry add saq redis
 ### 2. Define Scheduled Tasks
 
 ```python
-from ftf.schedule import Schedule
+from jtc.schedule import Schedule
 
 # Run every hour at minute 0
 @Schedule.cron("0 * * * *")
@@ -75,7 +75,7 @@ ftf queue list
 ### Common Patterns
 
 ```python
-from ftf.schedule import Schedule
+from jtc.schedule import Schedule
 
 # Every hour at minute 0
 @Schedule.cron("0 * * * *")
@@ -125,7 +125,7 @@ async def business_hours(ctx):
 For simple repetitive tasks, use `@Schedule.every()`:
 
 ```python
-from ftf.schedule import Schedule
+from jtc.schedule import Schedule
 
 # Every 30 seconds
 @Schedule.every(30)
@@ -194,8 +194,8 @@ async def task_with_context(ctx):
 While scheduled tasks receive `ctx` as a parameter (required by SAQ), you can access services from the IoC Container by creating a wrapper:
 
 ```python
-from ftf.schedule import Schedule
-from ftf.jobs import get_container
+from jtc.schedule import Schedule
+from jtc.jobs import get_container
 
 @Schedule.cron("0 2 * * *")  # Daily at 2 AM
 async def database_backup(ctx):
@@ -204,7 +204,7 @@ async def database_backup(ctx):
     container = get_container()
 
     # Resolve services
-    from ftf.services import BackupService
+    from jtc.services import BackupService
     backup_service = container.resolve(BackupService)
 
     # Use service
@@ -214,8 +214,8 @@ async def database_backup(ctx):
 **Better Pattern**: Use a Job instead of accessing container directly:
 
 ```python
-from ftf.jobs import Job
-from ftf.schedule import Schedule
+from jtc.jobs import Job
+from jtc.schedule import Schedule
 
 class DatabaseBackupJob(Job):
     def __init__(self, backup_service: BackupService):
@@ -282,7 +282,7 @@ Total: 3 task(s)
 
 ```python
 import pytest
-from ftf.schedule import run_task_by_name, ScheduleRegistry
+from jtc.schedule import run_task_by_name, ScheduleRegistry
 
 @pytest.fixture(autouse=True)
 def clear_registry():
@@ -314,7 +314,7 @@ def test_task_is_registered():
 ### Manual Execution
 
 ```python
-from ftf.schedule import run_task_by_name
+from jtc.schedule import run_task_by_name
 
 # Run a scheduled task manually (for testing)
 await run_task_by_name("hourly_cleanup")
@@ -344,7 +344,7 @@ protected function schedule(Schedule $schedule)
 
 **Fast Track:**
 ```python
-from ftf.schedule import Schedule
+from jtc.schedule import Schedule
 
 @Schedule.cron("0 * * * *")  # Hourly
 async def my_task(ctx):
@@ -376,7 +376,7 @@ def my_task():
 
 **Fast Track:**
 ```python
-from ftf.schedule import Schedule
+from jtc.schedule import Schedule
 
 @Schedule.cron("0 * * * *")
 async def my_task(ctx):
@@ -529,7 +529,7 @@ async def x(ctx):
 
 1. **Check if task is registered**:
    ```bash
-   ftf queue list
+   jtc queue list
    ```
 
 2. **Verify Redis connection**:

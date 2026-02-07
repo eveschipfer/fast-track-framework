@@ -268,7 +268,7 @@ async def test_paginate_first_page(self, repo: PaginationRepo):
 **Files Modified**:
 - `framework/fast_query/base.py`
 - `framework/fast_query/query_builder.py`
-- `framework/ftf/cli/templates.py`
+- `framework/jtc/cli/templates.py`
 
 **Change**: Replace `datetime.utcnow()` with `datetime.now(timezone.utc)`
 
@@ -342,7 +342,7 @@ asyncio_default_fixture_loop_scope = "function"
 |------|---------|--------------|
 | `framework/fast_query/base.py` | Updated docstring examples to use `datetime.now(timezone.utc)` | ~5 |
 | `framework/fast_query/query_builder.py` | Updated docstring examples to use `datetime.now(timezone.utc)` | ~5 |
-| `framework/ftf/cli/templates.py` | Updated event template to use timezone-aware datetime | ~3 |
+| `framework/jtc/cli/templates.py` | Updated event template to use timezone-aware datetime | ~3 |
 
 ### Tests
 
@@ -497,8 +497,8 @@ workbench/tests/integration/test_scenarios.py 5 PASSED
 ```
 Name                                         Stmts   Miss   Cover
 ---------------------------------------------------------------------------
-framework/ftf/resources/collection.py               25      2   92.00%
-framework/ftf/resources/core.py                    35      6   82.86%
+framework/jtc/resources/collection.py               25      2   92.00%
+framework/jtc/resources/core.py                    35      6   82.86%
 framework/fast_query/mixins.py                     35      4   88.57%
 framework/fast_query/repository.py                 118     27   77.12%
 framework/fast_query/query_builder.py              378     76   79.89%

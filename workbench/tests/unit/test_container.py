@@ -19,7 +19,7 @@ Run tests:
 import pytest
 from typing import Optional
 
-from ftf.core import (
+from jtc.core import (
     Container,
     DependencyResolutionError,
     CircularDependencyError,

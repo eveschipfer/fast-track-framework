@@ -36,7 +36,7 @@ Without Sprint 3.4, every route would need manual error handling, and middleware
 
 ## What We Built
 
-### 1. Exception System (`src/ftf/http/exceptions.py`)
+### 1. Exception System (`src/jtc/http/exceptions.py`)
 
 **Architecture:**
 
@@ -91,7 +91,7 @@ raise RecordNotFound("User", 123)
 # Auto-converts to: {"detail": "User not found: 123"} with status 404
 ```
 
-### 2. Middleware System (`src/ftf/http/middleware/__init__.py`)
+### 2. Middleware System (`src/jtc/http/middleware/__init__.py`)
 
 **Architecture:**
 
@@ -131,8 +131,8 @@ MiddlewareManager
 **Example Usage:**
 
 ```python
-from ftf.http import FastTrackFramework
-from ftf.http.middleware import MiddlewareManager
+from jtc.http import FastTrackFramework
+from jtc.http.middleware import MiddlewareManager
 
 app = FastTrackFramework()
 
@@ -140,7 +140,7 @@ app = FastTrackFramework()
 MiddlewareManager.configure_all(app)
 
 # Option 2: Configure individually
-from ftf.http.middleware import configure_cors, configure_gzip
+from jtc.http.middleware import configure_cors, configure_gzip
 configure_cors(app)  # Reads from CORS_ORIGINS env var
 configure_gzip(app)  # Compression level 5, min size 1000 bytes
 
@@ -162,7 +162,7 @@ CORS_ORIGINS="http://localhost:3000,https://myapp.com"
 ALLOWED_HOSTS="localhost,myapp.com,*.myapp.com"
 ```
 
-### 3. CLI Command (`ftf make:middleware`)
+### 3. CLI Command (`jtc make:middleware`)
 
 **Feature:**
 
@@ -171,8 +171,8 @@ Generates middleware class skeleton with dispatch() method.
 **Usage:**
 
 ```bash
-$ ftf make:middleware LogRequests
-✓ Middleware created: src/ftf/http/middleware/log_requests.py
+$ jtc make:middleware LogRequests
+✓ Middleware created: src/jtc/http/middleware/log_requests.py
 💡 Register with: app.add_middleware(LogRequests)
 ```
 
@@ -213,7 +213,7 @@ class FastTrackFramework(FastAPI):
         super().__init__(*args, **kwargs)
 
         # Auto-register exception handlers (Sprint 3.4)
-        from ftf.http.exceptions import ExceptionHandler
+        from jtc.http.exceptions import ExceptionHandler
         ExceptionHandler.register_all(self)
 ```
 
@@ -356,7 +356,7 @@ class Handler extends ExceptionHandler {
 }
 ```
 
-**Fast Track (`src/ftf/http/exceptions.py`):**
+**Fast Track (`src/jtc/http/exceptions.py`):**
 
 ```python
 class ExceptionHandler:
@@ -392,7 +392,7 @@ class Kernel extends HttpKernel {
 **Fast Track (`app.py`):**
 
 ```python
-from ftf.http.middleware import MiddlewareManager
+from jtc.http.middleware import MiddlewareManager
 
 app = FastTrackFramework()
 MiddlewareManager.configure_all(app)
@@ -441,7 +441,7 @@ MiddlewareManager.configure_all(app)
 **Pattern 1: Custom Exception**
 
 ```python
-from ftf.http import AppException
+from jtc.http import AppException
 
 class RateLimitExceeded(AppException):
     def __init__(self, retry_after: int):
@@ -478,8 +478,8 @@ app.add_middleware(RateLimitMiddleware)
 
 ```python
 import os
-from ftf.http import FastTrackFramework
-from ftf.http.middleware import configure_cors, configure_gzip, configure_trusted_host
+from jtc.http import FastTrackFramework
+from jtc.http.middleware import configure_cors, configure_gzip, configure_trusted_host
 
 app = FastTrackFramework()
 
@@ -508,13 +508,13 @@ if os.getenv("ENVIRONMENT") == "production":
 
 ### New Files
 
-1. **`src/ftf/http/exceptions.py` (497 lines)**
+1. **`src/jtc/http/exceptions.py` (497 lines)**
    - AppException base class
    - Specific exception types (Authentication, Authorization, Validation)
    - Exception handlers (async functions)
    - ExceptionHandler registry
 
-2. **`src/ftf/http/middleware/__init__.py` (374 lines)**
+2. **`src/jtc/http/middleware/__init__.py` (374 lines)**
    - configure_cors() with env var support
    - configure_gzip() with compression levels
    - configure_trusted_host() for security
@@ -527,22 +527,22 @@ if os.getenv("ENVIRONMENT") == "production":
 
 ### Modified Files
 
-1. **`src/ftf/http/__init__.py`**
+1. **`src/jtc/http/__init__.py`**
    - Exported exception classes
    - Exported middleware functions
    - Updated docstring
 
-2. **`src/ftf/http/app.py`**
+2. **`src/jtc/http/app.py`**
    - Removed manual RecordNotFound handler
    - Added ExceptionHandler.register_all() in __init__
    - Cleaner, more maintainable code
 
-3. **`src/ftf/cli/commands/make.py`**
+3. **`src/jtc/cli/commands/make.py`**
    - Added make:middleware command (58 lines)
    - Creates middleware class skeleton
    - Auto-creates middleware/ directory
 
-4. **`src/ftf/cli/templates.py`**
+4. **`src/jtc/cli/templates.py`**
    - Added get_middleware_template() (135 lines)
    - Comprehensive template with examples
    - Shows dispatch() pattern

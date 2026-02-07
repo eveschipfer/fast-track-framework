@@ -331,7 +331,7 @@ class BaseRepository(Generic[T]):
             ...     }
             >>>
             >>> # With ResourceCollection (automatic metadata)
-            >>> from ftf.resources import ResourceCollection, UserResource
+            >>> from jtc.resources import ResourceCollection, UserResource
             >>> users = await repo.paginate(page=1)
             >>> return ResourceCollection(users, UserResource).resolve()
             >>> # Returns Laravel-compatible JSON with data, meta, links sections

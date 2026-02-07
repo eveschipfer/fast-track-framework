@@ -14,9 +14,9 @@ Sprint 10 Changes:
     - Registered guards for multi-driver support
 """
 
-from ftf.core import Container, ServiceProvider
-from ftf.auth import AuthManager
-from ftf.auth.guards import JwtGuard
+from jtc.core import Container, ServiceProvider
+from jtc.auth import AuthManager
+from jtc.auth.guards import JwtGuard
 
 
 class AuthServiceProvider(ServiceProvider):
@@ -87,7 +87,7 @@ class AuthServiceProvider(ServiceProvider):
 
         # Create UserProvider (placeholder - will be implemented fully in future)
         # For now, we'll use a simple implementation that uses repository pattern
-        from ftf.auth.user_provider import DatabaseUserProvider
+        from jtc.auth.user_provider import DatabaseUserProvider
 
         user_provider = DatabaseUserProvider(container)
 

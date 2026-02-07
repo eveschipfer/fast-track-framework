@@ -33,7 +33,7 @@ Sprint 12.0 introduces **Method Injection** for Service Provider `boot()` method
 
 **Before (Sprint 11.0):**
 ```python
-# framework/ftf/providers/database.py
+# framework/jtc/providers/database.py
 class DatabaseServiceProvider(ServiceProvider):
     def boot(self, container: Container) -> None:
         # ❌ Service Locator pattern
@@ -44,7 +44,7 @@ class DatabaseServiceProvider(ServiceProvider):
 
 **After (Sprint 12.0):**
 ```python
-# framework/ftf/providers/database.py
+# framework/jtc/providers/database.py
 class DatabaseServiceProvider(ServiceProvider):
     priority: int = 10  # High priority - boots first
 
@@ -131,7 +131,7 @@ The `boot()` signature was `boot(self, container: Container)`, which meant:
 
 ### Phase 1: ServiceProvider Base Class Update
 
-**File**: `framework/ftf/core/service_provider.py`
+**File**: `framework/jtc/core/service_provider.py`
 
 Added `priority` attribute and updated `boot()` signature:
 
@@ -178,7 +178,7 @@ class ServiceProvider(ABC):
 
 ### Phase 2: FastTrackFramework Boot Logic
 
-**File**: `framework/ftf/http/app.py`
+**File**: `framework/jtc/http/app.py`
 
 Refactored `boot_providers()` method to support priority sorting and Method Injection:
 
@@ -271,7 +271,7 @@ def boot_providers(self) -> None:
 
 ### Phase 3: DatabaseServiceProvider Refactor
 
-**File**: `framework/ftf/providers/database.py`
+**File**: `framework/jtc/providers/database.py`
 
 Refactored to use Method Injection and set high priority:
 
@@ -393,9 +393,9 @@ class DatabaseServiceProvider(ServiceProvider):
 
 | File | Changes | Purpose |
 |------|---------|---------|
-| `framework/ftf/core/service_provider.py` | +50 lines | Add priority attribute, update boot() signature |
-| `framework/ftf/http/app.py` | +70 lines | Priority sorting, Method Injection, error handling |
-| `framework/ftf/providers/database.py` | +30 lines | Set priority=10, use Method Injection |
+| `framework/jtc/core/service_provider.py` | +50 lines | Add priority attribute, update boot() signature |
+| `framework/jtc/http/app.py` | +70 lines | Priority sorting, Method Injection, error handling |
+| `framework/jtc/providers/database.py` | +30 lines | Set priority=10, use Method Injection |
 
 ### Created Files (0 files)
 
@@ -496,7 +496,7 @@ class LegacyProvider(ServiceProvider):
 
 ```python
 from framework.ftf.core.service_provider import ServiceProvider
-from ftf.auth import AuthManager
+from jtc.auth import AuthManager
 
 class MyCustomProvider(ServiceProvider):
     """
@@ -762,7 +762,7 @@ class RouteServiceProvider(ServiceProvider):
 - Enables monitoring and debugging of provider boot process
 
 ```python
-# framework/ftf/events/provider_events.py
+# framework/jtc/events/provider_events.py
 class ProviderBooted(Event):
     provider: ServiceProvider
     boot_time: float
@@ -807,7 +807,7 @@ class DatabaseServiceProvider(ServiceProvider):
 
 ```python
 # CLI command
-$ ftf provider:reload --watch
+$ jtc provider:reload --watch
 
 Watching provider files...
 Reloading DatabaseServiceProvider... ✓

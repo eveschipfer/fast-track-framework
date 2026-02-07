@@ -24,7 +24,7 @@ Sprint 3.8 extends the existing Job Queue system (Sprint 3.2) with a complete ta
 
 ## 🎯 What Was Built
 
-### 1. Schedule System Core (`src/ftf/schedule/core.py`)
+### 1. Schedule System Core (`src/jtc/schedule/core.py`)
 
 **Components**:
 - `Schedule` class with decorator methods
@@ -55,7 +55,7 @@ tasks = ScheduleRegistry.get_all()
 print(f"Found {len(tasks)} scheduled tasks")
 ```
 
-### 2. Queue Provider (`src/ftf/providers/queue_provider.py`)
+### 2. Queue Provider (`src/jtc/providers/queue_provider.py`)
 
 Unified provider for queue system initialization:
 
@@ -80,17 +80,17 @@ if await provider.check_redis_connection():
 - Scheduled task registration with SAQ
 - Worker configuration
 
-### 3. Enhanced CLI Commands (`src/ftf/cli/commands/queue.py`)
+### 3. Enhanced CLI Commands (`src/jtc/cli/commands/queue.py`)
 
-**Updated `ftf queue work`**:
+**Updated `jtc queue work`**:
 - ✅ Verifies Redis connection before starting
 - ✅ Discovers and registers all @Schedule tasks
 - ✅ Shows registered tasks count on startup
 - ✅ Better error messages and troubleshooting
 
-**New `ftf queue list`**:
+**New `jtc queue list`**:
 ```bash
-$ ftf queue list
+$ jtc queue list
 
 Scheduled Tasks
 ┌──────────────────┬──────────────┬──────────┬─────────────────────┐
@@ -289,23 +289,23 @@ worker = provider.get_worker()
 
 ### Created Files (9)
 
-1. **`src/ftf/schedule/core.py`** (287 lines)
+1. **`src/jtc/schedule/core.py`** (287 lines)
    - Schedule class with decorators
    - ScheduledTask dataclass
    - ScheduleRegistry singleton
    - Utility functions
 
-2. **`src/ftf/schedule/__init__.py`** (58 lines)
+2. **`src/jtc/schedule/__init__.py`** (58 lines)
    - Module exports
    - Documentation
 
-3. **`src/ftf/providers/queue_provider.py`** (267 lines)
+3. **`src/jtc/providers/queue_provider.py`** (267 lines)
    - QueueProvider class
    - Redis connection checking
    - Schedule integration
    - Worker configuration
 
-4. **`src/ftf/providers/__init__.py`** (18 lines)
+4. **`src/jtc/providers/__init__.py`** (18 lines)
    - Module exports
 
 5. **`examples/schedule_example.py`** (280 lines)
@@ -328,10 +328,10 @@ worker = provider.get_worker()
 
 ### Modified Files (1)
 
-9. **`src/ftf/cli/commands/queue.py`** (enhanced)
+9. **`src/jtc/cli/commands/queue.py`** (enhanced)
    - Added Redis connection check
    - Integrated QueueProvider
-   - Added `ftf queue list` command
+   - Added `jtc queue list` command
    - Better error messages
 
 ---
@@ -363,7 +363,7 @@ async def send_emails(ctx):
     pass
 
 # No cron entry needed - worker handles scheduling
-$ ftf queue work
+$ jtc queue work
 ```
 
 ### Celery Beat (Python)
@@ -391,7 +391,7 @@ async def send_emails(ctx):
     pass
 
 # Single process
-$ ftf queue work
+$ jtc queue work
 ```
 
 ### NestJS Task Scheduling (Node.js)
@@ -490,7 +490,7 @@ async def cleanup(ctx): ...
 async def reports(ctx): ...
 
 # Single command
-$ ftf queue work
+$ jtc queue work
 ```
 
 ---
@@ -520,7 +520,7 @@ $ ftf queue work
 ### Define Scheduled Tasks
 
 ```python
-from ftf.schedule import Schedule
+from jtc.schedule import Schedule
 
 @Schedule.cron("0 * * * *")  # Every hour
 async def hourly_cleanup(ctx):
@@ -549,7 +549,7 @@ ftf queue work --redis redis://localhost:6380 --concurrency 20
 ### Dispatch Background Jobs
 
 ```python
-from ftf.jobs import Job
+from jtc.jobs import Job
 
 class ProcessOrderJob(Job):
     async def handle(self):

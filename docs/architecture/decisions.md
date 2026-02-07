@@ -34,7 +34,7 @@ await repo.update(user)
 - ✅ Works everywhere (HTTP, CLI, jobs, tests)
 - ✅ Type-safe (MyPy can verify)
 
-See: `src/ftf/exercises/sprint_1_2_active_record_trap.py` for detailed explanation.
+See: `src/jtc/exercises/sprint_1_2_active_record_trap.py` for detailed explanation.
 
 ---
 
@@ -55,8 +55,8 @@ See: `src/ftf/exercises/sprint_1_2_active_record_trap.py` for detailed explanati
 # fast_query has ZERO imports from fastapi or ftf
 from fast_query import BaseRepository  # ✅ Works anywhere
 
-# ftf integrates with fast_query
-from ftf.http import FastTrackFramework  # Web framework layer
+# jtc integrates with fast_query
+from jtc.http import FastTrackFramework  # Web framework layer
 ```
 
 ---

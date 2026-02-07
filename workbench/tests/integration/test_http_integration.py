@@ -22,8 +22,8 @@ import pytest
 from fastapi import APIRouter
 from fastapi.testclient import TestClient
 
-from ftf.http.app import FastTrackFramework, ScopedMiddleware
-from ftf.http.params import Inject
+from jtc.http.app import FastTrackFramework, ScopedMiddleware
+from jtc.http.params import Inject
 
 # ============================================================================
 # TEST FIXTURES AND ARTIFACTS
