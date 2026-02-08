@@ -51,10 +51,17 @@ Architecture Overview:
 """
 
 import os
+import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any, AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+
+# Add workbench to Python path for app imports
+workbench_path = Path(__file__).parent.parent.parent / "workbench"
+if str(workbench_path) not in sys.path:
+    sys.path.insert(0, str(workbench_path))
 
 from fast_query import AsyncSessionFactory, Base, create_engine
 from jtc.cache import Cache
@@ -119,8 +126,7 @@ async def lifespan(app: FastTrackFramework) -> AsyncGenerator[None]:
     # ------------------------------------------------------------------------
     locale = os.getenv("LOCALE", "en")
     fallback_locale = os.getenv("FALLBACK_LOCALE", "en")
-    Translator.set_locale(locale)
-    Translator.set_fallback_locale(fallback_locale)
+    translator = Translator.get_instance(locale=locale)
     print(f"🌍 i18n initialized: locale={locale}, fallback={fallback_locale}")  # noqa: T201
 
     # ------------------------------------------------------------------------

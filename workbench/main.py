@@ -23,9 +23,10 @@ Usage:
 
 from jtc.config import config
 from jtc.http import FastTrackFramework
+from jtc.http.middleware import DatabaseSessionMiddleware
 
 # Import app models (registers them with SQLAlchemy)
-from app.models import Comment, Post, Role, User  # noqa: F401
+from app.models import Comment, Post, Product, Role, User  # noqa: F401
 
 
 def create_app() -> FastTrackFramework:
@@ -59,10 +60,15 @@ def create_app() -> FastTrackFramework:
     # Sprint 5.3: Config loaded and providers registered automatically
     app = FastTrackFramework()
 
+    # Add database session middleware for proper transaction management
+    # This ensures sessions are committed on success, rolled back on error
+    app.add_middleware(DatabaseSessionMiddleware)
+
     # That's it! The framework now:
     # 1. Loads config from workbench/config/*.py
     # 2. Registers providers from config("app.providers")
     # 3. Boots providers on application startup
+    # 4. Manages database sessions per request (commit/rollback)
 
     return app
 

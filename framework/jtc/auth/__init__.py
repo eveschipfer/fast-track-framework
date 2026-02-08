@@ -93,6 +93,7 @@ from fastapi import Depends
 
 # Authentication imports (Sprint 3.3)
 from jtc.auth.crypto import hash_password, needs_rehash, verify_password
+from jtc.auth.guard import get_current_user
 from jtc.auth.jwt import (
     create_access_token,
     decode_token,
@@ -105,7 +106,8 @@ from jtc.auth.gates import Gate, GateManager
 from jtc.auth.policies import Policy
 
 # NEW: Guard Pattern imports (Sprint 10)
-from jtc.auth import AuthManager, JwtGuard
+from jtc.auth.auth_manager import AuthManager
+from jtc.auth.guards.jwt_guard import JwtGuard
 
 # CurrentUser type alias for route protection
 # Educational Note: We use Any here instead of User to avoid circular imports

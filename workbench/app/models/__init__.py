@@ -6,11 +6,12 @@ Database models using SQLAlchemy 2.0 with Repository Pattern.
 All models inherit from Base and use Mapped[] type hints for
 type safety and IDE support.
 
-Models:
+ Models:
     User: User model with posts, comments, and roles relationships
     Post: Blog post model with author and comments relationships
     Comment: Comment model with post and author relationships
     Role: Role model for authorization (many-to-many with User)
+    Product: Product model with SKU, price, and timestamps (Sprint 18.2)
 
 Example:
     from app.models import User, Post, Comment, Role
@@ -38,7 +39,8 @@ See: docs/relationships.md for relationship usage guide
 
 from .comment import Comment
 from .post import Post
+from .product import Product
 from .role import Role
 from .user import User
 
-__all__ = ["Comment", "Post", "Role", "User"]
+__all__ = ["Comment", "Post", "Product", "Role", "User"]

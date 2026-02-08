@@ -87,6 +87,13 @@ from sqlalchemy.pool import NullPool
 from jtc.config import config
 from jtc.core.service_provider import ServiceProvider
 
+# Import AppSettings for dependency injection
+# Note: This creates a dependency on workbench package
+try:
+    from workbench.config.settings import AppSettings
+except ImportError:
+    AppSettings = Any  # type: ignore
+
 
 class DatabaseServiceProvider(ServiceProvider):
     """
@@ -114,22 +121,29 @@ class DatabaseServiceProvider(ServiceProvider):
         """
         Register database services into IoC container.
 
+        HOTFIX: Race Condition Resolution
+        ==================================
+        This method now includes critical fixes for high-concurrency scenarios:
+        1. Default pool_size=50, max_overflow=20 for load testing
+        2. Explicit lambda factory to ensure FRESH session instances
+        3. expire_on_commit=False to prevent DetachedInstanceError
+
         This method:
         1. Reads database config
         2. Detects serverless environment (Sprint 15.0)
         3. Constructs database URL
-        4. Creates AsyncEngine (with appropriate pool settings)
-        5. Creates async_sessionmaker
-        6. Binds them to container as Singletons
+        4. Creates AsyncEngine (with HIGH CONCURRENCY pool settings)
+        5. Creates async_sessionmaker with expire_on_commit=False
+        6. Binds them to container with EXPLICIT LAMBDA FACTORY
 
         Sprint 15.0: Serverless Connection Handling
             - If serverless detected: Uses NullPool (no pooling)
-            - If not serverless: Uses standard pooling (QueuePool)
+            - If not serverless: Uses high-concurrency pooling (QueuePool)
             - Prevents "Too many connections" errors in AWS Lambda
 
         The container will then be able to inject:
         - AsyncEngine (singleton)
-        - AsyncSession (scoped per request)
+        - AsyncSession (scoped per request with FRESH instances)
         """
         # Step 1: Read database configuration
         default_connection = config("database.default", "sqlite")
@@ -150,24 +164,23 @@ class DatabaseServiceProvider(ServiceProvider):
         # Step 3: Construct database URL
         database_url = self._build_database_url(default_connection, connection_config)
 
-        # Step 4: Extract pool settings (Sprint 15.0: Serverless-aware)
+        # Step 4: Extract pool settings (HOTFIX: Force defaults for concurrency)
         pool_settings = self._extract_pool_settings(connection_config, is_serverless)
 
         # Step 5: Create AsyncEngine
         engine = create_async_engine(database_url, **pool_settings)
 
         # Step 6: Create async_sessionmaker
-        # Note: expire_on_commit=False is critical for async/await patterns
-        # This prevents lazy loading after commit, which can cause race conditions
+        # HOTFIX: expire_on_commit=False is CRITICAL for preventing DetachedInstanceError
+        # in async contexts and high-concurrency scenarios
         session_factory = async_sessionmaker(
             engine,
             class_=AsyncSession,
-            expire_on_commit=False,
+            expire_on_commit=False,  # CRITICAL: Prevents lazy-load after commit
         )
 
         # Step 7: Bind to container
         # AsyncEngine as Singleton (one engine for the entire application)
-        # Register type first, then set pre-created instance
         container.register(AsyncEngine, scope="singleton")
         container._singletons[AsyncEngine] = engine
 
@@ -175,19 +188,20 @@ class DatabaseServiceProvider(ServiceProvider):
         container.register(async_sessionmaker, scope="singleton")
         container._singletons[async_sessionmaker] = session_factory
 
-        # AsyncSession as Scoped (new session per request/scope)
-        # The factory is called automatically by container when resolving AsyncSession
+        # HOTFIX: AsyncSession as Scoped with EXPLICIT FACTORY FUNCTION
+        # This ensures a FRESH session instance is created for EVERY scope (request)
+        # The factory function prevents session reuse across concurrent requests
         def create_session() -> AsyncSession:
-            """Create a new AsyncSession from the factory."""
+            """Create a FRESH AsyncSession from the factory for each request."""
             return session_factory()
 
         container.register(
             AsyncSession,
-            implementation=create_session,
-            scope="scoped"
+            implementation=create_session,  # CRITICAL: Fresh instance per scope
+            scope="scoped"  # One session per request scope
         )
 
-    async def boot(self, db: AsyncEngine, settings: Any, **kwargs: Any) -> None:
+    async def boot(self, db: AsyncEngine, settings: AppSettings, **kwargs: Any) -> None:
         """
         Bootstrap database services after registration.
 
@@ -217,7 +231,7 @@ class DatabaseServiceProvider(ServiceProvider):
         else:
             driver = connection_config.driver
             database = connection_config.database
-            host = connection_config.host
+            host = getattr(connection_config, "host", "localhost")
 
         if driver == "sqlite+aiosqlite":
             db_info = f"SQLite ({database})"
@@ -309,9 +323,16 @@ class DatabaseServiceProvider(ServiceProvider):
         """
         Extract SQLAlchemy pool settings from connection config.
 
+        HOTFIX: High-Concurrency Defaults
+        ==================================
+        For non-serverless environments, if pool_size and max_overflow are not
+        explicitly configured, this method now forces defaults of:
+        - pool_size=50 (handles 50 concurrent requests)
+        - max_overflow=20 (allows 70 total connections)
+
         Sprint 15.0: Serverless Connection Handling
             - If serverless: Uses NullPool (ignores pool_size, max_overflow)
-            - If not serverless: Uses standard pooling (QueuePool)
+            - If not serverless: Uses high-concurrency pooling (QueuePool)
 
         Translates config/database.py settings into SQLAlchemy create_async_engine parameters.
 
@@ -323,7 +344,7 @@ class DatabaseServiceProvider(ServiceProvider):
             dict: Pool settings for create_async_engine()
 
         Pool Settings (Non-Serverless):
-            - pool_size: Number of connections to maintain (default: 10)
+            - pool_size: Number of connections to maintain (default: 50 for concurrency)
             - max_overflow: Extra connections beyond pool_size (default: 20)
             - pool_pre_ping: Verify connections before using (default: True)
             - pool_recycle: Recycle connections after N seconds (default: 3600)
@@ -341,18 +362,16 @@ class DatabaseServiceProvider(ServiceProvider):
             from sqlalchemy.pool import NullPool
             return {"poolclass": NullPool}
 
-        # Non-serverless: Use standard pooling
-        # Pool size (number of permanent connections)
-        if "pool_size" in connection_config:
-            pool_settings["pool_size"] = connection_config["pool_size"]
+        # Non-serverless: Use high-concurrency pooling
+        # HOTFIX: Force default pool_size=50 for load testing if not specified
+        pool_settings["pool_size"] = connection_config.get("pool_size", 50)
 
-        # Max overflow (additional connections beyond pool_size)
-        if "max_overflow" in connection_config:
-            pool_settings["max_overflow"] = connection_config["max_overflow"]
+        # HOTFIX: Force default max_overflow=20 for load testing if not specified
+        pool_settings["max_overflow"] = connection_config.get("max_overflow", 20)
 
         # Pool pre-ping (health check before using connection)
-        if "pool_pre_ping" in connection_config:
-            pool_settings["pool_pre_ping"] = connection_config["pool_pre_ping"]
+        # Default to True if not specified for connection reliability
+        pool_settings["pool_pre_ping"] = connection_config.get("pool_pre_ping", True)
 
         # Pool recycle (recycle connections after N seconds)
         if "pool_recycle" in connection_config:

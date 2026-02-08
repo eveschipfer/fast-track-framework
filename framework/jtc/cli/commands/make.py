@@ -1074,3 +1074,68 @@ def make_rule(
         console.print(f"[red]✗ File already exists:[/red] {file_path}")
         console.print("[dim]Use --force to overwrite[/dim]")
         raise typer.Exit(code=1)
+@app.command("k6")
+def make_k6(
+    name: str,
+    vus: int = typer.Option(10, "--vus", "-v", help="Number of virtual users"),
+    duration: str = typer.Option("30s", "--duration", "-d", help="Duration of load test"),
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite if exists"),
+) -> None:
+    """
+    Generate a k6 load testing script.
+
+    Creates a modern JavaScript file for k6 load testing with:
+    - Configurable VUs and duration
+    - Ramp up/down stages
+    - Performance thresholds (p95 < 500ms, errors < 1%)
+    - Environment variable support for BASE_URL
+
+    Args:
+        name: Name of the load test (e.g., "user_login", "api_stress")
+        vus: Number of virtual users (default: 10)
+        duration: Duration of the load test (default: "30s")
+        force: Overwrite if the file already exists
+
+    Example:
+        $ jtc make:k6 user_login
+        ✓ Load test created: workbench/tests/load/user_login.js
+
+        $ jtc make:k6 api_stress --vus 50 --duration 2m
+        ✓ Load test created: workbench/tests/load/api_stress.js
+
+        $ k6 run workbench/tests/load/user_login.js
+        $ k6 run --vus 100 --duration 5m workbench/tests/load/api_stress.js
+
+        $ BASE_URL=https://api.example.com k6 run workbench/tests/load/user_login.js
+    """
+    # Create tests/load directory if it doesn't exist
+    load_dir = Path("workbench/tests/load")
+    load_dir.mkdir(parents=True, exist_ok=True)
+
+    # Ensure .js extension
+    filename = name if name.endswith(".js") else f"{name}.js"
+    file_path = load_dir / filename
+
+    # Generate content from template
+    from jtc.cli.templates import get_k6_template
+
+    content = get_k6_template(name.replace(".js", ""), vus, duration)
+
+    # Create file
+    if create_file(file_path, content, force):
+        console.print(f"[green]✓ Load test created:[/green] {file_path}")
+        console.print()
+        console.print("[bold cyan]💡 Run with:[/bold cyan]")
+        console.print(f"  k6 run {file_path}")
+        console.print()
+        console.print("[bold cyan]💡 Or with custom settings:[/bold cyan]")
+        console.print(f"  k6 run --vus {vus} --duration {duration} {file_path}")
+        console.print()
+        console.print("[bold cyan]💡 Or with custom base URL:[/bold cyan]")
+        console.print(f"  BASE_URL=https://api.example.com k6 run {file_path}")
+        console.print()
+        console.print("[dim]Remember to update the endpoint URL in the script![/dim]")
+    else:
+        console.print(f"[red]✗ File already exists:[/red] {file_path}")
+        console.print("[dim]Use --force to overwrite[/dim]")
+        raise typer.Exit(code=1)

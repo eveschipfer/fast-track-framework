@@ -97,8 +97,8 @@ config = {
             "username": os.getenv("DB_USERNAME", "postgres"),
             "password": os.getenv("DB_PASSWORD", ""),
             # Connection pool settings
-            "pool_size": int(os.getenv("DB_POOL_SIZE", "10")),
-            "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "20")),
+            "pool_size": int(os.getenv("DB_POOL_SIZE", "50")),
+            "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "10")),
             "pool_pre_ping": True,
             "pool_recycle": 3600,
             "echo": os.getenv("DB_ECHO", "false").lower() == "true",

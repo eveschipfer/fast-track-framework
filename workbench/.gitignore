@@ -4,6 +4,6 @@
 storage/logs/*.log
 storage/framework/cache/*
 !storage/framework/cache/.gitkeep
-.env
+../.env
 __pycache__/
 *.pyc

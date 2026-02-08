@@ -1,60 +1,91 @@
 """
 API Routes
 
-This module contains the main API routes for the workbench application.
+This module contains main API routes for the workbench application.
 Similar to Laravel's routes/api.php, all routes defined here will be
 prefixed with /api.
 
-The RouteServiceProvider automatically registers these routes with
-the FastTrackFramework application instance.
+Note:
+    As of Sprint 18.2, product routes are registered via
+    RouteServiceProvider (app/providers/route_service_provider.py) for proper
+    dependency injection and organization.
+
+The RouteServiceProvider automatically registers routes with
+    FastTrackFramework application instance during the boot phase.
+
+Available Routes:
+    /api/products/*              - Product CRUD (registered by RouteServiceProvider)
+    /api/                          - API health check and documentation
 
 Example:
     GET /api/ping -> {"message": "pong"}
-    GET /api/users -> [{"id": 1, "name": "John Doe"}, ...]
+    GET /api/products -> [{"id": "...", "name": "Product 1"}, ...]
+    POST /api/products -> Created product
+    GET /api/products/{id} -> Single product
+    PUT /api/products/{id} -> Updated product
+    DELETE /api/products/{id} -> 204 No Content
 """
 
 from fastapi import APIRouter
 
-# Create API router (will be prefixed with /api by RouteServiceProvider)
-api_router = APIRouter()
+# Create main API router
+api_router = APIRouter(tags=["API"])
 
 
-@api_router.get("/ping")
-async def ping() -> dict[str, str]:
+@api_router.get("/health")
+async def health_check() -> dict[str, str]:
     """
-    Simple ping endpoint to verify the API is responding.
+    Health check endpoint.
+
+    Returns API status and version information.
+    Useful for load balancers and monitoring systems.
 
     Returns:
-        dict: A simple pong message
+        dict: Health status information
 
     Example:
-        >>> GET /api/ping
-        {"message": "pong"}
+        GET /api/health
+        Response: {
+            "status": "healthy",
+            "version": "1.0.0a1",
+            "framework": "Fast Track Framework"
+        }
     """
-    return {"message": "pong"}
+    return {
+        "status": "healthy",
+        "version": "1.0.0a1",
+        "framework": "Fast Track Framework"
+    }
 
 
-@api_router.get("/users")
-async def list_users() -> list[dict[str, str | int]]:
+@api_router.get("/")
+async def api_index() -> dict[str, Any]:
     """
-    List all users (sample endpoint).
+    API index endpoint.
 
-    This is a placeholder endpoint that returns mock data.
-    In a real application, this would query the database via
-    a repository and return actual user data.
+    Returns available API endpoints and documentation links.
 
     Returns:
-        list: List of user dictionaries
+        dict: API information and available routes
 
     Example:
-        >>> GET /api/users
-        [
-            {"id": 1, "name": "John Doe", "email": "john@example.com"},
-            {"id": 2, "name": "Jane Smith", "email": "jane@example.com"}
-        ]
+        GET /api/
+        Response: {
+            "name": "Fast Track Framework API",
+            "version": "1.0.0a1",
+            "endpoints": {
+                "products": "/api/products",
+                "health": "/api/health"
+            },
+            "documentation": "/docs"
+        }
     """
-    # Mock data - in production, this would come from UserRepository
-    return [
-        {"id": 1, "name": "John Doe", "email": "john@example.com"},
-        {"id": 2, "name": "Jane Smith", "email": "jane@example.com"},
-    ]
+    return {
+        "name": "Fast Track Framework API",
+        "version": "1.0.0a1",
+        "endpoints": {
+            "products": "/api/products",
+            "health": "/api/health",
+        },
+        "documentation": "/docs",
+    }

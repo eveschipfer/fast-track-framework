@@ -24,12 +24,151 @@ import sys
 from pathlib import Path
 
 import typer
+import os
 from rich.console import Console
+from alembic.config import Config
+from alembic import command as alembic_command
 
 # Create command group
 app = typer.Typer()
 console = Console()
 
+@app.command("migrate")
+def migrate():
+    """Executa todas as migrações pendentes no banco de dados."""
+    typer.echo("🐱 JTC: Sincronizando o banco de dados...")
+
+    # Add project root to sys.path for imports
+    project_root = Path.cwd()
+    framework_path = project_root / "framework"
+    
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+    if str(framework_path) not in sys.path:
+        sys.path.insert(0, str(framework_path))
+
+    # Import config to get database URL
+    try:
+        from jtc.config import config
+        
+        # Build database URL from config
+        default_connection = config("database.default", "sqlite")
+        connection_config = config(f"database.connections.{default_connection}", {})
+        
+        if not connection_config:
+            typer.echo(f"❌ Database connection '{default_connection}' not found in config")
+            raise typer.Exit(code=1)
+        
+        # Build database URL (same logic as DatabaseServiceProvider)
+        driver = connection_config.get("driver")
+        
+        if driver.startswith("sqlite"):
+            database = connection_config.get("database", "app.db")
+            database_url = f"{driver}:///{database}"
+        else:
+            # MySQL/PostgreSQL
+            username = connection_config.get("username", "")
+            password = connection_config.get("password", "")
+            host = connection_config.get("host", "localhost")
+            port = connection_config.get("port", 3306 if "mysql" in driver else 5432)
+            database = connection_config.get("database", "")
+            
+            if password:
+                credentials = f"{username}:{password}"
+            else:
+                credentials = username
+            
+            database_url = f"{driver}://{credentials}@{host}:{port}/{database}"
+        
+        typer.echo(f"📡 Using database: {default_connection}")
+        
+    except Exception as e:
+        typer.echo(f"❌ Failed to load database config: {e}")
+        raise typer.Exit(code=1)
+
+    # Busca o caminho do alembic.ini na raiz do projeto
+    ini_path = os.path.join(os.getcwd(), "alembic.ini")
+    alembic_cfg = Config(ini_path)
+
+    # Injeção de dependência forçada do path para evitar erros de diretório
+    alembic_cfg.set_main_option("script_location", "workbench/database/migrations")
+    
+    # Set database URL from config
+    alembic_cfg.set_main_option("sqlalchemy.url", database_url)
+
+    try:
+        alembic_command.upgrade(alembic_cfg, "head")
+        typer.echo("✅ Banco de dados atualizado com sucesso!")
+    except Exception as e:
+        typer.echo(f"❌ Falha na migração: {e}")
+        raise typer.Exit(code=1)
+
+@app.command("rollback")
+def rollback(step: int = 1):
+    """Reverte a última migração."""
+    typer.echo(f"⏪ Revertendo {step} passo(s)...")
+    
+    # Add project root to sys.path for imports
+    project_root = Path.cwd()
+    framework_path = project_root / "framework"
+    
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+    if str(framework_path) not in sys.path:
+        sys.path.insert(0, str(framework_path))
+
+    # Import config to get database URL
+    try:
+        from jtc.config import config
+        
+        # Build database URL from config
+        default_connection = config("database.default", "sqlite")
+        connection_config = config(f"database.connections.{default_connection}", {})
+        
+        if not connection_config:
+            typer.echo(f"❌ Database connection '{default_connection}' not found in config")
+            raise typer.Exit(code=1)
+        
+        # Build database URL (same logic as DatabaseServiceProvider)
+        driver = connection_config.get("driver")
+        
+        if driver.startswith("sqlite"):
+            database = connection_config.get("database", "app.db")
+            database_url = f"{driver}:///{database}"
+        else:
+            # MySQL/PostgreSQL
+            username = connection_config.get("username", "")
+            password = connection_config.get("password", "")
+            host = connection_config.get("host", "localhost")
+            port = connection_config.get("port", 3306 if "mysql" in driver else 5432)
+            database = connection_config.get("database", "")
+            
+            if password:
+                credentials = f"{username}:{password}"
+            else:
+                credentials = username
+            
+            database_url = f"{driver}://{credentials}@{host}:{port}/{database}"
+        
+        typer.echo(f"📡 Using database: {default_connection}")
+        
+    except Exception as e:
+        typer.echo(f"❌ Failed to load database config: {e}")
+        raise typer.Exit(code=1)
+    
+    ini_path = os.path.join(os.getcwd(), "alembic.ini")
+    alembic_cfg = Config(ini_path)
+    alembic_cfg.set_main_option("script_location", "workbench/database/migrations")
+    
+    # Set database URL from config
+    alembic_cfg.set_main_option("sqlalchemy.url", database_url)
+    
+    try:
+        alembic_command.downgrade(alembic_cfg, f"-{step}")
+        typer.echo("✅ Banco de dados revertido com sucesso!")
+    except Exception as e:
+        typer.echo(f"❌ Falha no rollback: {e}")
+        raise typer.Exit(code=1)
 
 @app.command("seed")
 def seed(

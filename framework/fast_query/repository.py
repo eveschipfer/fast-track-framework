@@ -118,20 +118,32 @@ class BaseRepository(Generic[T]):
         """
         Create new record in database.
 
+        Flushes the instance to get database-generated values (ID, timestamps).
+        DatabaseSessionMiddleware will commit the transaction at request end.
+
         Args:
             instance: Model instance to create (not yet persisted)
 
         Returns:
-            T: The created instance with ID populated
+            T: The created instance with ID and timestamps populated
 
         Example:
             >>> user = User(name="Alice", email="alice@example.com")
             >>> created_user = await repo.create(user)
-            >>> assert created_user.id is not None
+            >>> assert created_user.id is not None  # ID available immediately
         """
         self.session.add(instance)
-        await self.session.commit()
-        await self.session.refresh(instance)
+
+        # Flush to generate database defaults (ID, timestamps)
+        # Disable autoflush to prevent recursive flush if queries happen during flush
+        try:
+            with self.session.no_autoflush:
+                await self.session.flush()
+        except Exception:
+            # If flush fails (e.g., duplicate key), let exception propagate
+            # Middleware will rollback the transaction
+            raise
+
         return instance
 
     async def find(self, id: int) -> Optional[T]:
@@ -204,8 +216,8 @@ class BaseRepository(Generic[T]):
         """
         Update existing record.
 
-        Note: The instance must already be tracked by the session.
-        This commits changes made to the instance.
+        Note: DatabaseSessionMiddleware will commit the transaction at the
+        end of the request. The instance is already tracked by the session.
 
         Args:
             instance: Model instance with modified attributes
@@ -217,10 +229,9 @@ class BaseRepository(Generic[T]):
             >>> user = await repo.find(123)
             >>> user.name = "Bob Updated"
             >>> updated_user = await repo.update(user)
-            >>> assert updated_user.name == "Bob Updated"
+            >>> # Changes committed by middleware at end of request
         """
-        await self.session.commit()
-        await self.session.refresh(instance)
+        # Instance is already tracked, changes will be committed by middleware
         return instance
 
     async def delete(self, instance: T) -> None:
@@ -252,12 +263,11 @@ class BaseRepository(Generic[T]):
         if isinstance(instance, SoftDeletesMixin):
             # Soft delete: Set deleted_at timestamp
             instance.deleted_at = datetime.now(timezone.utc)
-            await self.session.commit()
-            await self.session.refresh(instance)
+            # Middleware will commit at end of request
         else:
             # Hard delete: Remove from database
             await self.session.delete(instance)
-            await self.session.commit()
+            # Middleware will commit at end of request
 
     async def count(self) -> int:
         """

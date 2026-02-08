@@ -63,6 +63,7 @@ config = {
 
         # Route registration and configuration
         "app.providers.route_service_provider.RouteServiceProvider",
+        "workbench.app.providers.RouteServiceProvider"
 
         # Authentication guards (Sprint 10)
         "workbench.app.providers.auth_service_provider.AuthServiceProvider",

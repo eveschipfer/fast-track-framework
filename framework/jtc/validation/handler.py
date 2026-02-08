@@ -142,6 +142,7 @@ def Validate(model_class: Type[T]) -> Callable[..., T]:
 
     async def dependency(
         request_body: model_class,  # type: ignore
+        session: AsyncSession = Inject(AsyncSession),  # Inject session from FastAPI DI
     ) -> T:
         """
         Dependency callable that validates a FormRequest with METHOD INJECTION.
@@ -150,6 +151,7 @@ def Validate(model_class: Type[T]) -> Callable[..., T]:
 
         Args:
             request_body: Parsed Pydantic model (from request body)
+            session: AsyncSession injected by FastAPI's dependency injection
 
         Returns:
             T: Validated FormRequest instance
@@ -180,9 +182,9 @@ def Validate(model_class: Type[T]) -> Callable[..., T]:
                         # Dependency not registered, try Inject() as fallback
                         pass
 
-        # Sprint 11: Backward compatibility: Inject session if rules() expects it
+        # Sprint 11: Backward compatibility: Use injected session if rules() expects it
         if 'session' in rules_signature.parameters and 'session' not in resolved_dependencies:
-            resolved_dependencies['session'] = Inject(AsyncSession)
+            resolved_dependencies['session'] = session
 
         # At this point, Pydantic has already validated structure
         # (types, required fields, regex patterns, etc.)

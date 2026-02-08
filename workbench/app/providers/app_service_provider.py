@@ -14,13 +14,12 @@ Similar to Laravel's AppServiceProvider, this is where you would:
 - Configure application-level services
 
 Example:
-    from workbench.config.settings import AppSettings
+    from workbench.config.settings import AppSettings, settings
 
     class AppServiceProvider(ServiceProvider):
         def register(self, container: Container) -> None:
             # Register settings for type-safe injection
-            from workbench.config.settings import settings
-            container.register(AppSettings, instance=settings, scope="singleton")
+            container.override_instance(AppSettings, settings)
 
             # Register other services
             container.register(CacheManager, scope="singleton")
@@ -35,7 +34,7 @@ Example:
 from jtc.core import Container, ServiceProvider
 
 
-class AppServiceProvider:
+class AppServiceProvider(ServiceProvider):
     """
     Application Service Provider (Sprint 7).
 
@@ -47,6 +46,8 @@ class AppServiceProvider:
         - Registers AppSettings in Container for DI
         - Enables type-safe config injection throughout app
     """
+
+    priority: int = 50  # Boot before RouteServiceProvider (100)
 
     def register(self, container: Container) -> None:
         """
@@ -64,9 +65,9 @@ class AppServiceProvider:
 
         Example:
             def register(self, container: Container) -> None:
-                # Register settings (Sprint 7)
-                from workbench.config.settings import settings
-                container.register(AppSettings, instance=settings, scope="singleton")
+                # Register settings (Sprint 7) - pre-constructed instance
+                from workbench.config.settings import AppSettings, settings
+                container.override_instance(AppSettings, settings)
 
                 # Register other services
                 container.register(CacheDriver, RedisDriver, scope="singleton")
@@ -75,7 +76,7 @@ class AppServiceProvider:
         # Sprint 7: Register AppSettings for type-safe injection
         # This enables: settings: AppSettings in any service/route
         from workbench.config.settings import AppSettings, settings
-        container.register(AppSettings, instance=settings, scope="singleton")
+        container.override_instance(AppSettings, settings)
 
         print("📝 AppServiceProvider: Registering application services...")  # noqa: T201
         print("⚙️  AppSettings registered for type-safe DI")  # noqa: T201

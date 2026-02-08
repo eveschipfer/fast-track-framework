@@ -7,13 +7,13 @@ and configures route groups, middleware, and prefixes.
 
 The boot() method is where route registration happens, because:
 1. It runs after all providers have registered their services
-2. It can resolve the FastTrackFramework app from the container
+2. It can resolve to FastTrackFramework app from the container
 3. Route registration is a bootstrapping concern, not a service registration
 
 Example:
     class RouteServiceProvider(ServiceProvider):
         def boot(self, container: Container) -> None:
-            # Resolve the app from the container
+            # Resolve to app from container
             app = container.resolve(FastTrackFramework)
 
             # Import and register API routes
@@ -27,6 +27,8 @@ Example:
 
 from jtc.core import Container, ServiceProvider
 from jtc.http import FastTrackFramework
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.repositories.product_repository import ProductRepository
 
 
 class RouteServiceProvider(ServiceProvider):
@@ -34,47 +36,62 @@ class RouteServiceProvider(ServiceProvider):
     Route Service Provider.
 
     This provider is responsible for registering all application routes
-    with the FastTrackFramework application instance.
+    with FastTrackFramework application instance.
+
+    Priority:
+        100: Register after core services (AppServiceProvider, DatabaseServiceProvider)
     """
+
+    priority: int = 100
 
     def register(self, container: Container) -> None:
         """
-        Register services in the IoC container.
+        Register services in IoC container.
 
-        Route providers typically don't register services, so this
-        method is left empty. All route registration happens in boot().
+        Route providers typically don't register services, but this one
+        registers ProductRepository and ProductService for dependency injection.
 
         Args:
             container: The IoC container instance
         """
-        # Route providers don't typically register services
-        pass
+        # Register ProductRepository for DI
+        # This allows services to inject ProductRepository via Container
+        container.register(ProductRepository, scope="scoped")
+
+        # Register ProductService for DI (JTC Design Pattern)
+        # This allows controllers to inject ProductService via Inject()
+        # Service layer sits between controllers and repositories
+        from app.http.controllers.product_controller import ProductService
+        container.register(ProductService, scope="scoped")
 
     def boot(self, container: Container) -> None:
         """
         Bootstrap routes by registering them with the application.
 
         This method:
-        1. Resolves the FastTrackFramework app from the container
-        2. Imports the API router from workbench.routes.api
-        3. Registers the router with prefix="/api" and tags=["API"]
+        1. Resolves to FastTrackFramework app instance from the container
+        2. Imports ProductController router
+        3. Registers router with prefix="/api" and tags=["Products"]
 
         Args:
             container: The IoC container instance
         """
         print("🛣️  RouteServiceProvider: Registering routes...")  # noqa: T201
 
-        # Resolve the FastTrackFramework app instance from the container
+        # Resolve to FastTrackFramework app instance from the container
         app = container.resolve(FastTrackFramework)
 
-        # Import API routes
-        from workbench.routes.api import api_router
+        # Import ProductController router
+        # Note: Use 'app' prefix since that's the package name in workbench/
+        from app.http.controllers.product_controller import router as product_router
 
-        # Register API router with /api prefix
+        # Register Product router with /api prefix
+        # This creates routes like /api/products, /api/products/{id}, etc.
         app.include_router(
-            api_router,
+            product_router,
             prefix="/api",
-            tags=["API"],
+            tags=["Products"],
         )
 
-        print("✅ RouteServiceProvider: API routes registered at /api")  # noqa: T201
+        print("✅ RouteServiceProvider: Product routes registered at /api/products")  # noqa: T201
+        print("✅ RouteServiceProvider: All routes registered successfully")  # noqa: T201

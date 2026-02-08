@@ -367,6 +367,7 @@ class AppConfig(BaseModelConfig):
         timezone: Default timezone for timestamps
         locale: Default language for i18n
         fallback_locale: Fallback language when translation is missing
+        providers: List of service providers to register
 
     Environment Variables:
         APP_NAME: Application name (default: "Fast Track Framework")
@@ -392,6 +393,14 @@ class AppConfig(BaseModelConfig):
     timezone: str = Field(default="UTC", alias="APP_TIMEZONE")
     locale: str = Field(default="en", alias="APP_LOCALE")
     fallback_locale: str = "en"
+    providers: list[str] = Field(
+        default=[
+            "jtc.providers.database_service_provider.DatabaseServiceProvider",
+            "app.providers.app_service_provider.AppServiceProvider",
+            "app.providers.route_service_provider.RouteServiceProvider",
+            "app.providers.auth_service_provider.AuthServiceProvider",
+        ]
+    )
     model_config = ConfigDict(populate_by_name=True)
 
 
@@ -458,6 +467,7 @@ class AppSettings(BaseSettings):
     )
 
     app: AppConfig
+    auth: AuthConfig
     database: DatabaseConfig
 
     def __init__(self, **kwargs: Any) -> None:
@@ -471,6 +481,12 @@ class AppSettings(BaseSettings):
         Args:
             **kwargs: Additional settings (usually from .env)
         """
+        # IMPORTANT: Load .env file before reading environment variables
+        # Pydantic's env_file only loads AFTER super().__init__(), so we need
+        # to manually load it here to make os.getenv() work correctly
+        from dotenv import load_dotenv
+        load_dotenv(".env")
+
         # Set up database connections with environment variables
         connections = DatabaseConnectionsConfig(
             sqlite=SQLiteConfig(

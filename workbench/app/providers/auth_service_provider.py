@@ -87,12 +87,14 @@ class AuthServiceProvider(ServiceProvider):
 
         # Create UserProvider (placeholder - will be implemented fully in future)
         # For now, we'll use a simple implementation that uses repository pattern
-        from jtc.auth.user_provider import DatabaseUserProvider
+        from jtc.auth.user_provider import DatabaseUserProvider, UserProvider
 
         user_provider = DatabaseUserProvider(container)
 
-        # Register UserProvider
-        container.register(type(user_provider), instance=user_provider, scope="singleton")
+        # Register UserProvider (both the abstract and concrete types)
+        # This allows JwtGuard to resolve UserProvider dependency
+        container.override_instance(UserProvider, user_provider)
+        container.override_instance(DatabaseUserProvider, user_provider)
 
         # Get JwtGuard from Container
         jwt_guard = container.resolve(JwtGuard)
