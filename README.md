@@ -130,6 +130,77 @@ This ORM **is not just sugar** — it’s an **architectural-first database laye
 **The power of Eloquent, engineered for the constraints of high-performance async Python.**
 
 ---
+---
+
+## 📝 CLI Commands Reference
+
+**Comprehensive English documentation for all framework CLI commands.**
+
+Fast-Track includes a powerful CLI tool with commands for scaffolding, database management, caching, authentication, queues, testing, and deployment. All commands are fully documented with examples, options, and use cases.
+
+### Available Command Groups
+
+| Group | Commands | Description |
+|--------|-----------|-------------|
+| **[Make Commands](docs/commands/make-commands.md)** | 18 commands for scaffolding components (models, repositories, controllers, etc.) |
+| **[Database Commands](docs/commands/db-commands.md)** | 3 commands for migrations, rollbacks, and seeding |
+| **[Cache Commands](docs/commands/cache-commands.md)** | 4 commands for cache management |
+| **[Auth Commands](docs/commands/auth-commands.md)** | Complete JWT authentication system |
+| **[Queue Commands](docs/commands/queue-commands.md)** | 3 commands for background job processing |
+| **[Test Commands](docs/commands/test-commands.md)** | Testing framework and utilities |
+| **[Deploy Commands](docs/commands/deploy-commands.md)** | Deployment automation and scripts |
+
+### Quick Start
+
+```bash
+# View all available commands
+jtc --help
+
+# Generate a model
+jtc make:model User
+
+# Run database migrations
+jtc db:migrate
+
+# Clear application cache
+jtc cache:clear
+
+# Start queue worker
+jtc queue work
+
+# Run all tests
+pytest workbench/tests/
+
+# View complete documentation
+# See: docs/commands/index.md
+```
+
+### Documentation Features
+
+- **Comprehensive Coverage**: All 29 CLI commands documented
+- **Practical Examples**: 100+ code examples included
+- **Clear Descriptions**: Purpose and usage explained
+- **Options and Arguments**: All command parameters documented
+- **Prerequisites**: Setup requirements listed
+- **Comparison Tables**: Laravel and Django comparisons
+- **Best Practices**: Guidelines for production use
+- **Troubleshooting**: Common issues and solutions
+
+### Quick Links
+
+- **[Overview & Index](docs/commands/index.md)** - Quick reference table of all commands
+- **[Make Commands](docs/commands/make-commands.md)** - model, repository, controller, etc.
+- **[Database Commands](docs/commands/db-commands.md)** - migrate, rollback, seed
+- **[Cache Commands](docs/commands/cache-commands.md)** - clear, forget, config, test
+- **[Auth Commands](docs/commands/auth-commands.md)** - make:auth command
+- **[Queue Commands](docs/commands/queue-commands.md)** - work, list, dashboard
+- **[Test Commands](docs/commands/test-commands.md)** - pytest and testing utilities
+- **[Deploy Commands](docs/commands/deploy-commands.md)** - deployment automation
+
+For detailed documentation with examples, see the individual command group pages.
+
+---
+---
 
 ## 📌 Read This First (Strategic Gatekeeping)
 

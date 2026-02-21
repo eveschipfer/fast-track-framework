@@ -6,9 +6,7 @@ authors = ["Everton Schipfer <eveschipfer@gmail.com>"]
 readme = "README.md"
 packages = [
     {include = "jtc", from = "framework"},
-    {include = "fast_query", from = "framework"},
-    {include = "app", from = "workbench"},
-    {include = "tests", from = "workbench"}
+    {include = "fast_query", from = "framework"}
 ]
 license = "MIT"
 homepage = "https://github.com/eveschipfer/fast-track-framework"

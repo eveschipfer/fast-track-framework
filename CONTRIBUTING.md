@@ -262,9 +262,29 @@ Since this is an educational project:
    ```
 
 3. **Document design decisions**
-   - Create ADRs (Architecture Decision Records) for major choices
-   - Explain trade-offs between alternatives
-   - Link to relevant GitHub discussions
+    - Create ADRs (Architecture Decision Records) for major choices
+    - Explain trade-offs between alternatives
+    - Link to relevant GitHub discussions
+
+4. **CLI Documentation Updates**
+
+When changing or adding CLI commands, please review and update the CLI documentation:
+
+- **CLI Docs Location**: `docs/commands/`
+- **Update Examples**: Ensure all examples work correctly
+- **Add Prerequisites**: Document any required setup
+- **Version Information**: Keep framework version and last updated date current
+- **Cross-References**: Update links between command groups
+
+**Documentation Files:**
+- `commands/index.md` - Overview and quick reference
+- `commands/make-commands.md` - Make command documentation
+- `commands/db-commands.md` - Database command documentation
+- `commands/cache-commands.md` - Cache command documentation
+- `commands/auth-commands.md` - Authentication command documentation
+- `commands/queue-commands.md` - Queue command documentation
+- `commands/test-commands.md` - Testing documentation
+- `commands/deploy-commands.md` - Deployment command documentation
 
 ### Code Review Focus
 

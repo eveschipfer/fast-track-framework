@@ -145,6 +145,15 @@ nav:
     - IoC Container: guides/container.md
     - Database & ORM: guides/database.md
     - Testing: guides/testing.md
+  - CLI Reference:
+    - Overview: commands/index.md
+    - Make Commands: commands/make-commands.md
+    - Database Commands: commands/db-commands.md
+    - Cache Commands: commands/cache-commands.md
+    - Auth Commands: commands/auth-commands.md
+    - Queue Commands: commands/queue-commands.md
+    - Test Commands: commands/test-commands.md
+    - Deploy Commands: commands/deploy-commands.md
   - Architecture:
     - Design Decisions: architecture/decisions.md
     - Service Providers: history/SPRINT_5_2_SUMMARY.md
