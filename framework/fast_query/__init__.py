@@ -122,7 +122,7 @@ See: https://github.com/yourusername/fast_query for documentation
 """
 
 # Database Engine & Session
-from .engine import create_engine, get_engine
+from .engine import create_engine, get_engine, reset_engine
 from .session import AsyncSessionFactory, get_session
 
 # Core ORM components
@@ -139,6 +139,9 @@ from .exceptions import FastQueryError, RecordNotFound
 # Pagination (Sprint 5.5 + 5.6)
 from .pagination import LengthAwarePaginator, CursorPaginator
 
+# Pagination Schemas (response envelopes — framework-agnostic)
+from .pagination_schemas import CursorMeta, CursorPage, OffsetMeta, OffsetPage, AnyPage
+
 # Testing & Development (Sprint 2.8)
 from .factories import Factory
 from .seeding import Seeder
@@ -148,15 +151,22 @@ __all__ = [
     # Engine & Session
     "create_engine",
     "get_engine",
+    "reset_engine",
     "AsyncSessionFactory",
     "get_session",
     # Core ORM
     "Base",
     "BaseRepository",
     "QueryBuilder",
-    # Pagination
+    # Pagination engine
     "LengthAwarePaginator",
     "CursorPaginator",
+    # Pagination schemas (response envelopes)
+    "CursorMeta",
+    "CursorPage",
+    "OffsetMeta",
+    "OffsetPage",
+    "AnyPage",
     # Mixins
     "TimestampMixin",
     "SoftDeletesMixin",

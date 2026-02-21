@@ -23,6 +23,7 @@ Middleware (Sprint 3.4):
 """
 
 from .app import FastTrackFramework, scoped_middleware
+from .controller import BaseController
 from .exceptions import (
     AppException,
     AuthenticationError,
@@ -32,6 +33,7 @@ from .exceptions import (
 )
 from .middleware import (
     MiddlewareManager,
+    JwtMiddleware,
     configure_cors,
     configure_gzip,
     configure_trusted_host,
@@ -43,6 +45,7 @@ __all__ = [
     "FastTrackFramework",
     "Inject",
     "scoped_middleware",
+    "BaseController",
     # Exceptions (Sprint 3.4)
     "AppException",
     "AuthenticationError",
@@ -54,4 +57,5 @@ __all__ = [
     "configure_gzip",
     "configure_trusted_host",
     "MiddlewareManager",
+    "JwtMiddleware",
 ]

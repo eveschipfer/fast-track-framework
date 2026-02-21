@@ -108,7 +108,10 @@ class ArrayDriver(CacheDriver):
 
     async def increment(self, key: str, amount: int = 1) -> int:
         """
-        Increment a counter in memory.
+        Increment a counter in memory, preserving existing expiration.
+
+        If the key doesn't exist, creates it with a large default TTL.
+        The caller sets the real TTL via expire().
 
         Args:
             key: Cache key
@@ -119,21 +122,40 @@ class ArrayDriver(CacheDriver):
 
         Example:
             count = await driver.increment(f"throttle:{ip}")
+            if count == 1:
+                await driver.expire(f"throttle:{ip}", 60)
         """
-        # Get current value
-        current = await self.get(key, default=0)
+        current_value = 0
+        # Default expiration: far future (caller sets real TTL via expire())
+        expiration = time.time() + 86400
 
-        # Ensure it's an integer
-        if not isinstance(current, int):
-            current = 0
+        if key in self.store:
+            value, stored_expiration = self.store[key]
+            if not self._is_expired(stored_expiration):
+                # Key still valid — preserve its expiration
+                expiration = stored_expiration
+                if isinstance(value, int):
+                    current_value = value
+            else:
+                del self.store[key]
 
-        # Increment
-        new_value = current + amount
-
-        # Store with 1 hour TTL
-        await self.put(key, new_value, ttl=3600)
-
+        new_value = current_value + amount
+        self.store[key] = (new_value, expiration)
         return new_value
+
+    async def expire(self, key: str, seconds: int) -> None:
+        """
+        Update the TTL on an existing key without touching its value.
+
+        Args:
+            key: Cache key (must already exist)
+            seconds: New TTL in seconds
+        """
+        if key not in self.store:
+            return
+
+        value, _ = self.store[key]
+        self.store[key] = (value, time.time() + seconds)
 
     async def forget(self, key: str) -> None:
         """

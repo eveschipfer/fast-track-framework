@@ -107,6 +107,28 @@ class CacheDriver(ABC):
         pass
 
     @abstractmethod
+    async def expire(self, key: str, seconds: int) -> None:
+        """
+        Set or update the TTL on an existing key WITHOUT touching its value.
+
+        This is critical for rate limiting: after an atomic increment creates
+        a new key, we set the TTL separately. Using put() would overwrite the
+        counter value, causing a race condition under concurrency.
+
+        For Redis, this maps directly to the EXPIRE command.
+
+        Args:
+            key: Cache key (must already exist)
+            seconds: New TTL in seconds
+
+        Example:
+            count = await driver.increment(f"throttle:{ip}")
+            if count == 1:
+                await driver.expire(f"throttle:{ip}", 60)
+        """
+        pass
+
+    @abstractmethod
     async def forget(self, key: str) -> None:
         """
         Remove a value from the cache.

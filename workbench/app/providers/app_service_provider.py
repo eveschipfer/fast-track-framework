@@ -31,7 +31,11 @@ Example:
             cache.configure(driver="redis")
 """
 
+import logging
+
 from jtc.core import Container, ServiceProvider
+
+logger = logging.getLogger(__name__)
 
 
 class AppServiceProvider(ServiceProvider):
@@ -78,8 +82,8 @@ class AppServiceProvider(ServiceProvider):
         from workbench.config.settings import AppSettings, settings
         container.override_instance(AppSettings, settings)
 
-        print("📝 AppServiceProvider: Registering application services...")  # noqa: T201
-        print("⚙️  AppSettings registered for type-safe DI")  # noqa: T201
+        logger.info("AppServiceProvider: Registering application services...")
+        logger.info("AppSettings registered for type-safe DI")
 
     def boot(self, container: Container) -> None:
         """
@@ -99,5 +103,5 @@ class AppServiceProvider(ServiceProvider):
                 db.configure_pool(max_connections=20)
         """
         # Currently empty - bootstrap logic will be added here
-        print("🔧 AppServiceProvider: Bootstrapping application services...")  # noqa: T201
+        logger.info("AppServiceProvider: Bootstrapping application services...")
 

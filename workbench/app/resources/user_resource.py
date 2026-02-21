@@ -28,7 +28,7 @@ This allows you to:
 
 from typing import Any
 
-from jtc.resources import JsonResource, MISSING
+from jtc.resources import JsonResource
 
 try:
     from fastapi import Request
@@ -65,21 +65,14 @@ class UserResource(JsonResource[User]):
         """
         return {
             "id": self.resource.id,
-            # TODO: Add more fields here
-
-            # Example: Format datetime
-            # "created_at": self.resource.created_at.isoformat(),
-
-            # Example: Conditional field (only for admins)
-            # "email": self.when(is_admin(request), self.resource.email),
-
-            # Example: Computed field
-            # "full_name": f"{self.resource.first_name} {self.resource.last_name}",
-
-            # Example: Nested resource
-            # "user": UserResource.make(self.resource.user).to_array(request)
-            #         if self.when_loaded("user") is not MISSING
-            #         else MISSING,
+            "name": self.resource.name,
+            "email": self.resource.email,
+            "created_at": self.resource.created_at.isoformat()
+            if self.resource.created_at is not None
+            else None,
+            "updated_at": self.resource.updated_at.isoformat()
+            if self.resource.updated_at is not None
+            else None,
         }
 
 

@@ -21,12 +21,22 @@ Usage:
     uvicorn workbench.main:app --reload
 """
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+
 from jtc.config import config
 from jtc.http import FastTrackFramework
-from jtc.http.middleware import DatabaseSessionMiddleware
+from jtc.http.middleware import DatabaseSessionMiddleware, configure_cors
 
 # Import app models (registers them with SQLAlchemy)
 from app.models import Comment, Post, Product, Role, User  # noqa: F401
+
+# Import shared limiter instance
+from app.limiter import limiter  # noqa: F401
+
+# JWT middleware — validates Bearer tokens and injects request.state.user
+from app.http.middleware import JwtMiddleware
 
 
 def create_app() -> FastTrackFramework:
@@ -60,15 +70,36 @@ def create_app() -> FastTrackFramework:
     # Sprint 5.3: Config loaded and providers registered automatically
     app = FastTrackFramework()
 
+    # JWT middleware — must be added BEFORE DatabaseSessionMiddleware so that
+    # token validation runs on the way in, before the DB session is opened.
+    # Starlette processes middleware in LIFO (last-added = outermost), so adding
+    # JwtMiddleware first means DatabaseSessionMiddleware wraps it.
+    app.add_middleware(JwtMiddleware)
+
     # Add database session middleware for proper transaction management
     # This ensures sessions are committed on success, rolled back on error
     app.add_middleware(DatabaseSessionMiddleware)
 
-    # That's it! The framework now:
-    # 1. Loads config from workbench/config/*.py
-    # 2. Registers providers from config("app.providers")
-    # 3. Boots providers on application startup
-    # 4. Manages database sessions per request (commit/rollback)
+    # CORS: allow frontend dev server
+    configure_cors(
+        app,
+        allow_origins=["http://localhost:5173"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+    )
+
+    # Rate limiting: attach limiter state and register 429 handler
+    app.state.limiter = limiter
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": "Too Many Requests",
+                "detail": f"Rate limit exceeded: {exc.detail}",
+            },
+        )
 
     return app
 

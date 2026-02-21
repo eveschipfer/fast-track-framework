@@ -211,8 +211,11 @@ class FileDriver(CacheDriver):
         """
         Increment a counter in file cache.
 
-        If key doesn't exist, creates it with initial value of `amount`.
-        If value is not an integer, treats it as 0 and increments.
+        If key doesn't exist, creates it with initial value of `amount`
+        and a large default TTL. The caller sets the real TTL via expire().
+
+        Preserves the existing expiration timestamp so repeated increments
+        don't reset the rate-limit window.
 
         Args:
             key: Cache key
@@ -222,26 +225,86 @@ class FileDriver(CacheDriver):
             New value after increment
 
         Example:
-            # Rate limiting
             count = await driver.increment(f"throttle:{ip}")
-            if count > 60:
-                raise RateLimitExceeded
+            if count == 1:
+                await driver.expire(f"throttle:{ip}", 60)
         """
-        # Get current value
-        current = await self.get(key, default=0)
+        file_path = self._get_file_path(key)
 
-        # Ensure it's an integer
-        if not isinstance(current, int):
-            current = 0
+        current_value = 0
+        # Default expiration: far future (caller sets real TTL via expire())
+        expiration = time.time() + 86400
 
-        # Increment
-        new_value = current + amount
+        # Try to read existing file to preserve its expiration
+        if await aiofiles.os.path.exists(file_path):
+            try:
+                async with aiofiles.open(file_path, "rb") as f:
+                    data = await f.read()
 
-        # Store with 1 hour TTL (default for counters)
-        # Note: For rate limiting, caller should set appropriate TTL
-        await self.put(key, new_value, ttl=3600)
+                if len(data) >= 8:
+                    stored_expiration = struct.unpack("d", data[:8])[0]
+
+                    if time.time() <= stored_expiration:
+                        # Key still valid — preserve its expiration
+                        expiration = stored_expiration
+                        value = pickle.loads(data[8:])
+                        if isinstance(value, int):
+                            current_value = value
+            except (OSError, pickle.PickleError, struct.error):
+                pass
+
+        new_value = current_value + amount
+
+        # Write back with preserved (or default) expiration
+        data = struct.pack("d", expiration) + pickle.dumps(new_value)
+        temp_path = file_path.with_suffix(".tmp")
+        try:
+            async with aiofiles.open(temp_path, "wb") as f:
+                await f.write(data)
+            await aiofiles.os.rename(temp_path, file_path)
+        except OSError:
+            try:
+                await aiofiles.os.remove(temp_path)
+            except OSError:
+                pass
+            raise
 
         return new_value
+
+    async def expire(self, key: str, seconds: int) -> None:
+        """
+        Update the TTL on an existing key without touching its value.
+
+        Reads the file, replaces only the 8-byte expiration header,
+        and writes back atomically.
+
+        Args:
+            key: Cache key (must already exist)
+            seconds: New TTL in seconds
+        """
+        file_path = self._get_file_path(key)
+
+        if not await aiofiles.os.path.exists(file_path):
+            return
+
+        try:
+            async with aiofiles.open(file_path, "rb") as f:
+                data = await f.read()
+
+            if len(data) < 8:
+                return
+
+            # Replace only the expiration header, keep the value bytes intact
+            new_expiration = time.time() + seconds
+            new_data = struct.pack("d", new_expiration) + data[8:]
+
+            temp_path = file_path.with_suffix(".tmp")
+            async with aiofiles.open(temp_path, "wb") as f:
+                await f.write(new_data)
+            await aiofiles.os.rename(temp_path, file_path)
+
+        except OSError:
+            pass
 
     async def forget(self, key: str) -> None:
         """

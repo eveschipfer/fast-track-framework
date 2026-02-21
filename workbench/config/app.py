@@ -61,12 +61,13 @@ config = {
         # Application-level service registration
         "app.providers.app_service_provider.AppServiceProvider",
 
-        # Route registration and configuration
-        "app.providers.route_service_provider.RouteServiceProvider",
-        "workbench.app.providers.RouteServiceProvider"
+        # Authentication infrastructure: AuthManager, JwtGuard, DatabaseUserProvider
+        # Must run before RouteServiceProvider so guards are available to controllers
+        "app.providers.auth_service_provider.AuthServiceProvider",
 
-        # Authentication guards (Sprint 10)
-        "workbench.app.providers.auth_service_provider.AuthServiceProvider",
+        # Domain orchestrator — delegates to DOMAIN_PROVIDERS (OCP-compliant)
+        # See app/config/providers.py to add new domains without touching this file
+        "app.providers.route_service_provider.RouteServiceProvider",
 
         # Future providers:
         # "jtc.providers.cache.CacheServiceProvider",      # Cache driver configuration

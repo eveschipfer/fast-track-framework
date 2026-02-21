@@ -174,6 +174,7 @@ class RedisDriver(CacheDriver):
         Atomically increment a counter in Redis.
 
         Redis's INCRBY is atomic, making it perfect for rate limiting.
+        TTL management is the caller's responsibility via expire().
 
         Args:
             key: Cache key
@@ -184,19 +185,26 @@ class RedisDriver(CacheDriver):
 
         Example:
             count = await driver.increment(f"throttle:{ip}")
+            if count == 1:
+                await driver.expire(f"throttle:{ip}", 60)
         """
         prefixed_key = self._make_key(key)
 
-        # Redis INCRBY is atomic
-        new_value = await self.redis.incrby(prefixed_key, amount)
+        # Redis INCRBY is atomic — no read-modify-write race
+        return await self.redis.incrby(prefixed_key, amount)
 
-        # Set TTL if this is a new key (first increment)
-        # Note: For rate limiting, caller should manage TTL
-        ttl = await self.redis.ttl(prefixed_key)
-        if ttl == -1:  # No expiration set
-            await self.redis.expire(prefixed_key, 3600)  # Default 1 hour
+    async def expire(self, key: str, seconds: int) -> None:
+        """
+        Set TTL on an existing key without touching its value.
 
-        return new_value
+        Maps directly to Redis EXPIRE command — O(1), atomic.
+
+        Args:
+            key: Cache key
+            seconds: TTL in seconds
+        """
+        prefixed_key = self._make_key(key)
+        await self.redis.expire(prefixed_key, seconds)
 
     async def forget(self, key: str) -> None:
         """

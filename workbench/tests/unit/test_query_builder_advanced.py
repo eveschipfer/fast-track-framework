@@ -88,7 +88,7 @@ async def test_nested_eager_loading_single_level(session: AsyncSession) -> None:
     post_repo = PostRepository(session)
 
     # Create test data
-    user = User(name="Alice", email="alice@test.com")
+    user = User(password="hashed_test_password", name="Alice", email="alice@test.com")
     await user_repo.create(user)
 
     post = Post(title="My Post", content="Content", user_id=user.id)
@@ -109,7 +109,7 @@ async def test_nested_eager_loading_two_levels(session: AsyncSession) -> None:
     comment_repo = CommentRepository(session)
 
     # Create test data: User -> Post -> Comment
-    user = User(name="Bob", email="bob@test.com")
+    user = User(password="hashed_test_password", name="Bob", email="bob@test.com")
     await user_repo.create(user)
 
     post = Post(title="Post 1", content="Content", user_id=user.id)
@@ -135,8 +135,8 @@ async def test_nested_eager_loading_multiple_paths(session: AsyncSession) -> Non
     comment_repo = CommentRepository(session)
 
     # Create test data
-    author = User(name="Author", email="author@test.com")
-    commenter = User(name="Commenter", email="commenter@test.com")
+    author = User(password="hashed_test_password", name="Author", email="author@test.com")
+    commenter = User(password="hashed_test_password", name="Commenter", email="commenter@test.com")
     await user_repo.create(author)
     await user_repo.create(commenter)
 
@@ -173,7 +173,7 @@ async def test_nested_eager_loading_mixed_notation(session: AsyncSession) -> Non
     user_repo = UserRepository(session)
     post_repo = PostRepository(session)
 
-    user = User(name="Alice", email="alice@test.com")
+    user = User(password="hashed_test_password", name="Alice", email="alice@test.com")
     await user_repo.create(user)
 
     post = Post(title="Post", content="Content", user_id=user.id)
@@ -199,8 +199,8 @@ async def test_global_scope_excludes_soft_deleted_by_default(session: AsyncSessi
     user_repo = UserRepository(session)
 
     # Create active and soft-deleted users
-    active = User(name="Active", email="active@test.com")
-    deleted = User(name="Deleted", email="deleted@test.com")
+    active = User(password="hashed_test_password", name="Active", email="active@test.com")
+    deleted = User(password="hashed_test_password", name="Deleted", email="deleted@test.com")
     deleted.deleted_at = datetime.now(timezone.utc)
 
     await user_repo.create(active)
@@ -220,8 +220,8 @@ async def test_global_scope_with_trashed_includes_deleted(session: AsyncSession)
 
     user_repo = UserRepository(session)
 
-    active = User(name="Active", email="active@test.com")
-    deleted = User(name="Deleted", email="deleted@test.com")
+    active = User(password="hashed_test_password", name="Active", email="active@test.com")
+    deleted = User(password="hashed_test_password", name="Deleted", email="deleted@test.com")
     deleted.deleted_at = datetime.now(timezone.utc)
 
     await user_repo.create(active)
@@ -242,8 +242,8 @@ async def test_global_scope_only_trashed_shows_deleted_only(session: AsyncSessio
 
     user_repo = UserRepository(session)
 
-    active = User(name="Active", email="active@test.com")
-    deleted = User(name="Deleted", email="deleted@test.com")
+    active = User(password="hashed_test_password", name="Active", email="active@test.com")
+    deleted = User(password="hashed_test_password", name="Deleted", email="deleted@test.com")
     deleted.deleted_at = datetime.now(timezone.utc)
 
     await user_repo.create(active)
@@ -263,8 +263,8 @@ async def test_global_scope_applies_to_count(session: AsyncSession) -> None:
 
     user_repo = UserRepository(session)
 
-    active = User(name="Active", email="active@test.com")
-    deleted = User(name="Deleted", email="deleted@test.com")
+    active = User(password="hashed_test_password", name="Active", email="active@test.com")
+    deleted = User(password="hashed_test_password", name="Deleted", email="deleted@test.com")
     deleted.deleted_at = datetime.now(timezone.utc)
 
     await user_repo.create(active)
@@ -290,7 +290,7 @@ async def test_global_scope_applies_to_first(session: AsyncSession) -> None:
 
     user_repo = UserRepository(session)
 
-    deleted = User(name="Deleted", email="deleted@test.com")
+    deleted = User(password="hashed_test_password", name="Deleted", email="deleted@test.com")
     deleted.deleted_at = datetime.now(timezone.utc)
     await user_repo.create(deleted)
 
@@ -311,8 +311,8 @@ async def test_global_scope_applies_to_pluck(session: AsyncSession) -> None:
 
     user_repo = UserRepository(session)
 
-    active = User(name="Active", email="active@test.com")
-    deleted = User(name="Deleted", email="deleted@test.com")
+    active = User(password="hashed_test_password", name="Active", email="active@test.com")
+    deleted = User(password="hashed_test_password", name="Deleted", email="deleted@test.com")
     deleted.deleted_at = datetime.now(timezone.utc)
 
     await user_repo.create(active)
@@ -334,7 +334,7 @@ async def test_global_scope_does_not_apply_to_models_without_mixin(session: Asyn
     user_repo = UserRepository(session)
 
     # Post doesn't have SoftDeletesMixin
-    user = User(name="User", email="user@test.com")
+    user = User(password="hashed_test_password", name="User", email="user@test.com")
     await user_repo.create(user)
 
     post = Post(title="Post", content="Content", user_id=user.id)
@@ -360,8 +360,8 @@ async def test_local_scope_with_static_method(session: AsyncSession) -> None:
     user_repo = UserRepository(session)
 
     # Create test data
-    active = User(name="Active", email="active@test.com")
-    inactive = User(name="Inactive", email="inactive@test.com")
+    active = User(password="hashed_test_password", name="Active", email="active@test.com")
+    inactive = User(password="hashed_test_password", name="Inactive", email="inactive@test.com")
     await user_repo.create(active)
     await user_repo.create(inactive)
 
@@ -382,8 +382,8 @@ async def test_local_scope_with_lambda(session: AsyncSession) -> None:
     """Test local scope using lambda function."""
     user_repo = UserRepository(session)
 
-    user1 = User(name="Alice", email="alice@test.com")
-    user2 = User(name="Bob", email="bob@test.com")
+    user1 = User(password="hashed_test_password", name="Alice", email="alice@test.com")
+    user2 = User(password="hashed_test_password", name="Bob", email="bob@test.com")
     await user_repo.create(user1)
     await user_repo.create(user2)
 
@@ -403,7 +403,7 @@ async def test_local_scope_chaining_multiple(session: AsyncSession) -> None:
     """Test chaining multiple local scopes."""
     user_repo = UserRepository(session)
 
-    user = User(name="Active", email="active@test.com")
+    user = User(password="hashed_test_password", name="Active", email="active@test.com")
     await user_repo.create(user)
 
     # Chain multiple scopes
@@ -431,8 +431,8 @@ async def test_where_has_one_to_many(session: AsyncSession) -> None:
     post_repo = PostRepository(session)
 
     # Create users with and without posts
-    user_with_posts = User(name="Author", email="author@test.com")
-    user_without_posts = User(name="Reader", email="reader@test.com")
+    user_with_posts = User(password="hashed_test_password", name="Author", email="author@test.com")
+    user_without_posts = User(password="hashed_test_password", name="Reader", email="reader@test.com")
     await user_repo.create(user_with_posts)
     await user_repo.create(user_without_posts)
 
@@ -453,7 +453,7 @@ async def test_where_has_many_to_one(session: AsyncSession) -> None:
     user_repo = UserRepository(session)
 
     # All posts have an author (foreign key constraint)
-    user = User(name="Author", email="author@test.com")
+    user = User(password="hashed_test_password", name="Author", email="author@test.com")
     await user_repo.create(user)
 
     post = Post(title="Post", content="Content", user_id=user.id)
@@ -473,9 +473,9 @@ async def test_where_has_combined_with_where(session: AsyncSession) -> None:
     post_repo = PostRepository(session)
 
     # Create multiple users
-    alice = User(name="Alice", email="alice@test.com")
-    bob = User(name="Bob", email="bob@test.com")
-    charlie = User(name="Charlie", email="charlie@test.com")
+    alice = User(password="hashed_test_password", name="Alice", email="alice@test.com")
+    bob = User(password="hashed_test_password", name="Bob", email="bob@test.com")
+    charlie = User(password="hashed_test_password", name="Charlie", email="charlie@test.com")
     await user_repo.create(alice)
     await user_repo.create(bob)
     await user_repo.create(charlie)
@@ -536,8 +536,8 @@ async def test_integration_nested_loading_with_global_scope(session: AsyncSessio
     comment_repo = CommentRepository(session)
 
     # Create user with soft-deleted status
-    active_user = User(name="Active", email="active@test.com")
-    deleted_user = User(name="Deleted", email="deleted@test.com")
+    active_user = User(password="hashed_test_password", name="Active", email="active@test.com")
+    deleted_user = User(password="hashed_test_password", name="Deleted", email="deleted@test.com")
     deleted_user.deleted_at = datetime.now(timezone.utc)
     await user_repo.create(active_user)
     await user_repo.create(deleted_user)
@@ -571,16 +571,16 @@ async def test_integration_all_features_combined(session: AsyncSession) -> None:
     comment_repo = CommentRepository(session)
 
     # Create active user with posts
-    active_user = User(name="Alice", email="alice@test.com")
+    active_user = User(password="hashed_test_password", name="Alice", email="alice@test.com")
     await user_repo.create(active_user)
 
     # Create deleted user with posts
-    deleted_user = User(name="Bob", email="bob@test.com")
+    deleted_user = User(password="hashed_test_password", name="Bob", email="bob@test.com")
     deleted_user.deleted_at = datetime.now(timezone.utc)
     await user_repo.create(deleted_user)
 
     # Create user without posts
-    no_posts_user = User(name="Charlie", email="charlie@test.com")
+    no_posts_user = User(password="hashed_test_password", name="Charlie", email="charlie@test.com")
     await user_repo.create(no_posts_user)
 
     # Posts

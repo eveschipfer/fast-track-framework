@@ -76,7 +76,7 @@ async def test_deleting_user_raises_integrity_error_for_posts(
     from sqlalchemy.exc import IntegrityError
 
     # Create user with posts
-    user = User(name="Author", email="author@test.com")
+    user = User(password="hashed_test_password", name="Author", email="author@test.com")
     session.add(user)
     await session.commit()
 
@@ -110,7 +110,7 @@ async def test_deleting_post_cascades_to_comments(
     This is CRITICAL for data integrity.
     """
     # Create user, post, and comments
-    user = User(name="Author", email="author@test.com")
+    user = User(password="hashed_test_password", name="Author", email="author@test.com")
     session.add(user)
     await session.commit()
 
@@ -164,7 +164,7 @@ async def test_orphan_removal_with_cascade(
     This is what "delete-orphan" does.
     """
     # Create user and post
-    user = User(name="Author", email="author@test.com")
+    user = User(password="hashed_test_password", name="Author", email="author@test.com")
     session.add(user)
     await session.commit()
 
@@ -223,7 +223,7 @@ async def test_three_level_cascade_user_post_comment(
     This tests the cascade chain.
     """
     # Create user
-    user = User(name="Author", email="author@test.com")
+    user = User(password="hashed_test_password", name="Author", email="author@test.com")
     session.add(user)
     await session.commit()
 
@@ -271,7 +271,7 @@ async def test_bulk_cascade_delete(
     This ensures cascade works at scale.
     """
     # Create user and post
-    user = User(name="Author", email="author@test.com")
+    user = User(password="hashed_test_password", name="Author", email="author@test.com")
     session.add(user)
     await session.commit()
 
@@ -336,7 +336,7 @@ async def test_repository_delete_cascades_correctly(
     comment_repo = CommentRepository(session)
 
     # Create user
-    user = User(name="Author", email="author@test.com")
+    user = User(password="hashed_test_password", name="Author", email="author@test.com")
     await user_repo.create(user)
 
     # Create post

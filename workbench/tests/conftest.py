@@ -43,6 +43,30 @@ def configure_sqlalchemy_for_tests():
     yield
 
 
+@pytest.fixture(autouse=True)
+def reset_db_engine():
+    """
+    Reset the fast_query engine singleton before each test.
+
+    WHY THIS IS NEEDED:
+    fast_query.create_engine() caches the first engine as a module-level singleton
+    (if _engine is None: ...). This is correct for production — engines are expensive
+    and should be shared across requests.
+
+    In tests, however, importing the app (e.g. `from jtc.main import app`) triggers
+    engine creation with the real file-based SQLite URL at collection time. Any
+    subsequent test fixture that calls create_engine("sqlite+aiosqlite:///:memory:")
+    gets the pre-cached file-based engine instead of a fresh in-memory one,
+    causing test data to accumulate in the real database across runs.
+
+    This autouse fixture resets the singleton to None before each test so that
+    the per-test engine fixture always creates a fresh in-memory engine.
+    """
+    from fast_query import reset_engine
+    reset_engine()
+    yield
+
+
 @pytest.fixture
 async def db_session():
     """

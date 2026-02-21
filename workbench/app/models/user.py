@@ -66,7 +66,7 @@ Example Usage:
 See: docs/relationships.md for relationship usage guide
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -92,6 +92,8 @@ class User(Base, TimestampMixin, SoftDeletesMixin):
         id: Primary key (auto-generated)
         name: User's full name
         email: Unique email address
+        password: Bcrypt-hashed password (never store plaintext)
+        reset_token: Password reset token (nullable)
         created_at: When user was created (auto-set, from TimestampMixin)
         updated_at: When user was last updated (auto-set, from TimestampMixin)
         deleted_at: When user was soft-deleted (None if active, from SoftDeletesMixin)
@@ -102,20 +104,6 @@ class User(Base, TimestampMixin, SoftDeletesMixin):
 
     Table:
         users
-
-    Example:
-        >>> user = User(name="Bob", email="bob@example.com")
-        >>> print(user)
-        User(id=None, name='Bob', email='bob@example.com')
-        >>>
-        >>> # Timestamps are auto-set on create
-        >>> await repo.create(user)
-        >>> assert user.created_at is not None
-        >>> assert user.updated_at is not None
-        >>>
-        >>> # Soft delete
-        >>> await repo.delete(user)
-        >>> assert user.is_deleted  # True
     """
 
     __tablename__ = "users"
@@ -124,6 +112,8 @@ class User(Base, TimestampMixin, SoftDeletesMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     email: Mapped[str] = mapped_column(String(100), unique=True)
+    password: Mapped[str] = mapped_column(String(255))
+    reset_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
 
     # HasMany: User has many Posts (one-to-many)
     posts: Mapped[list["Post"]] = relationship(

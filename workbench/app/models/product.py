@@ -17,6 +17,7 @@ Entity Details:
 """
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
@@ -104,7 +105,7 @@ class Product(Base, TimestampMixin, SoftDeletesMixin):
     )
 
     # Price: Decimal for financial accuracy
-    price: Mapped[float] = mapped_column(
+    price: Mapped[Decimal] = mapped_column(
         Numeric(precision=10, scale=2),
         nullable=False,
         comment="Product price (decimal with 2 places)"

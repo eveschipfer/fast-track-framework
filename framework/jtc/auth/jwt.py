@@ -82,30 +82,34 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
-from jwt.exceptions import DecodeError, ExpiredSignatureError, InvalidTokenError
+from jwt.exceptions import DecodeError, ExpiredSignatureError, InvalidSignatureError, InvalidTokenError
 
 # Load SECRET_KEY from environment variables
 # Educational Note: We use os.getenv() instead of os.environ[] to provide
 # a fallback value. In production, ALWAYS set this via environment variables.
-SECRET_KEY = os.getenv(
+_SECRET_KEY = os.getenv(
     "JWT_SECRET_KEY",
     "INSECURE_DEFAULT_SECRET_KEY_CHANGE_IN_PRODUCTION_DO_NOT_USE_THIS",
 )
 
 # Warn if using default secret key
-if SECRET_KEY == "INSECURE_DEFAULT_SECRET_KEY_CHANGE_IN_PRODUCTION_DO_NOT_USE_THIS":
+if _SECRET_KEY == "INSECURE_DEFAULT_SECRET_KEY_CHANGE_IN_PRODUCTION_DO_NOT_USE_THIS":
     warnings.warn(
-        "⚠️  Using default SECRET_KEY! Set JWT_SECRET_KEY environment variable in production.",
+        "Using default JWT secret key! Set JWT_SECRET_KEY environment variable in production.",
         stacklevel=2,
     )
 
 # JWT algorithm (HS256 = HMAC with SHA-256)
-ALGORITHM = "HS256"
+_ALGORITHM = "HS256"
 
-# Default token expiration (30 minutes)
-# Educational Note: Short expiration reduces risk of token theft.
-# Use refresh tokens for longer sessions.
-DEFAULT_EXPIRATION = timedelta(minutes=30)
+# Access token expiration — strict 15-minute window per spec.
+# Short-lived tokens reduce the attack surface of a stolen token.
+DEFAULT_EXPIRATION = timedelta(minutes=15)
+
+# Refresh token expiration — 7 days.
+# Refresh tokens are single-purpose (they carry token_type="refresh") and
+# should be stored securely by the client (e.g. httpOnly cookie).
+DEFAULT_REFRESH_EXPIRATION = timedelta(days=7)
 
 
 def create_access_token(
@@ -173,7 +177,7 @@ def create_access_token(
     # 2. Base64 encode header and payload
     # 3. Create signature: HMAC-SHA256(header.payload, secret)
     # 4. Return: header.payload.signature
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, _SECRET_KEY, algorithm=_ALGORITHM)
 
     return encoded_jwt
 
@@ -231,8 +235,8 @@ def decode_token(token: str) -> dict[str, Any]:
         # 4. Return payload
         payload = jwt.decode(
             token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM],
+            _SECRET_KEY,
+            algorithms=[_ALGORITHM],
             options={
                 "verify_signature": True,  # Verify HMAC signature
                 "verify_exp": True,        # Verify expiration
@@ -242,19 +246,57 @@ def decode_token(token: str) -> dict[str, Any]:
         return payload
 
     except ExpiredSignatureError:
-        # Token has expired (exp < current_time)
-        # This is a 401 Unauthorized error
+        # Token has expired (exp < current_time) → 401 Unauthorized
+        raise
+
+    except InvalidSignatureError:
+        # HMAC signature does not match — token was tampered with → 403 Forbidden
+        # NOTE: InvalidSignatureError is a subclass of DecodeError, so it MUST
+        # be caught before the DecodeError clause below.
         raise
 
     except DecodeError:
-        # Token is malformed (invalid base64, invalid JSON, etc.)
-        # This is a 401 Unauthorized error
+        # Token is malformed (invalid base64, invalid JSON, etc.) → 401 Unauthorized
         raise
 
     except InvalidTokenError:
-        # Signature verification failed (token was tampered with)
-        # This is a 401 Unauthorized error
+        # Catch-all for any other JWT validation failure → 401 Unauthorized
         raise
+
+
+def create_refresh_token(
+    data: dict[str, Any],
+    expires_delta: timedelta | None = None,
+) -> str:
+    """
+    Create a long-lived JWT refresh token.
+
+    Refresh tokens carry a ``token_type: "refresh"`` claim so the server can
+    distinguish them from access tokens and reject them on regular API calls.
+
+    Args:
+        data: Payload data (typically just ``{"sub": user_id}``).
+        expires_delta: Expiration window (default: 7 days).
+
+    Returns:
+        str: Encoded JWT refresh token.
+
+    Security Notes:
+        - Refresh tokens should be stored securely (httpOnly cookies recommended).
+        - Rotate refresh tokens on every use to detect theft.
+        - Invalidate all refresh tokens on password change / logout.
+    """
+    to_encode = data.copy()
+
+    expire = datetime.now(timezone.utc) + (expires_delta or DEFAULT_REFRESH_EXPIRATION)
+
+    to_encode.update({
+        "exp": expire,
+        "iat": datetime.now(timezone.utc),
+        "token_type": "refresh",  # Sentinel to prevent using refresh tokens as access tokens
+    })
+
+    return jwt.encode(to_encode, _SECRET_KEY, algorithm=_ALGORITHM)
 
 
 def get_token_expiration(token: str) -> datetime | None:
@@ -285,7 +327,7 @@ def get_token_expiration(token: str) -> datetime | None:
         payload = jwt.decode(
             token,
             options={"verify_signature": False},  # Skip verification!
-            algorithms=[ALGORITHM],
+            algorithms=[_ALGORITHM],
         )
 
         # Get exp claim

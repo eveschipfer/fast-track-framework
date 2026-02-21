@@ -239,7 +239,7 @@ async def test_rule_unique_fails_when_value_exists(session: AsyncSession) -> Non
     from jtc.validation import ValidationError
 
     # Create a user
-    user = User(name="Existing User", email="existing@test.com")
+    user = User(password="hashed_test_password", name="Existing User", email="existing@test.com")
     session.add(user)
     await session.commit()
 
@@ -257,7 +257,7 @@ async def test_rule_unique_ignores_specified_id(session: AsyncSession) -> None:
     Test that Rule.unique ignores a specific ID (for updates).
     """
     # Create a user
-    user = User(name="User", email="user@test.com")
+    user = User(password="hashed_test_password", name="User", email="user@test.com")
     session.add(user)
     await session.commit()
 
@@ -277,7 +277,7 @@ async def test_rule_exists_passes_when_value_exists(session: AsyncSession) -> No
     Test that Rule.exists passes when value exists in DB.
     """
     # Create a user
-    user = User(name="User", email="user@test.com")
+    user = User(password="hashed_test_password", name="User", email="user@test.com")
     session.add(user)
     await session.commit()
 
@@ -351,7 +351,7 @@ async def test_form_request_rules_failure_returns_422(session: AsyncSession) -> 
     from jtc.validation import ValidationError
 
     # Create a user
-    user = User(name="Existing", email="existing@test.com")
+    user = User(password="hashed_test_password", name="Existing", email="existing@test.com")
     session.add(user)
     await session.commit()
 
@@ -413,7 +413,7 @@ async def test_update_user_with_same_email_passes(session: AsyncSession) -> None
     This tests the ignore_id parameter in Rule.unique.
     """
     # Create a user
-    user = User(name="User", email="user@test.com")
+    user = User(password="hashed_test_password", name="User", email="user@test.com")
     session.add(user)
     await session.commit()
 
@@ -438,8 +438,8 @@ async def test_update_user_with_duplicate_email_fails(session: AsyncSession) -> 
     from jtc.validation import ValidationError
 
     # Create two users
-    user1 = User(name="User 1", email="user1@test.com")
-    user2 = User(name="User 2", email="user2@test.com")
+    user1 = User(password="hashed_test_password", name="User 1", email="user1@test.com")
+    user2 = User(password="hashed_test_password", name="User 2", email="user2@test.com")
     session.add(user1)
     session.add(user2)
     await session.commit()

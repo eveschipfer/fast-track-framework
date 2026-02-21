@@ -177,10 +177,12 @@ class ThrottleMiddleware(BaseHTTPMiddleware):
         try:
             current_count = await Cache.increment(cache_key, amount=1)
 
-            # Set TTL on first request
-            # Note: This is a race condition in file driver, but Redis is atomic
+            # Set TTL on first request using expire() — NOT put().
+            # expire() only touches the TTL, never the counter value.
+            # This eliminates the race condition where put() would overwrite
+            # the counter value that concurrent requests have already incremented.
             if current_count == 1:
-                await Cache.put(cache_key, current_count, ttl=self.window_seconds)
+                await Cache.expire(cache_key, self.window_seconds)
 
         except Exception:
             # Cache error, allow request through (fail open)

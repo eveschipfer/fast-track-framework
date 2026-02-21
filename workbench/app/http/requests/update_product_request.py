@@ -11,7 +11,7 @@ from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jtc.validation import FormRequest, Rule
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 
 from app.models import Product
 
@@ -79,8 +79,16 @@ class UpdateProductRequest(FormRequest):
         description="Stock quantity (cannot be negative)"
     )
 
-    # Store product ID for unique validation (set by controller)
-    _product_id: str | None = None
+    # Store product ID for unique validation (set by controller before rules() runs).
+    # KNOWN ISSUE: FastAPI resolves Validate(UpdateProductRequest) — which triggers
+    # rules() — before the controller method executes, so set_product_id() is never
+    # called in time.  As a result _product_id is always None during unique-slug
+    # validation on update, meaning the check does NOT exclude the current product.
+    # This can produce a false-positive ValidationError when a product is updated
+    # with its own unchanged slug.
+    # Fix requires either (a) promoting product_id to a body field so FastAPI passes
+    # it during validation, or (b) framework-level support for pre-validation hooks.
+    _product_id: str | None = PrivateAttr(default=None)
 
     def set_product_id(self, product_id: str) -> None:
         """

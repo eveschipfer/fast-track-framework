@@ -108,6 +108,27 @@ def create_engine(
     return _engine
 
 
+def reset_engine() -> None:
+    """
+    Reset the engine singleton (for testing only).
+
+    Clears the cached engine instance so the next call to create_engine()
+    will create a fresh engine. This is necessary in test suites where
+    different test modules need isolated in-memory databases.
+
+    WARNING: Do NOT call this in production code. It breaks connection pooling.
+
+    Example (in conftest.py):
+        @pytest.fixture(autouse=True)
+        def reset_db_engine():
+            from fast_query import reset_engine
+            reset_engine()
+            yield
+    """
+    global _engine
+    _engine = None
+
+
 def get_engine() -> AsyncEngine:
     """
     Get existing engine or raise error.

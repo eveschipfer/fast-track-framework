@@ -14,9 +14,13 @@ Sprint 10 Changes:
     - Registered guards for multi-driver support
 """
 
+import logging
+
 from jtc.core import Container, ServiceProvider
 from jtc.auth import AuthManager
 from jtc.auth.guards import JwtGuard
+
+log = logging.getLogger(__name__)
 
 
 class AuthServiceProvider(ServiceProvider):
@@ -46,7 +50,7 @@ class AuthServiceProvider(ServiceProvider):
             - AuthManager: Singleton
             - JwtGuard: Singleton (default API guard)
         """
-        print("🔐 AuthServiceProvider: Registering authentication services...")
+        log.info("🔐 AuthServiceProvider: registering authentication services…")
 
         # Register AuthManager as singleton
         container.register(AuthManager, scope="singleton")
@@ -55,15 +59,11 @@ class AuthServiceProvider(ServiceProvider):
         from workbench.config.settings import settings
         AuthManager.initialize(container, default_guard="api")
 
-        # Create JwtGuard with UserProvider and JWT secret
-        # Note: UserProvider will be created and registered below
-        jwt_secret = settings.auth.jwt_secret
-
-        # Register JwtGuard (will be initialized after UserProvider)
+        # Register JwtGuard — initialized with UserProvider in boot()
         container.register(JwtGuard, scope="singleton")
 
-        print("  ✓ AuthManager registered (Singleton)")
-        print("  ✓ JwtGuard registered (Singleton)")
+        log.debug("  ↳ AuthManager registered (singleton)")
+        log.debug("  ↳ JwtGuard registered (singleton)")
 
     def boot(self, container: Container) -> None:
         """
@@ -80,32 +80,23 @@ class AuthServiceProvider(ServiceProvider):
             - Initialize JwtGuard with UserProvider
             - Register JwtGuard in AuthManager
         """
-        print("🔐 AuthServiceProvider: Booting authentication services...")
+        log.info("🔐 AuthServiceProvider: booting authentication services…")
 
-        # Resolve AppSettings to get auth configuration
-        from workbench.config.settings import AppSettings, settings
-
-        # Create UserProvider (placeholder - will be implemented fully in future)
-        # For now, we'll use a simple implementation that uses repository pattern
+        from workbench.config.settings import settings
         from jtc.auth.user_provider import DatabaseUserProvider, UserProvider
 
         user_provider = DatabaseUserProvider(container)
 
-        # Register UserProvider (both the abstract and concrete types)
-        # This allows JwtGuard to resolve UserProvider dependency
+        # Override both abstract and concrete so JwtGuard can resolve either
         container.override_instance(UserProvider, user_provider)
         container.override_instance(DatabaseUserProvider, user_provider)
 
-        # Get JwtGuard from Container
         jwt_guard = container.resolve(JwtGuard)
-
-        # Initialize JwtGuard with UserProvider
         JwtGuard.__init__(jwt_guard, user_provider, settings.auth.jwt_secret)
 
-        # Register JwtGuard in AuthManager
         AuthManager.register("api", jwt_guard)
         AuthManager.register("jwt", jwt_guard)
 
-        print("  ✓ UserProvider registered (DatabaseUserProvider)")
-        print("  ✓ JwtGuard initialized with UserProvider")
-        print("  ✓ Guards registered in AuthManager (api, jwt)")
+        log.debug("  ↳ DatabaseUserProvider configured")
+        log.debug("  ↳ JwtGuard initialized and registered as 'api' + 'jwt'")
+        log.info("✅ AuthServiceProvider: authentication infrastructure ready")

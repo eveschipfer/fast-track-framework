@@ -52,6 +52,7 @@ class UserFactory(Factory[User]):
         return {
             "name": self.faker.name(),
             "email": self.faker.email(),
+            "password": "hashed_test_password",  # Placeholder; real auth uses bcrypt
         }
 
     def has_posts(self, count: int = 1) -> "UserFactory":

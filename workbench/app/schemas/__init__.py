@@ -35,10 +35,29 @@ from .product_schema import (
     ProductResponse,
     ProductUpdate,
 )
+from .user_schema import (
+    AccessTokenResponse,
+    LoginRequest,
+    RefreshRequest,
+    TokenResponse,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
 
 __all__ = [
+    # Product
     "ProductCreate",
     "ProductUpdate",
     "ProductResponse",
     "ProductListResponse",
+    # User
+    "UserCreate",
+    "UserUpdate",
+    "UserResponse",
+    # Auth
+    "LoginRequest",
+    "TokenResponse",
+    "RefreshRequest",
+    "AccessTokenResponse",
 ]

@@ -71,7 +71,7 @@ async def users_with_posts(session: AsyncSession) -> tuple[list[User], list[Post
         tuple: (users, posts)
     """
     # Create 10 users
-    users = [User(name=f"User{i}", email=f"user{i}@test.com") for i in range(10)]
+    users = [User(password="hashed_test_password", name=f"User{i}", email=f"user{i}@test.com") for i in range(10)]
 
     for user in users:
         session.add(user)
@@ -265,7 +265,7 @@ async def test_multiple_relationships_eager_loading(
     = 3 queries total
     """
     # Create user
-    user = User(name="Author", email="author@test.com")
+    user = User(password="hashed_test_password", name="Author", email="author@test.com")
     session.add(user)
     await session.commit()
 

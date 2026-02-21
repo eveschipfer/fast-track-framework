@@ -50,6 +50,7 @@ from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .database import DatabaseSessionMiddleware
+from .jwt_middleware import JwtMiddleware
 
 
 # ============================================================================

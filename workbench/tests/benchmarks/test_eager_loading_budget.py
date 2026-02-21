@@ -109,7 +109,7 @@ async def test_eager_loading_scales_o1_small_dataset(
 
     # Create small dataset: 5 users with 5 posts each
     for i in range(5):
-        user = User(name=f"User {i}", email=f"user{i}@test.com")
+        user = User(password="hashed_test_password", name=f"User {i}", email=f"user{i}@test.com")
         await user_repo.create(user)
 
         for j in range(5):
@@ -155,7 +155,7 @@ async def test_eager_loading_scales_o1_large_dataset(
 
     # Create large dataset: 50 users with 50 posts each
     for i in range(50):
-        user = User(name=f"User {i}", email=f"user{i}@test.com")
+        user = User(password="hashed_test_password", name=f"User {i}", email=f"user{i}@test.com")
         await user_repo.create(user)
 
         for j in range(50):
@@ -206,7 +206,7 @@ async def test_query_budget_consistency_across_scales(
 
     # Create 5 users with 5 posts each
     for i in range(5):
-        user = User(name=f"UserA{i}", email=f"usera{i}@test.com")
+        user = User(password="hashed_test_password", name=f"UserA{i}", email=f"usera{i}@test.com")
         await user_repo.create(user)
 
         for j in range(5):
@@ -227,7 +227,7 @@ async def test_query_budget_consistency_across_scales(
 
     # Create 50 users with 50 posts each (100x more data!)
     for i in range(50):
-        user = User(name=f"UserB{i}", email=f"userb{i}@test.com")
+        user = User(password="hashed_test_password", name=f"UserB{i}", email=f"userb{i}@test.com")
         await user_repo.create(user)
 
         for j in range(50):
@@ -275,7 +275,7 @@ async def test_nested_eager_loading_budget(
 
     # Create dataset: 5 users, 5 posts each, 5 comments each
     for i in range(5):
-        user = User(name=f"User {i}", email=f"user{i}@test.com")
+        user = User(password="hashed_test_password", name=f"User {i}", email=f"user{i}@test.com")
         await user_repo.create(user)
 
         for j in range(5):
@@ -325,7 +325,7 @@ async def test_nested_eager_loading_scales_o1(
 
     # Create large dataset: 20 users, 10 posts each, 10 comments each
     for i in range(20):
-        user = User(name=f"User {i}", email=f"user{i}@test.com")
+        user = User(password="hashed_test_password", name=f"User {i}", email=f"user{i}@test.com")
         await user_repo.create(user)
 
         for j in range(10):
@@ -378,7 +378,7 @@ async def test_multiple_relationship_eager_loading_budget(
 
     # Create dataset
     for i in range(5):
-        user = User(name=f"User {i}", email=f"user{i}@test.com")
+        user = User(password="hashed_test_password", name=f"User {i}", email=f"user{i}@test.com")
         await user_repo.create(user)
 
         for j in range(5):
@@ -430,7 +430,7 @@ async def test_no_eager_loading_causes_n_plus_1(
 
     # Create small dataset
     for i in range(5):
-        user = User(name=f"User {i}", email=f"user{i}@test.com")
+        user = User(password="hashed_test_password", name=f"User {i}", email=f"user{i}@test.com")
         await user_repo.create(user)
 
         for j in range(5):
@@ -478,7 +478,7 @@ async def test_global_scope_does_not_add_queries(
     from datetime import datetime, timezone
 
     for i in range(10):
-        user = User(name=f"User {i}", email=f"user{i}@test.com")
+        user = User(password="hashed_test_password", name=f"User {i}", email=f"user{i}@test.com")
         if i % 2 == 0:
             user.deleted_at = datetime.now(timezone.utc)  # Mark as deleted
         await user_repo.create(user)
@@ -520,7 +520,7 @@ async def test_where_has_does_not_cause_n_plus_1(
 
     # Create users (some with posts, some without)
     for i in range(20):
-        user = User(name=f"User {i}", email=f"user{i}@test.com")
+        user = User(password="hashed_test_password", name=f"User {i}", email=f"user{i}@test.com")
         await user_repo.create(user)
 
         # Only odd-numbered users have posts

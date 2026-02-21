@@ -168,7 +168,7 @@ class ProductRepository(BaseRepository[Product]):
         product = await self.find(product_id)
         if product:
             product.stock += quantity
-            await self.session.commit()
+            await self.session.flush()
         return product
 
     async def decrease_stock(self, product_id: str, quantity: int) -> Product | None:
@@ -194,7 +194,7 @@ class ProductRepository(BaseRepository[Product]):
         product = await self.find(product_id)
         if product:
             product.stock -= quantity
-            await self.session.commit()
+            await self.session.flush()
         return product
 
     async def increase_stock(self, product_id: str, quantity: int) -> Product | None:
@@ -218,7 +218,7 @@ class ProductRepository(BaseRepository[Product]):
         product = await self.find(product_id)
         if product:
             product.stock += quantity
-            await self.session.commit()
+            await self.session.flush()
         return product
 
     async def get_low_stock_products(self, threshold: int = 10) -> list[Product]:

@@ -4,10 +4,10 @@ Fast Track Framework - HTTP Requests Module
 Pydantic schemas for HTTP request validation and response transformation.
 """
 
-from .product_request import ProductCreate, ProductUpdate, ProductResponse
+from .store_product_request import StoreProductRequest
+from .update_product_request import UpdateProductRequest
 
 __all__ = [
-    "ProductCreate",
-    "ProductUpdate",
-    "ProductResponse",
+    "StoreProductRequest",
+    "UpdateProductRequest",
 ]

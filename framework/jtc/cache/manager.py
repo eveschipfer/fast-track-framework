@@ -243,6 +243,24 @@ class CacheManager:
         """
         return await self.driver.increment(key, amount)
 
+    async def expire(self, key: str, seconds: int) -> None:
+        """
+        Set or update TTL on an existing key without touching its value.
+
+        Critical for rate limiting: avoids the race condition where put()
+        would overwrite the counter value set by a concurrent increment().
+
+        Args:
+            key: Cache key (must already exist)
+            seconds: TTL in seconds
+
+        Example:
+            count = await Cache.increment(f"throttle:{ip}")
+            if count == 1:
+                await Cache.expire(f"throttle:{ip}", 60)
+        """
+        await self.driver.expire(key, seconds)
+
     async def forget(self, key: str) -> None:
         """
         Remove a value from cache.
