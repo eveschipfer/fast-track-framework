@@ -33,7 +33,7 @@ return UserResource.collection(users).resolve()
 ```
 """
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Iterable, Type
 
 try:
     from fastapi import Request
@@ -45,10 +45,7 @@ from jtc.resources.core import MISSING, JsonResource
 if TYPE_CHECKING:
     from fast_query.pagination import LengthAwarePaginator
 
-T = TypeVar("T")
-
-
-class ResourceCollection(Generic[T]):
+class ResourceCollection[T]:
     """
     Handle collections of resources.
 

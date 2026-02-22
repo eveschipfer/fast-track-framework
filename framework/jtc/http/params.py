@@ -25,15 +25,12 @@ Architecture:
     Route Handler:       Receives fully resolved UserService instance
 """
 
-from typing import TypeVar, cast
+from typing import cast
 
 from fastapi import Depends, Request
 
-# Type variable for generic dependency type
-T = TypeVar("T")
 
-
-def Inject(dependency_type: type[T]) -> T:  # noqa: N802
+def Inject[T](dependency_type: type[T]) -> T:  # noqa: N802
     """
     Inject a dependency from the IoC Container into a FastAPI route.
 

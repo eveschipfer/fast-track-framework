@@ -17,14 +17,12 @@ Responsibilities NOT belonging here:
 """
 
 from abc import ABC
-from typing import Any, TypeVar
+from typing import Any
 
 from fastapi import status
 from fastapi.responses import Response
 
 from fast_query import CursorPage, OffsetPage
-
-_T = TypeVar("_T")
 
 
 class BaseController(ABC):
@@ -39,7 +37,7 @@ class BaseController(ABC):
     # Simple response helpers
     # ------------------------------------------------------------------
 
-    def ok(self, data: _T) -> _T:
+    def ok[_T](self, data: _T) -> _T:
         """Pass-through for a 200 OK payload.
 
         Returns the data unchanged.  FastAPI serialises it via the route's
@@ -48,7 +46,7 @@ class BaseController(ABC):
         """
         return data
 
-    def created(self, data: _T) -> _T:
+    def created[_T](self, data: _T) -> _T:
         """Pass-through for a 201 Created payload.
 
         Pair with ``status_code=status.HTTP_201_CREATED`` on the route decorator.

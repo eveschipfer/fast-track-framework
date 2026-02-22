@@ -18,11 +18,9 @@ Python 3.10+ / Pydantic v2 — no GenericModel import required.
 Zero dependencies on any web framework or application layer.
 """
 
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from pydantic import BaseModel, Field
-
-T = TypeVar("T")
 
 
 # ---------------------------------------------------------------------------
@@ -45,7 +43,7 @@ class CursorMeta(BaseModel):
     count: int = Field(..., description="Number of items returned in this page")
 
 
-class CursorPage(BaseModel, Generic[T]):
+class CursorPage[T](BaseModel):
     """
     Cursor-based pagination envelope.
 
@@ -81,7 +79,7 @@ class OffsetMeta(BaseModel):
     last_page: int = Field(..., ge=1, description="Number of the final available page")
 
 
-class OffsetPage(BaseModel, Generic[T]):
+class OffsetPage[T](BaseModel):
     """
     Offset-based pagination envelope.
 

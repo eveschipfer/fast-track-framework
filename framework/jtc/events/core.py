@@ -48,12 +48,9 @@ Example:
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from jtc.core import Container
-
-# Type variable for generic Event
-E = TypeVar("E", bound="Event")
 
 
 class Event(ABC):
@@ -87,7 +84,7 @@ class Event(ABC):
     pass
 
 
-class Listener(ABC, Generic[E]):
+class Listener[E: Event](ABC):
     """
     Base class for event listeners.
 

@@ -72,7 +72,7 @@ BUILDER METHODS (return Self for chaining):
     - with_(), with_joined() (eager loading)
 """
 
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 from sqlalchemy import Select, and_, between, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -87,10 +87,7 @@ from .exceptions import RecordNotFound
 if TYPE_CHECKING:
     from .pagination import CursorPaginator, LengthAwarePaginator
 
-T = TypeVar("T", bound=Base)
-
-
-class QueryBuilder(Generic[T]):
+class QueryBuilder[T: Base]:
     """
     Fluent query builder for SQLAlchemy models.
 

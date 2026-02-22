@@ -58,7 +58,7 @@ class UserResource(JsonResource[User]):
 ```
 """
 
-from typing import Any, Generic, Iterable, TypeVar, Final
+from typing import Any, Iterable, Final
 
 try:
     from fastapi import Request
@@ -69,10 +69,7 @@ except ImportError:
 # Sentinel value for missing/conditional attributes
 MISSING: Final = object()
 
-T = TypeVar("T")
-
-
-class JsonResource(Generic[T]):
+class JsonResource[T]:
     """
     Base class for API Resources.
 

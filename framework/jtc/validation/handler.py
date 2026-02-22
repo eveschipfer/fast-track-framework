@@ -47,7 +47,7 @@ Usage (Old - Session Injection):
 """
 
 import inspect
-from typing import Any, Callable, Type, TypeVar
+from typing import Any, Callable, Type
 
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,11 +56,7 @@ from jtc.http.params import Inject
 from jtc.validation.request import FormRequest, ValidationError
 from jtc.core import Container
 
-# Type variable for FormRequest subclasses
-T = TypeVar("T", bound=FormRequest)
-
-
-def Validate(model_class: Type[T]) -> Callable[..., T]:
+def Validate[T: FormRequest](model_class: Type[T]) -> Callable[..., T]:
     """
     Create a FastAPI dependency that validates a FormRequest with METHOD INJECTION.
 

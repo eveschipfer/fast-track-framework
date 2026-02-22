@@ -60,7 +60,7 @@ See: Fast Track Framework documentation for anti-pattern details
 """
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -73,10 +73,7 @@ if TYPE_CHECKING:
     from .mixins import SoftDeletesMixin
     from .query_builder import QueryBuilder
 
-T = TypeVar("T", bound=Base)
-
-
-class BaseRepository(Generic[T]):
+class BaseRepository[T: Base]:
     """
     Generic repository with CRUD operations.
 
