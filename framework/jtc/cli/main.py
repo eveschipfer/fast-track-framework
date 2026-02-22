@@ -53,6 +53,42 @@ def version() -> None:
     console.print("[dim]Sprint 9.0 - CLI Modernization & Core Integration[/dim]")
 
 
+def _resolve_provider_class(provider_spec: Any) -> type:
+    """Resolve a provider class from either a dot-notation string or a direct class reference."""
+    if isinstance(provider_spec, str):
+        return _import_provider_class(provider_spec)
+    return provider_spec
+
+
+def _register_providers(providers: list[Any], container: Any) -> None:
+    """Register phase: instantiate every provider and call its register() method."""
+    console.print(f"[cyan]📦 Booting {len(providers)} service provider(s)...[/cyan]")
+    for provider_spec in providers:
+        provider_class = _resolve_provider_class(provider_spec)
+        provider = provider_class()
+        container.register(provider.__class__, scope="singleton")
+        container._singletons[provider.__class__] = provider
+        console.print(f"[dim]   → {provider.__class__.__name__}: Registering...[/dim]")
+        provider.register(container)
+
+
+def _boot_single_provider(provider: Any, container: Any) -> None:
+    """Boot a single provider, warning on async boot() or wrong signature."""
+    import inspect
+    try:
+        result = provider.boot(container)
+        if inspect.iscoroutine(result):
+            console.print(
+                f"[yellow]⚠️  {provider.__class__.__name__}.boot() is async - "
+                f"CLI should await this. Consider making boot() synchronous for CLI."
+            )
+        console.print(f"[green]✓ {provider.__class__.__name__}: Booted[/green]")
+    except TypeError as e:
+        # If boot() has a different signature, skip it with a warning so the
+        # CLI can continue even when individual providers cannot be booted.
+        console.print(f"[yellow]⚠️  Skipping {provider.__class__.__name__}: {e}[/yellow]")
+
+
 def _boot_framework() -> None:
     """
     Boot the Fast Track Framework with Container and Service Providers.
@@ -82,72 +118,24 @@ def _boot_framework() -> None:
     container._singletons[Container] = container
 
     # Step 2: Register AppSettings (Sprint 7.0)
-    # This makes settings available for DI throughout the framework
     container.register(AppSettings, scope="singleton")
     container._singletons[AppSettings] = settings
 
     # Step 3: Load and execute Service Providers
-    # Providers are registered in config/app.py
     from jtc.config import config
 
     providers = config("app.providers", [])
     if not providers:
         console.print("[yellow]⚠️  No providers configured in config/app.py[/yellow]")
         console.print("   Using minimal configuration...")
-    else:
-        console.print(f"[cyan]📦 Booting {len(providers)} service provider(s)...[/cyan]")
+        return
 
-        # Import and register each provider
-        for provider_spec in providers:
-            # Sprint 5.7: Handle string paths (e.g., "jtc.providers.database.DatabaseServiceProvider")
-            if isinstance(provider_spec, str):
-                provider_class = _import_provider_class(provider_spec)
-            else:
-                # Backward compatibility: Direct class reference
-                provider_class = provider_spec
+    _register_providers(providers, container)
 
-            # Create provider instance and register in container
-            provider = provider_class()
-            container.register(provider.__class__, scope="singleton")
-            container._singletons[provider.__class__] = provider
-
-            # Execute register phase
-            console.print(f"[dim]   → {provider.__class__.__name__}: Registering...[/dim]")
-            provider.register(container)
-
-        # Execute boot phase on all providers
-        import inspect
-
-        console.print("[cyan]🔧 Bootstrapping service providers...[/cyan]")
-        for provider_spec in providers:
-            if isinstance(provider_spec, str):
-                provider_class = _import_provider_class(provider_spec)
-            else:
-                provider_class = provider_spec
-
-            # Get provider instance from container
-            provider = container.resolve(provider_class)
-
-            # Try to boot provider with container argument
-            # This works for providers with boot(self, container: Container) signature
-            try:
-                result = provider.boot(container)
-
-                # Handle async boot() methods
-                if inspect.iscoroutine(result):
-                    console.print(
-                        f"[yellow]⚠️  {provider.__class__.__name__}.boot() is async - "
-                        f"CLI should await this. Consider making boot() synchronous for CLI."
-                    )
-
-                console.print(f"[green]✓ {provider.__class__.__name__}: Booted[/green]")
-            except TypeError as e:
-                # If boot() has different signature, skip it with warning
-                # This allows CLI to continue even if some providers fail to boot
-                console.print(
-                    f"[yellow]⚠️  Skipping {provider.__class__.__name__}: {e}[/yellow]"
-                )
-                continue
+    console.print("[cyan]🔧 Bootstrapping service providers...[/cyan]")
+    for provider_spec in providers:
+        provider = container.resolve(_resolve_provider_class(provider_spec))
+        _boot_single_provider(provider, container)
 
 
 def _import_provider_class(provider_path: str) -> type:

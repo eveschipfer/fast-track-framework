@@ -228,7 +228,10 @@ class BaseRepository[T: Base]:
             >>> updated_user = await repo.update(user)
             >>> # Changes committed by middleware at end of request
         """
-        # Instance is already tracked, changes will be committed by middleware
+        # Flush so attribute changes are pushed to the unit-of-work immediately.
+        # This lets subsequent queries within the same request see the updated
+        # values without waiting for the middleware commit.
+        await self.session.flush()
         return instance
 
     async def delete(self, instance: T) -> None:
