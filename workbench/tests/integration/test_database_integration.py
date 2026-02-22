@@ -25,6 +25,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from fast_query import AsyncSessionFactory, Base, BaseRepository, create_engine
 from jtc.http import FastTrackFramework, Inject
 from jtc.http.app import ScopedMiddleware
+from jtc.http.middleware import DatabaseSessionMiddleware
 
 
 # ============================================================================
@@ -89,8 +90,8 @@ async def app() -> FastTrackFramework:
     # Register repository (transient)
     app.register(IntegrationTestUserRepository, scope="transient")
 
-    # Add middleware for scoped session lifecycle
-    app.add_middleware(ScopedMiddleware)
+    # Add middleware for scoped session lifecycle + auto-commit/rollback
+    app.add_middleware(DatabaseSessionMiddleware)
 
     # Create tables
     async with engine.begin() as conn:

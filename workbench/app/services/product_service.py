@@ -154,7 +154,9 @@ class ProductService:
 
         data.set_product_id(product_id)
         for key, value in data.model_dump(exclude_unset=False).items():
-            if not key.startswith("_"):
+            # Skip None values: UpdateProductRequest has all-optional fields,
+            # so unset fields arrive as None and should not overwrite existing data.
+            if not key.startswith("_") and value is not None:
                 setattr(product, key, value)
 
         product = await self.repo.update(product)

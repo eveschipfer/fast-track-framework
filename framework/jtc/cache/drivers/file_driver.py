@@ -9,8 +9,8 @@ This is the default driver for development since it doesn't require Redis.
 Educational Note:
     File Structure:
         storage/framework/cache/
-        ├── 5f4dcc3b5aa765d61d8327deb882cf99  # hash("user:123")
-        ├── 098f6bcd4621d373cade4e832627b4f6  # hash("config:app")
+        ├── 61b7de306ccf11d6c81f85e56e86571766d10c01e72449b0171a4966d97e1793  # hash("user:123")
+        ├── 5ce988715802e8eaea3f6fb722d4e99219f82aa5098282368949fe38ae7041fd  # hash("config:app")
         └── ...
 
     File Format (binary):
@@ -36,7 +36,7 @@ Comparison with Laravel:
     Fast Track FileDriver:
         - Stores in storage/framework/cache/
         - Uses pickle for Python objects
-        - Filename = md5 hash of key
+        - Filename = sha256 hash of key
 """
 
 import hashlib
@@ -91,7 +91,7 @@ class FileDriver(CacheDriver):
         """
         Get file path for a cache key.
 
-        Uses MD5 hash to ensure valid filename regardless of key characters.
+        Uses SHA-256 hash to ensure valid filename regardless of key characters.
 
         Args:
             key: Cache key (e.g., "user:123", "config:app")
@@ -101,10 +101,10 @@ class FileDriver(CacheDriver):
 
         Example:
             >>> driver._get_file_path("user:123")
-            Path('storage/framework/cache/5f4dcc3b5aa765d61d8327deb882cf99')
+            Path('storage/framework/cache/61b7de306ccf11d6c81f85e56e86571766d10c01e72449b0171a4966d97e1793')
         """
         # Hash the key to create a valid filename
-        key_hash = hashlib.md5(key.encode()).hexdigest()
+        key_hash = hashlib.sha256(key.encode()).hexdigest()
         return self.cache_path / key_hash
 
     async def get(self, key: str, default: Any = None) -> Any:

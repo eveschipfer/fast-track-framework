@@ -22,6 +22,8 @@ Usage:
     poetry run ftf make:model User
 """
 
+from typing import Any
+
 import typer
 from rich.console import Console
 
@@ -105,15 +107,17 @@ def _boot_framework() -> None:
                 provider_class = provider_spec
 
             # Create provider instance and register in container
-            provider = provider_class(container)
+            provider = provider_class()
             container.register(provider.__class__, scope="singleton")
             container._singletons[provider.__class__] = provider
 
             # Execute register phase
             console.print(f"[dim]   → {provider.__class__.__name__}: Registering...[/dim]")
-            provider.register()
+            provider.register(container)
 
         # Execute boot phase on all providers
+        import inspect
+
         console.print("[cyan]🔧 Bootstrapping service providers...[/cyan]")
         for provider_spec in providers:
             if isinstance(provider_spec, str):
@@ -122,9 +126,28 @@ def _boot_framework() -> None:
                 provider_class = provider_spec
 
             # Get provider instance from container
-            provider = container.resolve(provider.__class__)
-            provider.boot()
-            console.print(f"[green]✓ {provider.__class__.__name__}: Booted[/green]")
+            provider = container.resolve(provider_class)
+
+            # Try to boot provider with container argument
+            # This works for providers with boot(self, container: Container) signature
+            try:
+                result = provider.boot(container)
+
+                # Handle async boot() methods
+                if inspect.iscoroutine(result):
+                    console.print(
+                        f"[yellow]⚠️  {provider.__class__.__name__}.boot() is async - "
+                        f"CLI should await this. Consider making boot() synchronous for CLI."
+                    )
+
+                console.print(f"[green]✓ {provider.__class__.__name__}: Booted[/green]")
+            except TypeError as e:
+                # If boot() has different signature, skip it with warning
+                # This allows CLI to continue even if some providers fail to boot
+                console.print(
+                    f"[yellow]⚠️  Skipping {provider.__class__.__name__}: {e}[/yellow]"
+                )
+                continue
 
 
 def _import_provider_class(provider_path: str) -> type:

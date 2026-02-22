@@ -267,7 +267,9 @@ class BaseRepository(Generic[T]):
         else:
             # Hard delete: Remove from database
             await self.session.delete(instance)
-            # Middleware will commit at end of request
+            # Flush so the object is expelled from the identity map,
+            # allowing subsequent find() calls to correctly return None.
+            await self.session.flush()
 
     async def count(self) -> int:
         """

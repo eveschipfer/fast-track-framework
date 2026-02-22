@@ -53,7 +53,8 @@ class StoreProductRequest(FormRequest):
         ...,
         min_length=1,
         max_length=100,
-        description="URL-friendly identifier (must be unique)"
+        pattern=r'^[a-z0-9]+(?:-[a-z0-9]+)*$',
+        description="URL-friendly identifier (lowercase, numbers and hyphens only)"
     )
 
     description: str | None = Field(

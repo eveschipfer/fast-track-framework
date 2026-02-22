@@ -13,10 +13,10 @@ Tests the complete product API including:
 import pytest
 from decimal import Decimal
 from uuid import uuid4
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import StaticPool
 
 from fast_query import Base
 from app.models import Product
@@ -29,7 +29,8 @@ async def test_db():
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
         echo=False,
-        poolclass=NullPool,
+        poolclass=StaticPool,
+        connect_args={"check_same_thread": False},
     )
 
     # Create all tables
@@ -69,7 +70,7 @@ async def client(session):
     # TODO: Override the database session dependency
     # For now, we'll test the repository layer directly
 
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
 
 
@@ -344,10 +345,10 @@ class TestProductDelete:
 
         repo = ProductRepository(session)
 
-        # Delete product
-        await repo.delete(sample_product.id)
+        # Delete product (pass instance, not ID — BaseRepository.delete takes an instance)
+        await repo.delete(sample_product)
 
-        # Should not be found
+        # Should not be found (Product uses SoftDeletesMixin, so deleted_at is set)
         product = await repo.find(sample_product.id)
         assert product is None or product.deleted_at is not None
 

@@ -70,8 +70,8 @@ class CacheDriver(ABC):
 **File Structure**:
 ```
 storage/framework/cache/
-├── 5f4dcc3b5aa765d61d8327deb882cf99  # hash("user:123")
-├── 098f6bcd4621d373cade4e832627b4f6  # hash("config:app")
+├── 61b7de306ccf11d6c81f85e56e86571766d10c01e72449b0171a4966d97e1793  # hash("user:123")
+├── 5ce988715802e8eaea3f6fb722d4e99219f82aa5098282368949fe38ae7041fd  # hash("config:app")
 └── ...
 ```
 
@@ -83,8 +83,8 @@ class FileDriver(CacheDriver):
         self.cache_path.mkdir(parents=True, exist_ok=True)
 
     def _get_file_path(self, key: str) -> Path:
-        # MD5 hash ensures valid filename
-        key_hash = hashlib.md5(key.encode()).hexdigest()
+        # SHA-256 hash ensures valid filename
+        key_hash = hashlib.sha256(key.encode()).hexdigest()
         return self.cache_path / key_hash
 
     async def put(self, key: str, value: Any, ttl: int) -> None:
