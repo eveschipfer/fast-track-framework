@@ -56,6 +56,110 @@ from jtc.http.params import Inject
 from jtc.validation.request import FormRequest, ValidationError
 from jtc.core import Container
 
+
+# ---------------------------------------------------------------------------
+# Private helpers — each focused on a single concern
+# ---------------------------------------------------------------------------
+
+_SKIP_PARAMS = frozenset({"self", "session", "request_body"})
+
+
+def _resolve_dependencies(
+    rules_sig: inspect.Signature,
+    session: AsyncSession,
+    container: Container,
+) -> dict[str, Any]:
+    """
+    Build the kwargs dict to pass to rules() / authorize().
+
+    Iterates the rules() signature, resolves every type-hinted parameter
+    from the IoC container, and falls back to the injected AsyncSession for
+    the legacy ``session`` parameter.
+    """
+    resolved: dict[str, Any] = {}
+    for param in rules_sig.parameters.values():
+        if param.name in _SKIP_PARAMS:
+            continue
+        try:
+            resolved[param.name] = container.resolve(param.annotation)
+        except Exception:
+            pass  # Dependency not registered; caller may supply it manually
+
+    # Backward compat: inject the FastAPI-provided session when rules() still
+    # declares ``session: AsyncSession`` as its only dependency.
+    if "session" in rules_sig.parameters and "session" not in resolved:
+        resolved["session"] = session
+
+    return resolved
+
+
+async def _run_authorize(
+    request_body: FormRequest,
+    resolved: dict[str, Any],
+) -> None:
+    """
+    Call authorize() with the best available credential and raise on failure.
+
+    Priority: session > auth > no argument (authorize() with no args).
+    Raises 403 when the check returns False, 500 on unexpected errors.
+    """
+    try:
+        if "session" in resolved:
+            is_authorized = await request_body.authorize(resolved["session"])
+        elif "auth" in resolved:
+            is_authorized = await request_body.authorize(resolved["auth"])
+        else:
+            is_authorized = await request_body.authorize()
+
+        if not is_authorized:
+            raise HTTPException(
+                status_code=403,
+                detail="You are not authorized to perform this action.",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Authorization check failed: {str(e)}",
+        )
+
+
+async def _run_rules(
+    request_body: FormRequest,
+    resolved: dict[str, Any],
+) -> None:
+    """
+    Call rules() with resolved dependencies and translate domain errors to HTTP.
+
+    * ValidationError → 422 Unprocessable Entity
+    * Any other unexpected error → 500 Internal Server Error
+    """
+    try:
+        await request_body.rules(**resolved)
+    except HTTPException:
+        raise
+    except ValidationError as e:
+        detail: list[dict[str, Any]] = [
+            {
+                "msg": e.message,
+                "type": "value_error",
+                "loc": ["body", e.field] if e.field else ["body"],
+            }
+        ]
+        raise HTTPException(status_code=422, detail=detail)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Validation failed: {str(e)}",
+        )
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+
 def Validate[T: FormRequest](model_class: Type[T]) -> Callable[..., T]:
     """
     Create a FastAPI dependency that validates a FormRequest with METHOD INJECTION.
@@ -138,100 +242,14 @@ def Validate[T: FormRequest](model_class: Type[T]) -> Callable[..., T]:
 
     async def dependency(
         request_body: model_class,  # type: ignore
-        session: AsyncSession = Inject(AsyncSession),  # Inject session from FastAPI DI
+        session: AsyncSession = Inject(AsyncSession),
     ) -> T:
-        """
-        Dependency callable that validates a FormRequest with METHOD INJECTION.
-
-        Sprint 11: Inspects rules() signature and resolves dependencies.
-
-        Args:
-            request_body: Parsed Pydantic model (from request body)
-            session: AsyncSession injected by FastAPI's dependency injection
-
-        Returns:
-            T: Validated FormRequest instance
-
-        Raises:
-            HTTPException: 403 if not authorized, 422 if validation fails
-        """
-        # Sprint 11: Get Container for dependency resolution
         container = Container()
-
-        # Sprint 11: Inspect rules() method signature
-        rules_signature = inspect.signature(model_class.rules)
-
-        # Sprint 11: Resolve type-hinted dependencies from Container
-        resolved_dependencies = {}
-        if rules_signature.parameters:
-            for param in rules_signature.parameters.values():
-                # Skip self parameter
-                if param.name == 'self':
-                    continue
-
-                # Resolve dependency from Container
-                # Only resolve if not already manually injected
-                if param.name not in ['session', 'request_body']:
-                    try:
-                        resolved_dependencies[param.name] = container.resolve(param.annotation)
-                    except Exception:
-                        # Dependency not registered, try Inject() as fallback
-                        pass
-
-        # Sprint 11: Backward compatibility: Use injected session if rules() expects it
-        if 'session' in rules_signature.parameters and 'session' not in resolved_dependencies:
-            resolved_dependencies['session'] = session
-
-        # At this point, Pydantic has already validated structure
-        # (types, required fields, regex patterns, etc.)
-
-        # Step 1: Run authorization check (can use injected dependencies)
-        try:
-            if 'session' in resolved_dependencies:
-                is_authorized = await request_body.authorize(resolved_dependencies['session'])
-            elif 'auth' in resolved_dependencies:
-                is_authorized = await request_body.authorize(resolved_dependencies['auth'])
-            else:
-                is_authorized = await request_body.authorize()
-            if not is_authorized:
-                raise HTTPException(
-                    status_code=403,
-                    detail="You are not authorized to perform this action.",
-                )
-        except HTTPException:
-            # Re-raise HTTPExceptions (including from stop())
-            raise
-        except Exception as e:
-            # Catch any unexpected errors in authorize()
-            raise HTTPException(
-                status_code=500,
-                detail=f"Authorization check failed: {str(e)}",
-            )
-
-        # Step 2: Run business logic validation with METHOD INJECTION
-        try:
-            await request_body.rules(**resolved_dependencies)
-        except HTTPException:
-            # Re-raise HTTPExceptions (from stop() or Rule helpers)
-            raise
-        except ValidationError as e:
-            # Convert ValidationError to HTTPException
-            detail: list[dict[str, Any]] = [
-                {
-                    "msg": e.message,
-                    "type": "value_error",
-                    "loc": ["body", e.field] if e.field else ["body"],
-                }
-            ]
-            raise HTTPException(status_code=422, detail=detail)
-        except Exception as e:
-            # Catch any unexpected errors in rules()
-            raise HTTPException(
-                status_code=500,
-                detail=f"Validation failed: {str(e)}",
-            )
-
-        # Step 3: Return validated model
+        resolved = _resolve_dependencies(
+            inspect.signature(model_class.rules), session, container
+        )
+        await _run_authorize(request_body, resolved)
+        await _run_rules(request_body, resolved)
         return request_body
 
     return Depends(dependency)
