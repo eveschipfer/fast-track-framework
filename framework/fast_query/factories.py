@@ -50,7 +50,7 @@ Usage:
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Generic, TypeVar, cast
+from typing import Any, Callable, cast
 
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -58,11 +58,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fast_query.base import Base
 from fast_query.repository import BaseRepository
 
-# Type variable for the model class
-T = TypeVar("T", bound=Base)
 
-
-class Factory(ABC, Generic[T]):
+class Factory[T: Base](ABC):
     """
     Abstract base class for model factories.
 

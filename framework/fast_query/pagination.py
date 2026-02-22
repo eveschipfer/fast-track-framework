@@ -40,13 +40,10 @@ Example (Cursor):
 """
 
 import math
-from typing import Any, Generic, TypeVar
-
-# Generic type for paginated items
-T = TypeVar("T")
+from typing import Any
 
 
-class LengthAwarePaginator(Generic[T]):
+class LengthAwarePaginator[T]:
     """
     Laravel-style pagination container.
 
@@ -321,7 +318,7 @@ class LengthAwarePaginator(Generic[T]):
         )
 
 
-class CursorPaginator(Generic[T]):
+class CursorPaginator[T]:
     """
     High-performance cursor-based pagination (Sprint 5.6).
 
